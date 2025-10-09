@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Empresa{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'pages/css/styles.css' %}">
+</head>
+<header>
+    <div class="svg-container">
+        <img src="{% static 'SVG/GOB AIT White_2.svg' %}" class="svg_ait" alt="Logo AIT">
+    </div>
+</header>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <ul class="nav-menu">
+                <li><a href="{% url 'home' %}">Inicio</a></li>
+                <li><a href="https://anzoategui.gob.ve/">La Gobernación</a></li>
+                <li><a href="{% url 'about' %}">Acerca de AIT</a></li>
+                <li><a href="{% url 'polls' %}">Encuestas</a></li>
+                <li><a href="{% url 'contact'%}">contacto</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    {% block content %}
+    {% endblock %}
+</body>
+</html>
