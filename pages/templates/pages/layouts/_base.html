@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Empresa{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'pages/css/styles.css' %}">
+    <title>{% block title %}AIT Anzoátegui{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <header>
     <div class="svg-container">
@@ -17,15 +17,41 @@
         <div class="nav-container">
             <ul class="nav-menu">
                 <li><a href="{% url 'home' %}">Inicio</a></li>
-                <li><a href="https://anzoategui.gob.ve/">La Gobernación</a></li>
                 <li><a href="{% url 'about' %}">Acerca de AIT</a></li>
+                <li><a href="https://anzoategui.gob.ve/">La Gobernación</a></li>
                 <li><a href="{% url 'polls' %}">Encuestas</a></li>
-                <li><a href="{% url 'contact'%}">contacto</a></li>
+                <li><a href="{% url 'contact'%}">Contacto</a></li>
             </ul>
+            <div class="login-section">
+                <a href="#" class="login-btn">Log In</a>
+            </div>
         </div>
     </nav>
     
     {% block content %}
     {% endblock %}
+    
+    <footer>
+        <div class="footer-container">
+            <div class="footer-left">
+                <img src="{% static 'SVG/GOB AIT White_2.svg' %}" class="svg_footer" alt="Logo AIT">
+            </div>
+            <div class="footer-right">
+                <ul class="footer-details">
+                    <li>Dirección: Gobernación del Estado Anzoátegui, Av. 5 de Julio.</li>
+                    <li>Código Postal: Barcelona 6001.</li>
+                    <li>Horarios: 8:00 A.M - 5:00 P.M</li>
+                </ul>
+                <div class="social-icons">
+                    <a href="#" class="social-link">
+                        <img src="{% static 'SVG/Instagram.svg' %}" alt="Instagram" class="social-icon">
+                    </a>
+                    <a href="#" class="social-link">
+                        <img src="{% static 'SVG/XTwitter.svg' %}" alt="Twitter" class="social-icon">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
