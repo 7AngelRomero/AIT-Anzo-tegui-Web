@@ -19,14 +19,27 @@
                 <li><a href="{% url 'home' %}">Inicio</a></li>
                 <li><a href="{% url 'about' %}">Acerca de AIT</a></li>
                 <li><a href="https://anzoategui.gob.ve/">La Gobernación</a></li>
-                <li><a href="{% url 'polls' %}">Encuestas</a></li>
+                <li><a href="{% url 'poll_list' %}">Encuestas</a></li>
                 <li><a href="{% url 'contact'%}">Contacto</a></li>
             </ul>
             <div class="login-section">
-                <a href="#" class="login-btn">Log In</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'admin:index' %}" class="admin-btn">Admin</a>
+                    <a href="{% url 'logout' %}" class="login-btn">Log Out</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="login-btn">Log In</a>
+                {% endif %}
             </div>
         </div>
     </nav>
+    
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     
     {% block content %}
     {% endblock %}

@@ -69,6 +69,467 @@ footer {
     transform: scale(1.1);
 }
 
+/* Header de página */
+.page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.page-header h1 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 2.5rem;
+}
+
+.page-subtitle {
+    color: #666;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Estilos para encuestas - Diseño de tarjetas mejorado */
+.polls-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.poll-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #f0f0f0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.poll-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    border-color: #e0e0e0;
+}
+
+.poll-image {
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+}
+
+.poll-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.poll-card:hover .poll-image img {
+    transform: scale(1.08);
+}
+
+.poll-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.poll-card:hover .poll-overlay {
+    opacity: 1;
+}
+
+.poll-no-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.poll-placeholder {
+    color: #adb5bd;
+    opacity: 0.7;
+}
+
+.poll-content {
+    padding: 1.75rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.poll-title {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-size: 1.35rem;
+    line-height: 1.4;
+    font-weight: 700;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.poll-description {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.poll-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    color: #868e96;
+}
+
+.poll-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.poll-meta svg {
+    opacity: 0.7;
+}
+
+.poll-footer {
+    margin-top: auto;
+}
+
+.poll-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.85rem 1.75rem;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.poll-btn:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.poll-btn svg {
+    transition: transform 0.3s ease;
+}
+
+.poll-btn:hover svg {
+    transform: translateX(3px);
+}
+
+/* Estado vacío */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #6c757d;
+}
+
+.empty-state svg {
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    color: #495057;
+    margin-bottom: 0.75rem;
+    font-size: 1.5rem;
+}
+
+.empty-state p {
+    font-size: 1rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Responsividad mejorada */
+@media (max-width: 768px) {
+    .polls-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .poll-image {
+        height: 180px;
+    }
+    
+    .poll-content {
+        padding: 1.25rem;
+    }
+    
+    .poll-title {
+        font-size: 1.2rem;
+    }
+    
+    .poll-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-header h1 {
+        font-size: 2rem;
+    }
+    
+    .poll-image {
+        height: 160px;
+    }
+    
+    .poll-content {
+        padding: 1rem;
+    }
+}
+
+/* Estilos para formulario de encuesta */
+.question-block {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.question-block h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.choice-option {
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.choice-option input[type="radio"] {
+    margin: 0;
+}
+
+.choice-option label {
+    cursor: pointer;
+    flex: 1;
+}
+
+textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.submit-btn {
+    background: #27ae60;
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin-top: 1rem;
+}
+
+.submit-btn:hover {
+    background: #219a52;
+}
+
+.back-link {
+    color: #3498db;
+    text-decoration: none;
+    margin-top: 2rem;
+    display: inline-block;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+/* Estilos para login */
+.login-container {
+    max-width: 400px;
+    margin: 3rem auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.login-container h1 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.login-container p {
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+.login-form {
+    text-align: left;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.login-submit-btn {
+    width: 100%;
+    background: #3498db;
+    color: white;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin-bottom: 1rem;
+}
+
+.login-submit-btn:hover {
+    background: #2980b9;
+}
+
+/* Estilos para navbar con usuario logueado */
+.login-section {
+    margin-left: auto;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.admin-btn {
+    background: #27ae60;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.admin-btn:hover {
+    background: #219a52;
+}
+
+/* Estilos para notificaciones emergentes */
+ul.messages {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 1000 !important;
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+}
+
+.messages li {
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideIn 0.3s ease-out;
+    min-width: 300px;
+    position: relative;
+}
+
+.messages .success {
+    background: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.messages .error {
+    background: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.messages .info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Auto-hide después de 5 segundos */
+.messages li {
+    animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-in 4.5s forwards;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
 .navbar {
     background: #184da1;
     padding: 1rem 0;

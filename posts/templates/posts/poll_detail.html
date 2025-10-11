@@ -1,0 +1,44 @@
+{% extends "pages/layouts/_base.html" %}
+{% load static %}
+
+{% block title %}{{ poll.title }} - Encuesta{% endblock %}
+
+{% block content %}
+    <main>
+        <h1>{{ poll.title }}</h1>
+        <p>{{ poll.description }}</p>
+        
+        <form method="post" action="{% url 'submit_poll' poll.id %}">
+            {% csrf_token %}
+            
+            {% for question in poll.questions.all %}
+                <div class="question-block">
+                    <h3>{{ question.text }}</h3>
+                    
+                    {% if question.question_type == 'multiple' %}
+                        <!-- Preguntas de opción múltiple -->
+                        {% for choice in question.choices.all %}
+                            <div class="choice-option">
+                                <input type="radio" 
+                                       name="question_{{ question.id }}" 
+                                       value="{{ choice.id }}" 
+                                       id="choice_{{ choice.id }}">
+                                <label for="choice_{{ choice.id }}">{{ choice.text }}</label>
+                            </div>
+                        {% endfor %}
+                    
+                    {% elif question.question_type == 'text' %}
+                        <!-- Preguntas de texto libre -->
+                        <textarea name="question_{{ question.id }}" 
+                                  rows="3" 
+                                  placeholder="Escribe tu respuesta aquí..."></textarea>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            <button type="submit" class="submit-btn">Enviar Respuestas</button>
+        </form>
+        
+        <a href="{% url 'poll_list' %}" class="back-link">← Volver a encuestas</a>
+    </main>
+{% endblock %}
