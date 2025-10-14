@@ -4,13 +4,13 @@ from django.contrib.auth.forms import AuthenticationForm
 class CustomLoginForm(AuthenticationForm):
     username = forms.CharField(
         widget=forms.TextInput(attrs={
-            'class': 'form-input',
+            'class': 'form-control',
             'placeholder': 'Usuario'
         })
     )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'form-input',
+            'class': 'form-control',
             'placeholder': 'Contraseña'
         })
     )

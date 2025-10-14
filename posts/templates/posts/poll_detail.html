@@ -4,41 +4,71 @@
 {% block title %}{{ poll.title }} - Encuesta{% endblock %}
 
 {% block content %}
-    <main>
-        <h1>{{ poll.title }}</h1>
-        <p>{{ poll.description }}</p>
-        
-        <form method="post" action="{% url 'submit_poll' poll.id %}">
-            {% csrf_token %}
-            
-            {% for question in poll.questions.all %}
-                <div class="question-block">
-                    <h3>{{ question.text }}</h3>
-                    
-                    {% if question.question_type == 'multiple' %}
-                        <!-- Preguntas de opción múltiple -->
-                        {% for choice in question.choices.all %}
-                            <div class="choice-option">
-                                <input type="radio" 
-                                       name="question_{{ question.id }}" 
-                                       value="{{ choice.id }}" 
-                                       id="choice_{{ choice.id }}">
-                                <label for="choice_{{ choice.id }}">{{ choice.text }}</label>
-                            </div>
-                        {% endfor %}
-                    
-                    {% elif question.question_type == 'text' %}
-                        <!-- Preguntas de texto libre -->
-                        <textarea name="question_{{ question.id }}" 
-                                  rows="3" 
-                                  placeholder="Escribe tu respuesta aquí..."></textarea>
-                    {% endif %}
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header de la encuesta -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body text-center">
+                        <h1 class="card-title display-6 fw-bold text-primary mb-3">{{ poll.title }}</h1>
+                        {% if poll.description %}
+                            <p class="lead text-muted">{{ poll.description }}</p>
+                        {% endif %}
+                    </div>
                 </div>
-            {% endfor %}
-            
-            <button type="submit" class="submit-btn">Enviar Respuestas</button>
-        </form>
-        
-        <a href="{% url 'poll_list' %}" class="back-link">← Volver a encuestas</a>
-    </main>
+                
+                <!-- Formulario de encuesta -->
+                <form method="post" action="{% url 'submit_poll' poll.id %}">
+                    {% csrf_token %}
+                    
+                    {% for question in poll.questions.all %}
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title fw-semibold text-dark mb-3">
+                                    <span class="badge bg-primary me-2">{{ forloop.counter }}</span>
+                                    {{ question.text }}
+                                </h5>
+                                
+                                {% if question.question_type == 'multiple' %}
+                                    <!-- Preguntas de opción múltiple -->
+                                    {% for choice in question.choices.all %}
+                                        <div class="form-check mb-2 choice-hover">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="question_{{ question.id }}" 
+                                                   value="{{ choice.id }}" 
+                                                   id="choice_{{ choice.id }}">
+                                            <label class="form-check-label choice-label" for="choice_{{ choice.id }}">
+                                                {{ choice.text }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                
+                                {% elif question.question_type == 'text' %}
+                                    <!-- Preguntas de texto libre -->
+                                    <div class="mb-3">
+                                        <textarea class="form-control" 
+                                                  name="question_{{ question.id }}" 
+                                                  rows="4" 
+                                                  placeholder="Escribe tu respuesta aquí..."></textarea>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                    
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-paper-plane me-2"></i>Enviar Respuestas
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center">
+                    <a href="{% url 'poll_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Volver a encuestas
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

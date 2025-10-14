@@ -4,23 +4,131 @@
 {% block title %}Inicio - Empresa{% endblock %}
 
 {% block content %}
-    <main>
-        <div class="parraf">
-            <section>
-                <p>El avance tecnológico en Venezuela tiene su espina dorsal en el talento humano y una historia que se remonta a figuras pioneras. La llegada de la explotación petrolera en el siglo XX impulsó la modernización, pero fue el ingenio de científicos como Jacinto Convit (medicina) y Humberto Fernández Morán (microscopía) lo que marcó el verdadero potencial. Recientemente, proyectos como el lanzamiento de los satélites Simón Bolívar y Miranda han demostrado la ambición del país por expandir la conectividad y la teleeducación, integrando a la nación en la era digital y espacial.</p>
-            </section>
+    <!-- Carousel Section -->
+    <div id="homeCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+        </div>
+        
+        <div class="carousel-inner">
+            <!-- Slide 1 -->
+            <div class="carousel-item active">
+                <div class="carousel-slide d-flex align-items-center justify-content-center">
+                    <div class="carousel-content text-center text-white">
+                        <h2 class="display-5 fw-bold mb-3">AIT Anzoátegui</h2>
+                        <p class="lead mb-4">Impulsando la innovación tecnológica en el estado</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Slide 2 -->
+            <div class="carousel-item">
+                <div class="carousel-slide d-flex align-items-center justify-content-center">
+                    <div class="carousel-content text-center text-white">
+                        <h2 class="display-5 fw-bold mb-3">Tecnología e Innovación</h2>
+                        <p class="lead mb-4">Desarrollando soluciones tecnológicas para el futuro</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Slide 3 -->
+            <div class="carousel-item">
+                <div class="carousel-slide d-flex align-items-center justify-content-center">
+                    <div class="carousel-content text-center text-white">
+                        <h2 class="display-5 fw-bold mb-3">Talento Humano</h2>
+                        <p class="lead mb-4">Fortaleciendo las capacidades del capital humano venezolano</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Slide 4 -->
+            <div class="carousel-item">
+                <div class="carousel-slide d-flex align-items-center justify-content-center">
+                    <div class="carousel-content text-center text-white">
+                        <h2 class="display-5 fw-bold mb-3">Proyectos Estratégicos</h2>
+                        <p class="lead mb-4">Iniciativas que transforman el panorama tecnológico nacional</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Controles del carousel -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Anterior</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#homeCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Siguiente</span>
+        </button>
+    </div>
+
+    <div class="container container-custom my-5">
+        <!-- Hero Section -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="text-start">
+                    <h1 class="display-4 fw-bold text-primary mb-3">Tecnología e Innovación en Venezuela</h1>
+                    <p class="lead text-muted">Construyendo el futuro con talento humano y desarrollo tecnológico</p>
+                </div>
+            </div>
         </div>
 
-        <div class="parraf">
-            <section>
-                <p>El verdadero motor del desarrollo venezolano reside en su capital humano, un recurso inagotable forjado en instituciones como el IVIC y las universidades. A pesar de los retos, esta masa crítica de profesionales mantiene una notable capacidad de innovación y resiliencia. De hecho, el talento venezolano es reconocido a nivel internacional, con ingenieros y especialistas ocupando posiciones influyentes en la industria tecnológica global. Este valioso know-how asegura un futuro lleno de posibilidades.</p>
-            </section>
+        <!-- Sección 1 - Izquierda -->
+        <div class="row mb-5 align-items-center">
+            <div class="col-lg-8">
+                <div class="content-section">
+                    <h3 class="fw-bold text-dark mb-3">Historia Tecnológica</h3>
+                    <p class="text-justify">El avance tecnológico en Venezuela tiene su espina dorsal en el talento humano y una historia que se remonta a figuras pioneras. La llegada de la explotación petrolera en el siglo XX impulsó la modernización, pero fue el ingenio de científicos como Jacinto Convit (medicina) y Humberto Fernández Morán (microscopía) lo que marcó el verdadero potencial. Recientemente, proyectos como el lanzamiento de los satélites Simón Bolívar y Miranda han demostrado la ambición del país por expandir la conectividad y la teleeducación, integrando a la nación en la era digital y espacial.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="image-placeholder">
+                    <!-- Espacio para imagen futura -->
+                    <div class="placeholder-box d-flex align-items-center justify-content-center">
+                        <i class="fas fa-history fa-3x text-muted"></i>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="parraf">
-            <section>
-                <p>Actualmente, Venezuela se concentra en potenciar la soberanía tecnológica y las soluciones endógenas. Iniciativas como el proyecto Canaima buscan democratizar el acceso al conocimiento digital. Además, la rápida adaptación y el desarrollo de tecnologías financieras como la billetera electrónica local muestran una gran capacidad de adaptación y búsqueda de vías de desarrollo propias. Esta resiliencia, combinada con el ingenio nacional, es la garantía del progreso tecnológico futuro de la nación</p>
-            </section>
+        <!-- Sección 2 - Derecha -->
+        <div class="row mb-5 align-items-center">
+            <div class="col-lg-4 order-lg-1">
+                <div class="image-placeholder">
+                    <!-- Espacio para imagen futura -->
+                    <div class="placeholder-box d-flex align-items-center justify-content-center">
+                        <i class="fas fa-users fa-3x text-muted"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8 order-lg-2">
+                <div class="content-section">
+                    <h3 class="fw-bold text-dark mb-3">Talento Humano</h3>
+                    <p class="text-justify">El verdadero motor del desarrollo venezolano reside en su capital humano, un recurso inagotable forjado en instituciones como el IVIC y las universidades. A pesar de los retos, esta masa crítica de profesionales mantiene una notable capacidad de innovación y resiliencia. De hecho, el talento venezolano es reconocido a nivel internacional, con ingenieros y especialistas ocupando posiciones influyentes en la industria tecnológica global. Este valioso know-how asegura un futuro lleno de posibilidades.</p>
+                </div>
+            </div>
         </div>
-    </main>
+
+        <!-- Sección 3 - Izquierda -->
+        <div class="row mb-5 align-items-center">
+            <div class="col-lg-8">
+                <div class="content-section">
+                    <h3 class="fw-bold text-dark mb-3">Innovación Actual</h3>
+                    <p class="text-justify">Actualmente, Venezuela se concentra en potenciar la soberanía tecnológica y las soluciones endógenas. Iniciativas como el proyecto Canaima buscan democratizar el acceso al conocimiento digital. Además, la rápida adaptación y el desarrollo de tecnologías financieras como la billetera electrónica local muestran una gran capacidad de adaptación y búsqueda de vías de desarrollo propias. Esta resiliencia, combinada con el ingenio nacional, es la garantía del progreso tecnológico futuro de la nación.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="image-placeholder">
+                    <!-- Espacio para imagen futura -->
+                    <div class="placeholder-box d-flex align-items-center justify-content-center">
+                        <i class="fas fa-rocket fa-3x text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

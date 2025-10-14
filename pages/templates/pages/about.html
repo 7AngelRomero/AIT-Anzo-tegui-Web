@@ -1,7 +1,90 @@
 {% extends "pages/layouts/_base.html" %}
+{% load static %}
+
+{% block title %}Acerca de AIT - Anzoátegui{% endblock %}
 
 {% block content %}
+    <!-- Video Live Section -->
+    <div class="video-live-section mb-5">
+        <div class="video-container">
+            <div class="ratio ratio-16x9">
+                <iframe 
+                    src="https://www.youtube.com/embed/LIVE_STREAM_ID" 
+                    title="Transmisión en Vivo" 
+                    allowfullscreen>
+                </iframe>
+            </div>
+            <div class="video-overlay d-flex align-items-end">
+                <div class="video-info p-4">
+                    <h3 class="text-white fw-bold mb-2">Transmisión en Vivo</h3>
+                    <p class="text-white-50 mb-0">Sigue las últimas actualizaciones y anuncios importantes</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<h1>Quienes Somos?</h1>
+    <div class="container container-custom my-5">
+        <!-- Hero Section -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="text-start">
+                    <h1 class="display-4 fw-bold text-primary mb-3">Acerca de AIT</h1>
+                    <p class="lead text-muted">Agencia de Innovación Tecnológica del Estado Anzoátegui</p>
+                </div>
+            </div>
+        </div>
 
-{% endblock%}
+        <!-- Sección 1 - ¿Quiénes somos? - Izquierda -->
+        <div class="row mb-5 align-items-center">
+            <div class="col-lg-8">
+                <div class="content-section">
+                    <h3 class="fw-bold text-dark mb-3">¿Quiénes somos?</h3>
+                    <p class="text-justify">Nos encargamos de garantizar el establecimiento y mantenimiento de la tecnología informática requerida por las dependencias de la gobernación del estado Anzoátegui, permitiendo la generación oportuna en apoyo a la gestión gubernamental.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="image-placeholder">
+                    <div class="d-flex align-items-center justify-content-center h-100">
+                        <img src="{% static 'SVG/AIT Full no backg.svg' %}" alt="Logo AIT" class="img-fluid" style="max-width: 250px; height: auto;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección 2 - Misión - Derecha -->
+        <div class="row mb-5 align-items-center">
+            <div class="col-lg-4 order-lg-1">
+                <div class="image-placeholder">
+                    <!-- Espacio para imagen futura -->
+                    <div class="placeholder-box d-flex align-items-center justify-content-center">
+                        <i class="fas fa-target fa-3x text-muted"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8 order-lg-2">
+                <div class="content-section">
+                    <h3 class="fw-bold text-dark mb-3">Misión</h3>
+                    <p class="text-justify">Nuestra misión no es más que impulsar la eficiencia y transparencia de la gestión pública del estado Anzoátegui, mediante el uso de las tecnologías libres y estándares abiertos como sistema para facilitar la participación ciudadana.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección 3 - Visión - Izquierda -->
+        <div class="row mb-5 align-items-center">
+            <div class="col-lg-8">
+                <div class="content-section">
+                    <h3 class="fw-bold text-dark mb-3">Visión</h3>
+                    <p class="text-justify">Nosotros en AIT nos visualizamos como un órgano de la gobernación del estado Anzoátegui de amplio reconocimiento por su eficaz y eficiente aporte a la plataforma tecnológica, a través de la implementación de tecnologías libres y estándares abiertos que promuevan la apropiación social del conocimiento y la preservación de los recursos naturales.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="image-placeholder">
+                    <!-- Espacio para imagen futura -->
+                    <div class="placeholder-box d-flex align-items-center justify-content-center">
+                        <i class="fas fa-eye fa-3x text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
