@@ -1,17 +1,20 @@
-{% extends "pages/layouts/_base.html" %}
+{% extends "pages/layouts/_base_clean.html" %}
 {% load static %}
 
 {% block title %}Iniciar Sesión - AIT{% endblock %}
 
 {% block content %}
-    <div class="container my-5">
+    <div class="container my-5 login-page">
         <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-8 col-lg-5">
                 <div class="card shadow-lg border-0">
                     <div class="card-body p-4">
-                        <div class="text-center mb-4">
-                            <h2 class="card-title fw-bold text-primary">Iniciar Sesión</h2>
-                            <p class="text-muted">Acceso para administradores</p>
+                        <div class="d-flex align-items-center mb-4">
+                            <img src="{% static 'SVG/AIT Full no backg.svg' %}" alt="Logo AIT" class="login-logo me-3">
+                            <div>
+                                <h2 class="card-title fw-bold text-primary mb-1">Iniciar Sesión</h2>
+                                <p class="text-muted mb-0">Acceso para administradores</p>
+                            </div>
                         </div>
                         
                         <form method="post">

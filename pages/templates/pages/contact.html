@@ -1,7 +1,45 @@
 {% extends "pages/layouts/_base.html" %}
+{% load static %}
 
 {% block content %}
+<!-- Mapa de Google Maps -->
+<div class="contact-map-section">
+    <iframe 
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1388.5849880827366!2d-64.68887865749358!3d10.139017184657012!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8c2d72ebe7a434b5%3A0xbbf742e5f7915c2!2sGobernaci%C3%B3n%20del%20Estado%20Anzo%C3%A1tegui!5e0!3m2!1ses-419!2sus!4v1760757006469!5m2!1ses-419!2sus"
+        width="100%" 
+        height="500" 
+        style="border:0;" 
+        allowfullscreen="" 
+        loading="lazy" 
+        referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+</div>
 
-<h1>este es nuesto contacto</h1>
-
+<!-- Información de contacto en 3 flexbox -->
+<div class="contact-info-section">
+    <div class="contact-flexbox">
+        <div class="contact-box">
+            <h3>Información</h3>
+            <p>Nosotros en AIT nos visualizamos como un órgano de la gobernación del estado Anzoátegui de amplio reconocimiento por su eficaz y eficiente aporte a la plataforma tecnológica, a través de la implementación de tecnologías libres y estándares abiertos que promuevan la apropiación social del conocimiento y la preservación de los recursos naturales.</p>
+        </div>
+        
+        <div class="contact-box">
+            <h3>Dirección</h3>
+            <p>Av. 5 de Julio. <br> Código Postal: Barcelona 6001. <br> Anzoátegui – Venezuela</p>
+        </div>
+        
+        <div class="contact-box">
+            <h3>Contacto</h3>
+            <p><strong>Email:</strong><br>aitanzoátegui@gmail.com</p>
+            <div class="social-links mt-3">
+                <a href="https://www.instagram.com/aitanzoategui/" target="_blank" class="social-link">
+                    <img src="{% static 'SVG/Instagram.svg' %}" alt="Instagram" class="social-icon-contact">
+                </a>
+                <a href="https://x.com/aitanzoategui" target="_blank" class="social-link">
+                    <img src="{% static 'SVG/XTwitter.svg' %}" alt="Twitter" class="social-icon-contact">
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock%}
