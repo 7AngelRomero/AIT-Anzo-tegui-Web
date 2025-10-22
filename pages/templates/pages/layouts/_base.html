@@ -15,12 +15,12 @@
     <!-- Custom CSS (debe ir DESPUÉS de Bootstrap) -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
-<header>
-    <div class="svg-container">
-        <img src="{% static 'SVG/GOB AIT White_2.svg' %}" class="svg_ait" alt="Logo AIT">
-    </div>
-</header>
 <body>
+    <header>
+        <div class="svg-container">
+            <img src="{% static 'SVG/GOB AIT White_2.svg' %}" class="svg_ait" alt="Logo AIT">
+        </div>
+    </header>
     <nav class="navbar navbar-expand-lg custom-navbar">
         <div class="container custom-nav-container">
             <!-- Botón hamburguesa para móvil -->
@@ -32,19 +32,19 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}" style="color: white !important; font-weight: bold;">Inicio</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">Inicio</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'about' %}" style="color: white !important; font-weight: bold;">Acerca de AIT</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}" href="{% url 'about' %}">Acerca de AIT</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="https://anzoategui.gob.ve/" style="color: white !important; font-weight: bold;">La Gobernación</a>
+                        <a class="nav-link" href="https://anzoategui.gob.ve/">La Gobernación</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'poll_list' %}" style="color: white !important; font-weight: bold;">Encuestas</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'poll_list' %}active{% endif %}" href="{% url 'poll_list' %}">Encuestas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'contact'%}" style="color: white !important; font-weight: bold;">Contacto</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}" href="{% url 'contact'%}">Contacto</a>
                     </li>
                 </ul>
                 
