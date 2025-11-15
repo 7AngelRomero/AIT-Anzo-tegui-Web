@@ -1,0 +1,238 @@
+{% extends "pages/layouts/_base.html" %}
+{% load static %}
+
+{% block title %}Resultados - {{ poll.title }} - AIT{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="container mt-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'posts:poll_list' %}">Encuestas</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'posts:poll_manager' %}">Gestión</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Resultados: {{ poll.title }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="fas fa-chart-bar fa-2x me-3" style="color: #184da1;"></i>
+                        <div>
+                            <h2 class="card-title fw-bold mb-1" style="color: #184da1;">Resultados de la Encuesta</h2>
+                            <h4 class="text-muted">{{ poll.title }}</h4>
+                        </div>
+                    </div>
+                    
+                    {% if poll.description %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>{{ poll.description }}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Estadísticas Generales -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-users fa-2x mb-2"></i>
+                                    <h3>{{ total_participations }}</h3>
+                                    <p class="mb-0">Participaciones</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-question-circle fa-2x mb-2"></i>
+                                    <h3>{{ poll.preguntas.count }}</h3>
+                                    <p class="mb-0">Preguntas</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-calendar-alt fa-2x mb-2"></i>
+                                    <h3>{{ poll.star_date|date:"d/m" }}</h3>
+                                    <p class="mb-0">Fecha Inicio</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-flag fa-2x mb-2"></i>
+                                    <h3>{{ poll.get_status_display }}</h3>
+                                    <p class="mb-0">Estado</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Resultados por Pregunta -->
+                    {% for question in poll.preguntas.all %}
+                    <div class="card mb-4">
+                        <div class="card-header" style="background-color: #f8f9fa;">
+                            <h5 class="mb-0 fw-bold" style="color: #184da1;">
+                                <i class="fas fa-question-circle me-2"></i>
+                                Pregunta {{ forloop.counter }}: {{ question.question_text }}
+                            </h5>
+                            <small class="text-muted">
+                                Tipo: {{ question.get_question_type_display }} | 
+                                {% if question.is_obligatory %}Obligatoria{% else %}Opcional{% endif %}
+                            </small>
+                        </div>
+                        <div class="card-body">
+                            {% if question.question_type == 'SELECCION_MULTIPLE' %}
+                                <!-- Gráfico para Selección Múltiple -->
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        {% for option in question.opciones.all %}
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="fw-semibold">{{ option.options_text }}</span>
+                                                <span class="badge bg-primary">{{ option.response_count }} respuesta{{ option.response_count|pluralize:"s" }}</span>
+                                            </div>
+                                            <div class="progress" style="height: 25px;">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     style="width: {{ option.percentage }}%; background-color: #184da1;" 
+                                                     aria-valuenow="{{ option.percentage }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                    {{ option.percentage|floatformat:1 }}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <canvas id="chart-{{ question.id }}" width="200" height="200"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            
+                            {% elif question.question_type == 'TEXTO_LIBRE' %}
+                                <!-- Respuestas de Texto Libre -->
+                                <div class="alert alert-light">
+                                    <strong>{{ question.text_responses.count }}</strong> respuesta{{ question.text_responses.count|pluralize:"s" }} de texto libre
+                                </div>
+                                {% if question.text_responses %}
+                                <div class="accordion" id="accordion-{{ question.id }}">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                                    data-bs-target="#collapse-{{ question.id }}">
+                                                Ver todas las respuestas
+                                            </button>
+                                        </h2>
+                                        <div id="collapse-{{ question.id }}" class="accordion-collapse collapse" 
+                                             data-bs-parent="#accordion-{{ question.id }}">
+                                            <div class="accordion-body">
+                                                {% for response in question.text_responses %}
+                                                <div class="border-start border-primary ps-3 mb-2">
+                                                    <small class="text-muted">{{ response.participation.user.username }} - {{ response.participation.sent_date|date:"d/m/Y H:i" }}</small>
+                                                    <p class="mb-0">{{ response.answer_text }}</p>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            
+                            {% elif question.question_type == 'ESCALA_NUMERICA' %}
+                                <!-- Resultados de Escala Numérica -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="text-center mb-3">
+                                            <h3 class="display-4 fw-bold" style="color: #184da1;">{{ question.average_rating|floatformat:1 }}</h3>
+                                            <p class="text-muted">Promedio de calificación</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            {% for i in "12345" %}
+                                            <div class="text-center mx-2">
+                                                <div class="badge bg-secondary mb-1">{{ forloop.counter }}</div>
+                                                <div class="small">{{ question.rating_counts|slice:forloop.counter0|slice:":1"|first|default:0 }}</div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'posts:poll_manager' %}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-2"></i>Volver a Gestión
+                        </a>
+                        <button class="btn btn-success" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>Imprimir Resultados
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Crear gráficos circulares para preguntas de selección múltiple
+{% for question in poll.preguntas.all %}
+    {% if question.question_type == 'SELECCION_MULTIPLE' %}
+    const ctx{{ question.id }} = document.getElementById('chart-{{ question.id }}').getContext('2d');
+    new Chart(ctx{{ question.id }}, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for option in question.opciones.all %}'{{ option.options_text|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for option in question.opciones.all %}{{ option.response_count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: [
+                    '#184da1', '#2D64BB', '#3498db', '#27ae60', '#f39c12', 
+                    '#e74c3c', '#9b59b6', '#1abc9c', '#34495e', '#95a5a6'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    {% endif %}
+{% endfor %}
+</script>
+
+<style>
+@media print {
+    .btn, .accordion-button {
+        display: none !important;
+    }
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+    transition: all 0.3s ease;
+}
+</style>
+{% endblock %}

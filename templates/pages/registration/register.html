@@ -1,0 +1,132 @@
+{% extends "pages/layouts/_base_clean.html" %}
+{% load static %}
+
+{% block title %}Registro - AIT Anzoátegui{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0">
+                <div class="row g-0">
+                    <!-- Panel de información -->
+                    <div class="col-md-5" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%);">
+                        <div class="p-5 text-white h-100 d-flex flex-column justify-content-center">
+                            <div class="text-center mb-4">
+                                <img src="{% static 'SVG/GOB AIT White_2.svg' %}" alt="Logo AIT" style="max-width: 200px; width: 100%;">
+                            </div>
+                            
+                            <h3 class="fw-bold mb-4">Información de Registro</h3>
+                            
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="fas fa-poll fa-lg me-3"></i>
+                                    <span>Para participar en nuestras encuestas e interactuar con nuestros posts debe primero crearse una cuenta. <br> <br> Contribuye al desarrollo Tecnológico Participando en encuestas exclusivas y aportando conocimiento a la comunidad.</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <small class="opacity-75">
+                                    <i class="fas fa-map-marker-alt me-2"></i>
+                                    Av. 5 de Julio, Barcelona 6001, Anzoátegui
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Formulario de registro -->
+                    <div class="col-md-7">
+                        <div class="p-5">
+                            <div class="mb-4">
+                                <h2 class="fw-bold mb-2" style="color: #184da1;">Crear Cuenta</h2>
+                                <p class="text-muted">Completa el formulario para registrarte</p>
+                            </div>
+                            
+                            <form method="post" class="login-form">
+                                {% csrf_token %}
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="username" class="form-label fw-semibold">Usuario *</label>
+                                        <input type="text" class="form-control form-input" id="username" name="username" required>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="email" class="form-label fw-semibold">Email *</label>
+                                        <input type="email" class="form-control form-input" id="email" name="email" required>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="first_name" class="form-label fw-semibold">Nombre *</label>
+                                        <input type="text" class="form-control form-input" id="first_name" name="first_name" required>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="last_name" class="form-label fw-semibold">Apellido *</label>
+                                        <input type="text" class="form-control form-input" id="last_name" name="last_name" required>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="password1" class="form-label fw-semibold">Contraseña *</label>
+                                        <input type="password" class="form-control form-input" id="password1" name="password1" required>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="password2" class="form-label fw-semibold">Confirmar Contraseña *</label>
+                                        <input type="password" class="form-control form-input" id="password2" name="password2" required>
+                                    </div>
+                                </div>
+                                
+                                <!-- Términos y condiciones -->
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                                    <label class="form-check-label" for="terms">
+                                        Acepto los <a href="#" class="text-decoration-none" style="color: #184da1;" data-bs-toggle="modal" data-bs-target="#termsModal">Términos y Condiciones</a> y la <a href="#" class="text-decoration-none" style="color: #184da1;">Política de Privacidad</a> *
+                                    </label>
+                                </div>
+                                
+                                <button type="submit" class="login-submit-btn mt-4 w-100">Crear Cuenta</button>
+                            </form>
+                            
+                            <div class="text-center mt-4">
+                                <p class="text-muted">¿Ya tienes cuenta? <a href="{% url 'login' %}" class="text-decoration-none" style="color: #184da1;">Inicia sesión aquí</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Términos y Condiciones -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #184da1; color: white;">
+                <h5 class="modal-title">Términos y Condiciones</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6 class="fw-bold">1. Aceptación de los Términos</h6>
+                <p>Al registrarte en la plataforma de AIT Anzoátegui, aceptas cumplir con estos términos y condiciones.</p>
+                
+                <h6 class="fw-bold">2. Uso de la Plataforma</h6>
+                <p>Esta plataforma está destinada exclusivamente para la participación en encuestas oficiales de la Agencia de Innovación Tecnológica del Estado Anzoátegui.</p>
+                
+                <h6 class="fw-bold">3. Información Personal</h6>
+                <p>La información proporcionada será utilizada únicamente para fines estadísticos y de mejora de servicios. No será compartida con terceros sin tu consentimiento.</p>
+                
+                <h6 class="fw-bold">4. Responsabilidades del Usuario</h6>
+                <p>Te comprometes a proporcionar información veraz y a utilizar la plataforma de manera responsable.</p>
+                
+                <h6 class="fw-bold">5. Modificaciones</h6>
+                <p>AIT Anzoátegui se reserva el derecho de modificar estos términos en cualquier momento.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

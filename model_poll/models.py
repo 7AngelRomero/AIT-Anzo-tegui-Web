@@ -32,6 +32,18 @@ class User(AbstractUser):
         # Opcional: Sincronizar nombre_completo con first_name y last_name
         if not self.full_name:
             self.full_name = f"{self.first_name} {self.last_name}".strip()
+        
+        # Asignar rol según tipo de usuario
+        if not self.rol:
+            if self.is_superuser or self.is_staff:
+                # Superusuarios y staff tienen rol de Administrador
+                admin_role, created = Rol.objects.get_or_create(name='Administrador')
+                self.rol = admin_role
+            else:
+                # Usuarios normales tienen rol de Usuario
+                user_role, created = Rol.objects.get_or_create(name='Usuario')
+                self.rol = user_role
+        
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -50,6 +62,7 @@ class Poll(models.Model):
 
     title = models.CharField(max_length=30)
     description = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='polls/', blank=True, null=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.BORRADOR)
     star_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(null=True, blank=True, help_text="Opcional: Dejar en blanco si no hay fecha límite")
@@ -67,24 +80,24 @@ class Question(models.Model):
         CASILLA_VERIFICACION = 'CASILLA_VERIFICACION', 'Casilla de Verificación (Checkbox)'
         ESCALA_NUMERICA = 'ESCALA_NUMERICA', 'Escala Numérica (1-5)'
 
-    Poll = models.ForeignKey(Poll, on_delete=models.CASCADE, related_name="Preguntas")
+    poll = models.ForeignKey(Poll, on_delete=models.CASCADE, related_name="preguntas")
     question_text = models.TextField()
     question_type = models.CharField(max_length=50, choices=QuestionType.choices)
     is_obligatory = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=0, help_text="Orden de las preguntas (0, 1, 2 ...)")
 
     class Meta:
-        ordering = ['orden'] # Ordena las preguntas por defecto según el campo 'orden'
+        ordering = ['order'] # Ordena las preguntas por defecto según el campo 'order'
 
     def __str__(self):
         return f"{self.poll.title} - Pregunta {self.order}: {self.question_text[:30]}..."
     
 
-### Tabla de las preguntas
+### Tabla de las opciones
 
-class Options():
+class Options(models.Model):
     
-    Question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="Opciones")
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="opciones")
     options_text = models.CharField(max_length=255)
     value = models.IntegerField(null=True, blank=True, help_text="Valor numérico opcional para análisis")
 
@@ -96,27 +109,27 @@ class Options():
 
 class Participation(models.Model):
 
-    Poll = models.ForeignKey(Poll, on_delete=models.CASCADE, related_name="Participaciones")
-    User = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="Participaciones")
+    poll = models.ForeignKey(Poll, on_delete=models.CASCADE, related_name="participaciones")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="participaciones")
     sent_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('encuesta', 'usuario')
+        unique_together = ('poll', 'user')
 
     def __str__(self):
         return f"Participación de {self.user.username} en {self.poll.title}"
 
 
-class QuestionDetails(models.model):
+class QuestionDetails(models.Model):
 
-    Participation = models.ForeignKey(Participation, on_delete=models.CASCADE, related_name="Respuestas")
-    Question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="Respuestas")
+    participation = models.ForeignKey(Participation, on_delete=models.CASCADE, related_name="respuestas")
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="respuestas")
     selected_options = models.ForeignKey(Options, on_delete=models.SET_NULL, null=True, blank=True)
     answer_text = models.TextField(null=True, blank=True)
 
     class Meta:
         # Solo una respuesta por pregunta por participación
-        unique_together = ('participacion', 'pregunta')
+        unique_together = ('participation', 'question')
 
     def __str__(self):
         return f"Respuesta a Pregunta ID {self.question.id} (Participación ID {self.participation.id})"

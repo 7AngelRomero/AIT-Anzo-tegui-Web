@@ -131,4 +131,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Modelo de usuario personalizado
 AUTH_USER_MODEL = 'model_poll.User'
+
+# URL de login para redireccionar usuarios no autenticados
+LOGIN_URL = '/login/'
