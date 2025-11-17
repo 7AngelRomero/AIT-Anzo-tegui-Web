@@ -43,9 +43,9 @@ def poll_manager(request):
         if role_filter:
             users = users.filter(rol__name=role_filter)
             
-    # Trabajador: Solo ve sus propias encuestas
+    # Trabajador: Ve todas las encuestas pero solo puede editar las suyas
     else:
-        polls = Poll.objects.filter(created_by=request.user).order_by('-star_date')
+        polls = Poll.objects.all().order_by('-star_date')
         users = None
     
     return render(request, 'posts/poll_manager.html', {'polls': polls, 'users': users})

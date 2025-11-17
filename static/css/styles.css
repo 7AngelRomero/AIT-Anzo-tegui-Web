@@ -13,7 +13,7 @@ body {
 
 /* Footer Bootstrap personalizado */
 .custom-footer {
-    background: #2D64BB !important;
+    background: linear-gradient(135deg,  #101e35 0%, #162a4d 50%, #10346e 100%) !important;
     padding: 2rem 0 !important;
     color: #ffffff !important;
     margin-top: 3rem !important;
