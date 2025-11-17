@@ -31,69 +31,29 @@
         </div>
     </div>
 
-    {% if polls %}
-        <div class="row g-4 mb-5">
+    <!-- Contenedor React para manager mejorado -->
+    <div id="poll-manager-react"></div>
+    
+    <!-- Datos para React (ocultos) -->
+    <script type="application/json" id="manager-poll-data">
+        [
             {% for poll in polls %}
-                <div class="col-lg-4 col-md-6">
-                    <div class="card h-100 border-0 shadow-sm hover-card">
-                        <div class="card-body d-flex flex-column">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <h5 class="card-title fw-bold" style="color: #184da1;">{{ poll.title }}</h5>
-                                <span class="badge {% if poll.status == 'ACTIVA' %}bg-success{% elif poll.status == 'BORRADOR' %}bg-warning{% else %}bg-secondary{% endif %}">
-                                    {{ poll.get_status_display }}
-                                </span>
-                            </div>
-                            
-                            {% if poll.description %}
-                                <p class="card-text text-muted flex-grow-1">{{ poll.description|truncatewords:15 }}</p>
-                            {% endif %}
-                            
-                            <div class="d-flex justify-content-between align-items-center mb-3 text-muted small">
-                                <span>
-                                    <i class="fas fa-calendar-alt me-1"></i>
-                                    {{ poll.star_date|date:"d/m/Y" }}
-                                </span>
-                                <span>
-                                    <i class="fas fa-question-circle me-1"></i>
-                                    {{ poll.preguntas.count }} pregunta{{ poll.preguntas.count|pluralize:"s" }}
-                                </span>
-                            </div>
-                            
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <a href="{% url 'posts:edit_poll' poll.id %}" class="btn btn-outline-primary btn-sm w-100">
-                                        <i class="fas fa-edit me-1"></i>Editar
-                                    </a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="{% url 'posts:poll_results' poll.id %}" class="btn btn-info btn-sm w-100">
-                                        <i class="fas fa-chart-bar me-1"></i>Resultados
-                                    </a>
-                                </div>
-                                {% if user.rol.name == 'Administrador' %}
-                                <div class="col-12">
-                                    <a href="{% url 'posts:delete_poll' poll.id %}" class="btn btn-outline-danger btn-sm w-100">
-                                        <i class="fas fa-trash me-1"></i>Eliminar
-                                    </a>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            {
+                "id": {{ poll.id }},
+                "title": "{{ poll.title|escapejs }}",
+                "description": "{{ poll.description|escapejs }}",
+                "status": "{{ poll.status }}",
+                "star_date": "{{ poll.star_date|date:'c' }}",
+                "questions_count": {{ poll.preguntas.count }},
+                "responses_count": {{ poll.participaciones.count }}
+            }{% if not forloop.last %},{% endif %}
             {% endfor %}
-        </div>
-    {% else %}
-        <div class="row mb-5">
-            <div class="col-12">
-                <div class="text-center py-5">
-                    <i class="fas fa-poll fa-4x text-muted mb-4"></i>
-                    <h3 class="text-muted">No hay encuestas creadas</h3>
-                    <p class="text-muted">Crea tu primera encuesta para comenzar.</p>
-                </div>
-            </div>
-        </div>
-    {% endif %}
+        ]
+    </script>
+    
+    <script type="text/javascript">
+        window.userRole = "{{ user.rol.name }}";
+    </script>
 
     <!-- Sección de Gestión de Usuarios (Solo Administradores) -->
     {% if user.rol.name == 'Administrador' %}
@@ -105,109 +65,44 @@
         </div>
     </div>
     
-    <!-- Filtros de búsqueda -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <form method="get" class="row g-3">
-                        <div class="col-md-6">
-                            <label for="search" class="form-label fw-semibold">Buscar Usuario</label>
-                            <input type="text" class="form-control" id="search" name="search" 
-                                   value="{{ request.GET.search }}" 
-                                   placeholder="Nombre, apellido, usuario o email...">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="role" class="form-label fw-semibold">Filtrar por Rol</label>
-                            <select class="form-select" id="role" name="role">
-                                <option value="">Todos los roles</option>
-                                <option value="Usuario" {% if request.GET.role == 'Usuario' %}selected{% endif %}>Usuario</option>
-                                <option value="Trabajador" {% if request.GET.role == 'Trabajador' %}selected{% endif %}>Trabajador</option>
-                                <option value="Administrador" {% if request.GET.role == 'Administrador' %}selected{% endif %}>Administrador</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end gap-2">
-                            <button type="submit" class="btn btn-primary flex-fill">
-                                <i class="fas fa-search me-1"></i>Buscar
-                            </button>
-                            <a href="{% url 'posts:poll_manager' %}" class="btn btn-outline-secondary" title="Limpiar filtros">
-                                <i class="fas fa-times"></i>
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    {% if users %}
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <small class="text-muted">
-                            <i class="fas fa-users me-1"></i>
-                            Mostrando {{ users|length }} usuario{{ users|length|pluralize:"s" }}
-                            {% if request.GET.search or request.GET.role %}
-                                (filtrado{{ users|length|pluralize:",s" }})
-                            {% endif %}
-                        </small>
-                    </div>
-                    {% endif %}
-                    
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Usuario</th>
-                                    <th>Nombre Completo</th>
-                                    <th>Email</th>
-                                    <th>Rol Actual</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if users %}
-                                {% for usuario in users %}
-                                <tr>
-                                    <td><strong>{{ usuario.username }}</strong></td>
-                                    <td>{{ usuario.first_name }} {{ usuario.last_name }}</td>
-                                    <td>{{ usuario.email }}</td>
-                                    <td>
-                                        <span class="badge {% if usuario.rol.name == 'Administrador' %}bg-danger{% elif usuario.rol.name == 'Trabajador' %}bg-warning{% else %}bg-info{% endif %}">
-                                            {{ usuario.rol.name|default:"Sin rol" }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
-                                                Cambiar Rol
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li><a class="dropdown-item" href="{% url 'posts:change_user_role' usuario.id 'Usuario' %}">Usuario</a></li>
-                                                <li><a class="dropdown-item" href="{% url 'posts:change_user_role' usuario.id 'Trabajador' %}">Trabajador</a></li>
-                                                <li><a class="dropdown-item" href="{% url 'posts:change_user_role' usuario.id 'Administrador' %}">Administrador</a></li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                                {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">
-                                        <i class="fas fa-search fa-2x mb-2 d-block"></i>
-                                        No se encontraron usuarios con los criterios de búsqueda.
-                                    </td>
-                                </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Contenedor React para gestión de usuarios -->
+    <div id="user-management-react"></div>
+    
+    <!-- Datos de usuarios para React (ocultos) -->
+    <script type="application/json" id="user-data">
+        [
+            {% for usuario in users %}
+            {
+                "id": {{ usuario.id }},
+                "username": "{{ usuario.username|escapejs }}",
+                "first_name": "{{ usuario.first_name|escapejs }}",
+                "last_name": "{{ usuario.last_name|escapejs }}",
+                "email": "{{ usuario.email|escapejs }}",
+                "date_joined": "{{ usuario.date_joined|date:'c' }}",
+                "rol": {% if usuario.rol %}{"name": "{{ usuario.rol.name|escapejs }}"}{% else %}null{% endif %}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    </script>
     {% endif %}
 </div>
+
+<!-- Componentes React -->
+<script type="text/babel" src="{% static 'js/react/PollManagerEnhanced.js' %}"></script>
+<script type="text/babel" src="{% static 'js/react/UserManagementEnhanced.js' %}"></script>
+<script type="text/babel">
+    // Obtener datos de Django
+    const managerPollData = JSON.parse(document.getElementById('manager-poll-data').textContent);
+    
+    // Renderizar componente React para encuestas
+    const pollManagerRoot = ReactDOM.createRoot(document.getElementById('poll-manager-react'));
+    pollManagerRoot.render(<PollManagerEnhanced initialPolls={managerPollData} userRole={window.userRole} />);
+    
+    // Renderizar componente React para usuarios (solo administradores)
+    if (window.userRole === 'Administrador') {
+        const userData = JSON.parse(document.getElementById('user-data').textContent);
+        const userManagementRoot = ReactDOM.createRoot(document.getElementById('user-management-react'));
+        userManagementRoot.render(<UserManagementEnhanced initialUsers={userData} />);
+    }
+</script>
 {% endblock %}
