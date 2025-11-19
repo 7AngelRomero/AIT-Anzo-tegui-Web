@@ -9,8 +9,8 @@ from django.conf import settings
 ### Tabla de Roles
 
 class Rol(models.Model):
-    name = models.CharField(max_length=25, unique=True, help_text="Adminitrador, Trabajador, Usuario")
-    descripcion = models.TextField(blank=True, null=True)
+    name = models.CharField(max_length=50, unique=True, help_text="Administrador, Trabajador, Usuario")
+    descripcion = models.TextField(blank=True, null=True, default='')
 
     def __str__(self):
         return self.name
@@ -23,7 +23,7 @@ class Rol(models.Model):
 
 class User(AbstractUser):
 
-    full_name = models.CharField(max_length=255, blank=True)
+    full_name = models.CharField(max_length=255, blank=True, default='')
         
     # Relación con el Rol
     rol = models.ForeignKey(Rol, on_delete=models.SET_NULL, null=True, blank=True, related_name="usuarios")
@@ -60,8 +60,8 @@ class Poll(models.Model):
         
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="encuestas_creadas")
 
-    title = models.CharField(max_length=30)
-    description = models.TextField(blank=True, null=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True, default='')
     image = models.ImageField(upload_to='polls/', blank=True, null=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.BORRADOR)
     star_date = models.DateTimeField(auto_now_add=True)
@@ -125,7 +125,7 @@ class QuestionDetails(models.Model):
     participation = models.ForeignKey(Participation, on_delete=models.CASCADE, related_name="respuestas")
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="respuestas")
     selected_options = models.ForeignKey(Options, on_delete=models.SET_NULL, null=True, blank=True)
-    answer_text = models.TextField(null=True, blank=True)
+    answer_text = models.TextField(null=True, blank=True, default='')
 
     class Meta:
         # Solo una respuesta por pregunta por participación

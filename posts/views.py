@@ -236,20 +236,38 @@ def edit_poll(request, poll_id):
 @login_required
 def change_user_role(request, user_id, new_role):
     """Vista para cambiar rol de usuario - Solo Administradores"""
+    from django.http import JsonResponse
+    
     if not request.user.rol or request.user.rol.name != 'Administrador':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'No tienes permisos para cambiar roles.'})
         return HttpResponseForbidden("No tienes permisos para cambiar roles.")
     
     user = get_object_or_404(User, id=user_id)
     
     # Evitar que los administradores se cambien el rol a sí mismos
     if user.id == request.user.id:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'No puedes cambiar tu propio rol por seguridad.'})
         messages.error(request, 'No puedes cambiar tu propio rol por seguridad.')
         return redirect('posts:poll_manager')
     
-    role = get_object_or_404(Rol, name=new_role)
+    try:
+        role = Rol.objects.get(name=new_role)
+    except Rol.DoesNotExist:
+        # Crear el rol si no existe
+        role = Rol.objects.create(name=new_role, descripcion=f'Rol {new_role}')
     
     user.rol = role
     user.save()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True, 
+            'message': f'Rol de {user.username} cambiado a {new_role} exitosamente.',
+            'user_id': user.id,
+            'new_role': new_role
+        })
     
     messages.success(request, f'Rol de {user.username} cambiado a {new_role} exitosamente.')
     return redirect('posts:poll_manager')
