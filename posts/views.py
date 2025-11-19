@@ -240,6 +240,12 @@ def change_user_role(request, user_id, new_role):
         return HttpResponseForbidden("No tienes permisos para cambiar roles.")
     
     user = get_object_or_404(User, id=user_id)
+    
+    # Evitar que los administradores se cambien el rol a sí mismos
+    if user.id == request.user.id:
+        messages.error(request, 'No puedes cambiar tu propio rol por seguridad.')
+        return redirect('posts:poll_manager')
+    
     role = get_object_or_404(Rol, name=new_role)
     
     user.rol = role

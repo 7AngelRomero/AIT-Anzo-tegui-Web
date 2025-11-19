@@ -1,4 +1,4 @@
-// Componente React para gestión de usuarios mejorada
+// Componente React para gestión de usuarios mejorada - Versión corregida URLs
 const { useState, useEffect } = React;
 
 const UserManagementEnhanced = ({ initialUsers }) => {
@@ -125,6 +125,8 @@ const UserManagementEnhanced = ({ initialUsers }) => {
 
     // Componente de fila de usuario (tabla compacta)
     const UserRow = ({ user }) => {
+        // Obtener ID del usuario actual desde el contexto global
+        const currentUserId = window.currentUserId;
         const getRoleInfo = (roleName) => {
             const roleMap = {
                 'Administrador': { class: 'bg-danger', icon: 'fas fa-user-shield' },
@@ -164,32 +166,38 @@ const UserManagementEnhanced = ({ initialUsers }) => {
                     </small>
                 </td>
                 <td>
-                    <div className="dropdown">
-                        <button 
-                            className="btn btn-sm btn-outline-primary dropdown-toggle" 
-                            type="button" 
-                            data-bs-toggle="dropdown"
-                        >
-                            <i className="fas fa-user-cog me-1"></i>Cambiar
-                        </button>
-                        <ul className="dropdown-menu">
-                            <li>
-                                <a className="dropdown-item" href={`/polls/users/${user.id}/role/Usuario/`}>
-                                    <i className="fas fa-user me-2 text-info"></i>Usuario
-                                </a>
-                            </li>
-                            <li>
-                                <a className="dropdown-item" href={`/polls/users/${user.id}/role/Trabajador/`}>
-                                    <i className="fas fa-user-tie me-2 text-warning"></i>Trabajador
-                                </a>
-                            </li>
-                            <li>
-                                <a className="dropdown-item" href={`/polls/users/${user.id}/role/Administrador/`}>
-                                    <i className="fas fa-user-shield me-2 text-danger"></i>Administrador
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+                    {currentUserId && user.id === currentUserId ? (
+                        <span className="badge bg-secondary px-3 py-2">
+                            <i className="fas fa-lock me-1"></i>Tu cuenta
+                        </span>
+                    ) : (
+                        <div className="dropdown">
+                            <button 
+                                className="btn btn-sm btn-outline-primary dropdown-toggle" 
+                                type="button" 
+                                data-bs-toggle="dropdown"
+                            >
+                                <i className="fas fa-user-cog me-1"></i>Cambiar
+                            </button>
+                            <ul className="dropdown-menu">
+                                <li>
+                                    <a className="dropdown-item" href={`/polls/user/${user.id}/role/Usuario/`}>
+                                        <i className="fas fa-user me-2 text-info"></i>Usuario
+                                    </a>
+                                </li>
+                                <li>
+                                    <a className="dropdown-item" href={`/polls/user/${user.id}/role/Trabajador/`}>
+                                        <i className="fas fa-user-tie me-2 text-warning"></i>Trabajador
+                                    </a>
+                                </li>
+                                <li>
+                                    <a className="dropdown-item" href={`/polls/user/${user.id}/role/Administrador/`}>
+                                        <i className="fas fa-user-shield me-2 text-danger"></i>Administrador
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    )}
                 </td>
             </tr>
         );

@@ -4,6 +4,9 @@
 {% block title %}Gestión - AIT{% endblock %}
 
 {% block content %}
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <!-- Breadcrumb -->
 <div class="container mt-3">
     <nav aria-label="breadcrumb">
@@ -53,6 +56,7 @@
     
     <script type="text/javascript">
         window.userRole = "{{ user.rol.name }}";
+        window.currentUserId = {{ user.id }};
     </script>
 
     <!-- Sección de Gestión de Usuarios (Solo Administradores) -->
@@ -88,8 +92,8 @@
 </div>
 
 <!-- Componentes React -->
-<script type="text/babel" src="{% static 'js/react/PollManagerEnhanced.js' %}"></script>
-<script type="text/babel" src="{% static 'js/react/UserManagementEnhanced.js' %}"></script>
+<script type="text/babel" src="{% static 'js/react/PollManagerEnhanced.js' %}?v={% now 'U' %}"></script>
+<script type="text/babel" src="{% static 'js/react/UserManagementEnhanced.js' %}?v={% now 'U' %}"></script>
 <script type="text/babel">
     // Obtener datos de Django
     const managerPollData = JSON.parse(document.getElementById('manager-poll-data').textContent);
