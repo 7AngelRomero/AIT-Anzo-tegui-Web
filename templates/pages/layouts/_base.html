@@ -65,8 +65,27 @@
                 <!-- Enlaces de login/logout a la derecha -->
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">Cerrar Sesión</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                                <div class="profile-avatar me-2">
+                                    {% if user.profile_image %}
+                                        <img src="{{ user.profile_image.url }}" alt="Perfil" class="rounded-circle" width="32" height="32">
+                                    {% else %}
+                                        <i class="fas fa-user-circle fa-2x"></i>
+                                    {% endif %}
+                                </div>
+                                <span class="d-none d-md-inline">{{ user.first_name|default:user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><h6 class="dropdown-header">Mi Perfil</h6></li>
+                                <li><a class="dropdown-item" href="{% url 'profile' %}">
+                                    <i class="fas fa-user-cog me-2"></i>Configurar Perfil
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                </a></li>
+                            </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
