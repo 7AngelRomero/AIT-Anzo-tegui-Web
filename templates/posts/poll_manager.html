@@ -83,6 +83,7 @@
                 "last_name": "{{ usuario.last_name|escapejs }}",
                 "email": "{{ usuario.email|escapejs }}",
                 "date_joined": "{{ usuario.date_joined|date:'c' }}",
+                "profile_image": {% if usuario.profile_image %}"{{ usuario.profile_image.url }}"{% else %}null{% endif %},
                 "rol": {% if usuario.rol %}{"name": "{{ usuario.rol.name|escapejs }}"}{% else %}null{% endif %}
             }{% if not forloop.last %},{% endif %}
             {% endfor %}

@@ -143,7 +143,11 @@ const UserManagementEnhanced = ({ initialUsers }) => {
                 <td>
                     <div className="d-flex align-items-center">
                         <div className="avatar-sm me-3">
-                            <i className={`${roleInfo.icon} text-primary`}></i>
+                            {user.profile_image ? (
+                                <img src={user.profile_image} alt="Perfil" className="rounded-circle" width="40" height="40" style={{objectFit: 'cover'}} />
+                            ) : (
+                                <i className={`${roleInfo.icon} text-primary`}></i>
+                            )}
                         </div>
                         <div>
                             <div className="fw-bold text-primary">@{user.username}</div>
