@@ -1,0 +1,113 @@
+{% extends "pages/layouts/_base_clean.html" %}
+{% load static %}
+
+{% block title %}Mi Perfil - AIT{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0">
+                <div class="row g-0">
+                    <!-- Panel de foto de perfil -->
+                    <div class="col-md-5" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%);">
+                        <div class="p-5 text-white h-100 d-flex flex-column justify-content-center align-items-center">
+                            <div class="text-center mb-4">
+                                {% if user.profile_image %}
+                                    <img src="{{ user.profile_image.url }}" alt="Perfil" class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover; border: 4px solid white;">
+                                {% else %}
+                                    <i class="fas fa-user-circle mb-3" style="font-size: 150px; opacity: 0.8;"></i>
+                                {% endif %}
+                            </div>
+                            
+                            <h4 class="fw-bold mb-2 text-center">{{ user.first_name }} {{ user.last_name }}</h4>
+                            <p class="mb-1 text-center opacity-75"><i class="fas fa-user me-2"></i>@{{ user.username }}</p>
+                            <p class="mb-3 text-center opacity-75"><i class="fas fa-user-tag me-2"></i>{{ user.rol.name|default:"Sin rol" }}</p>
+                            
+                            <!-- Botón de cambio de foto -->
+                            <div class="mt-4">
+                                <label for="profile_image" class="btn btn-light btn-lg mb-2" style="cursor: pointer;">
+                                    <i class="fas fa-camera me-2"></i>Cambiar Foto
+                                </label>
+                                <div class="text-start">
+                                    <small class="opacity-75 d-block">Formatos: JPG, PNG, GIF</small>
+                                    <small class="opacity-75 d-block">Tamaño máximo: 5MB</small>
+                                    <small class="opacity-75 d-block">Resolución recomendada: 400x400px</small>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-auto text-center">
+                                <small class="opacity-75">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    Información segura y protegida
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Formulario de perfil -->
+                    <div class="col-md-7">
+                        <div class="p-5">
+                            <div class="mb-4">
+                                <h2 class="fw-bold mb-2" style="color: #184da1;">Configurar Perfil</h2>
+                                <p class="text-muted">Actualiza tu información personal</p>
+                            </div>
+                            
+                            <form method="post" enctype="multipart/form-data" class="login-form">
+                                {% csrf_token %}
+                                
+                                <!-- Campo oculto para foto -->
+                                <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display: none;" onchange="this.form.submit();">
+                                
+                                <!-- Sección Usuario -->
+                                <div class="mb-4">
+                                    <h6 class="fw-bold mb-3" style="color: #184da1; border-bottom: 2px solid #184da1; padding-bottom: 5px;">
+                                        <i class="fas fa-user me-2"></i>Información de Usuario
+                                    </h6>
+                                    <div class="mb-3">
+                                        <label for="username" class="form-label fw-semibold">Nombre de Usuario</label>
+                                        <input type="text" class="form-control form-input" id="username" name="username" value="{{ user.username }}" required>
+                                        <div class="form-text">Este será tu identificador único en el sistema</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Sección Contraseña -->
+                                <div class="mb-4">
+                                    <h6 class="fw-bold mb-3" style="color: #184da1; border-bottom: 2px solid #184da1; padding-bottom: 5px;">
+                                        <i class="fas fa-key me-2"></i>Cambiar Contraseña
+                                    </h6>
+                                    <div class="mb-3">
+                                        <label for="old_password" class="form-label fw-semibold">Contraseña Actual</label>
+                                        <input type="password" class="form-control form-input" id="old_password" name="old_password">
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="new_password1" class="form-label fw-semibold">Nueva Contraseña</label>
+                                            <input type="password" class="form-control form-input" id="new_password1" name="new_password1">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="new_password2" class="form-label fw-semibold">Confirmar Contraseña</label>
+                                            <input type="password" class="form-control form-input" id="new_password2" name="new_password2">
+                                        </div>
+                                    </div>
+                                    <div class="form-text">Deja en blanco si no deseas cambiar la contraseña</div>
+                                </div>
+                                
+                                <button type="submit" class="login-submit-btn w-100">
+                                    <i class="fas fa-save me-2"></i>Guardar Cambios
+                                </button>
+                            </form>
+                            
+                            <div class="text-center mt-4">
+                                <a href="{% url 'home' %}" class="text-decoration-none" style="color: #184da1;">
+                                    <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

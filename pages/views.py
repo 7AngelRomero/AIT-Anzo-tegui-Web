@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth.forms import PasswordChangeForm
 from .forms import CustomLoginForm
 from model_poll.models import User, Rol
 
@@ -78,4 +79,44 @@ def register(request):
         return redirect('login')
     
     return render(request, 'pages/registration/register.html')
+
+@login_required
+def profile(request):
+    if request.method == 'POST':
+        # Cambio de foto
+        if 'profile_image' in request.FILES:
+            request.user.profile_image = request.FILES['profile_image']
+            request.user.save()
+            messages.success(request, 'Foto de perfil actualizada exitosamente.')
+            
+        # Cambio de username
+        new_username = request.POST.get('username')
+        if new_username and new_username != request.user.username:
+            if User.objects.filter(username=new_username).exists():
+                messages.error(request, 'Este nombre de usuario ya existe.')
+            else:
+                request.user.username = new_username
+                request.user.save()
+                messages.success(request, 'Nombre de usuario actualizado exitosamente.')
+                
+        # Cambio de contraseña
+        old_password = request.POST.get('old_password')
+        new_password1 = request.POST.get('new_password1')
+        new_password2 = request.POST.get('new_password2')
+        
+        if old_password and new_password1 and new_password2:
+            if new_password1 == new_password2:
+                if request.user.check_password(old_password):
+                    request.user.set_password(new_password1)
+                    request.user.save()
+                    update_session_auth_hash(request, request.user)
+                    messages.success(request, 'Contraseña cambiada exitosamente.')
+                else:
+                    messages.error(request, 'La contraseña actual es incorrecta.')
+            else:
+                messages.error(request, 'Las nuevas contraseñas no coinciden.')
+        
+        return redirect('profile')
+    
+    return render(request, 'pages/profile.html')
 

@@ -24,6 +24,7 @@ class Rol(models.Model):
 class User(AbstractUser):
 
     full_name = models.CharField(max_length=255, blank=True, default='')
+    profile_image = models.ImageField(upload_to='profiles/', blank=True, null=True)
         
     # Relación con el Rol
     rol = models.ForeignKey(Rol, on_delete=models.SET_NULL, null=True, blank=True, related_name="usuarios")
