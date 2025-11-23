@@ -147,3 +147,22 @@ AUTH_USER_MODEL = 'model_poll.User'
 
 # URL de login para redireccionar usuarios no autenticados
 LOGIN_URL = '/login/'
+
+# Configuración de Email (CONSOLE para testing - cambiar a SMTP cuando tengas credenciales)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'AIT Anzoátegui <noreply@aitanzoategui.gov.ve>'
+
+# SMTP Configuration (PRODUCCIÓN)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+# EMAIL_HOST_USER: Tu email personal (para autenticación SMTP)
+EMAIL_HOST_USER = 'asebastianbrito@gmail.com'  # Tu email con contraseña de app
+EMAIL_HOST_PASSWORD = 'rqzl chwx edsx tkaj'  # Tu contraseña de aplicación
+# DEFAULT_FROM_EMAIL: Email que ve el usuario (puede ser ficticio pero profesional)
+DEFAULT_FROM_EMAIL = 'AIT Anzoátegui <noreply@aitanzoategui.gov.ve>'
+
+# URLs de redirección después del reset
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
