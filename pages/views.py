@@ -4,16 +4,32 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
 from .forms import CustomLoginForm
-from model_poll.models import User, Rol
+from model_poll.models import User, Rol, SiteContent
 
 def home(request):
-    return render(request, 'pages/home.html')
+    # Obtener contenido dinámico
+    home_images = SiteContent.objects.filter(content_type='HOME_IMAGE', is_active=True).order_by('order')
+    carousel_slides = SiteContent.objects.filter(content_type='CAROUSEL_SLIDE', is_active=True).order_by('order')
+    
+    context = {
+        'home_images': home_images,
+        'carousel_slides': carousel_slides,
+    }
+    return render(request, 'pages/home.html', context)
 
 def contact(request):
     return render(request, 'pages/contact.html')
 
 def about(request):
-    return render(request, 'pages/about.html')
+    # Obtener contenido dinámico
+    about_images = SiteContent.objects.filter(content_type='ABOUT_IMAGE', is_active=True).order_by('order')
+    live_stream = SiteContent.objects.filter(content_type='LIVE_STREAM', is_active=True).first()
+    
+    context = {
+        'about_images': about_images,
+        'live_stream': live_stream,
+    }
+    return render(request, 'pages/about.html', context)
 
 def user_login(request):
     if request.user.is_authenticated:

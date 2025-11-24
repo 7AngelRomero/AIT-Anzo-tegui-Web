@@ -1,22 +1,10 @@
-{% extends "pages/layouts/_base.html" %}
+{% extends "pages/layouts/_base_manage.html" %}
 {% load static %}
 
 {% block title %}Crear Encuesta - AIT{% endblock %}
 
 {% block content %}
-<!-- Breadcrumb -->
-<div class="container mt-3">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'posts:poll_list' %}">Encuestas</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'posts:poll_manager' %}">Gestión</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Crear Encuesta</li>
-        </ol>
-    </nav>
-</div>
-
-<div class="container my-5">
+<div class="container-fluid my-4">
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="card border-0 shadow-sm">
@@ -42,8 +30,8 @@
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label for="title" class="form-label fw-semibold">Título de la Encuesta *</label>
-                                <input type="text" class="form-control" id="title" name="title" maxlength="30" required>
-                                <div class="form-text">Máximo 30 caracteres</div>
+                                <input type="text" class="form-control" id="title" name="title" maxlength="200" required>
+                                <div class="form-text">Máximo 200 caracteres</div>
                             </div>
                             <div class="col-md-3">
                                 <label for="status" class="form-label fw-semibold">Estado</label>
@@ -58,6 +46,17 @@
                             </div>
                         </div>
                         
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="star_date" class="form-label fw-semibold">Fecha de Inicio *</label>
+                                <input type="datetime-local" class="form-control" id="star_date" name="star_date" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="end_date" class="form-label fw-semibold">Fecha de Finalización *</label>
+                                <input type="datetime-local" class="form-control" id="end_date" name="end_date" required>
+                            </div>
+                        </div>
+                        
                         <div class="mb-4">
                             <label for="description" class="form-label fw-semibold">Descripción</label>
                             <textarea class="form-control" id="description" name="description" rows="3" placeholder="Describe brevemente el propósito de esta encuesta..."></textarea>
@@ -68,28 +67,28 @@
                         <!-- Sección de Preguntas -->
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
-                                <h4 class="fw-bold mb-1" style="color: #184da1;">Preguntas</h4>
+                                <h4 class="fw-bold mb-1" style="color: #184da1;">Preguntas *</h4>
                                 <small class="text-muted">Agrega al menos una pregunta para tu encuesta</small>
                             </div>
-                            <button type="button" class="btn btn-success" onclick="addQuestion()">
-                                <i class="fas fa-plus me-2"></i>Agregar Pregunta
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuestion()">
+                                <i class="fas fa-plus me-1"></i>Agregar Pregunta
                             </button>
                         </div>
                         
-                        <div id="questionsContainer" class="mb-4">
-                            <!-- Las preguntas se agregarán dinámicamente -->
+                        <div id="questionsContainer">
+                            <!-- Las preguntas se agregarán aquí dinámicamente -->
                         </div>
                         
-                        <div class="alert alert-info d-none" id="noQuestionsAlert">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Debes agregar al menos una pregunta antes de crear la encuesta.
+                        <div class="alert alert-warning d-none" id="questionsAlert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Debes agregar al menos una pregunta para crear la encuesta.
                         </div>
                         
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                             <a href="{% url 'posts:poll_manager' %}" class="btn btn-outline-secondary me-md-2">
                                 <i class="fas fa-arrow-left me-2"></i>Cancelar
                             </a>
-                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <button type="submit" class="btn btn-primary" onclick="return validateForm()">
                                 <i class="fas fa-save me-2"></i>Crear Encuesta
                             </button>
                         </div>
@@ -106,178 +105,108 @@ let questionCount = 0;
 function addQuestion() {
     questionCount++;
     const container = document.getElementById('questionsContainer');
-    
-    const questionDiv = document.createElement('div');
-    questionDiv.className = 'card mb-3 question-card';
-    questionDiv.id = `question-${questionCount}`;
-    
-    questionDiv.innerHTML = `
-        <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #f8f9fa;">
-            <h6 class="mb-0 fw-bold" style="color: #184da1;">
-                <i class="fas fa-question-circle me-2"></i>Pregunta ${questionCount}
-            </h6>
-            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeQuestion(${questionCount})" title="Eliminar pregunta">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Texto de la Pregunta *</label>
-                <input type="text" class="form-control" name="question_text_${questionCount}" placeholder="Escribe tu pregunta aquí..." required>
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">Tipo de Pregunta *</label>
-                    <select class="form-select" name="question_type_${questionCount}" onchange="toggleOptions(${questionCount})" required>
-                        <option value="">Seleccionar tipo</option>
-                        <option value="TEXTO_LIBRE">📝 Texto Libre</option>
-                        <option value="SELECCION_MULTIPLE">🔘 Selección Múltiple</option>
-                        <option value="ESCALA_NUMERICA">📊 Escala Numérica (1-5)</option>
-                    </select>
+    const questionHtml = `
+        <div class="card mb-3 question-card" id="question_${questionCount}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h6 class="fw-bold">Pregunta ${questionCount}</h6>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeQuestion(${questionCount})">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">¿Es obligatoria?</label>
-                    <select class="form-select" name="is_obligatory_${questionCount}">
-                        <option value="false">No</option>
-                        <option value="true">Sí</option>
-                    </select>
+                
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold">Texto de la Pregunta *</label>
+                        <textarea class="form-control" name="question_text_${questionCount}" rows="2" required></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Tipo de Pregunta *</label>
+                        <select class="form-select" name="question_type_${questionCount}" onchange="handleQuestionType(${questionCount})" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="TEXTO_LIBRE">Texto Libre</option>
+                            <option value="SELECCION_MULTIPLE">Selección Múltiple</option>
+                            <option value="ESCALA_NUMERICA">Escala Numérica (1-5)</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
-            
-            <div id="options-container-${questionCount}" class="options-container" style="display: none;">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="form-label fw-semibold mb-0">Opciones de Respuesta</label>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addOption(${questionCount})">
+                
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="is_obligatory_${questionCount}" value="true" id="obligatory_${questionCount}">
+                    <label class="form-check-label" for="obligatory_${questionCount}">Pregunta Obligatoria</label>
+                </div>
+                
+                <div id="options_${questionCount}" class="options-container d-none">
+                    <label class="form-label fw-semibold">Opciones de Respuesta</label>
+                    <div id="optionsList_${questionCount}"></div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="addOption(${questionCount})">
                         <i class="fas fa-plus me-1"></i>Agregar Opción
                     </button>
                 </div>
-                <div id="options-list-${questionCount}">
-                    <!-- Opciones se agregarán aquí -->
-                </div>
-                <small class="text-muted">Agrega al menos 2 opciones para preguntas de selección múltiple</small>
             </div>
         </div>
     `;
-    
-    container.appendChild(questionDiv);
-    updateQuestionNumbers();
-    updateNoQuestionsAlert();
+    container.insertAdjacentHTML('beforeend', questionHtml);
 }
 
 function removeQuestion(questionId) {
-    if (confirm('¿Estás seguro de que quieres eliminar esta pregunta?')) {
-        const questionDiv = document.getElementById(`question-${questionId}`);
-        questionDiv.remove();
-        updateQuestionNumbers();
-        updateNoQuestionsAlert();
-    }
+    document.getElementById(`question_${questionId}`).remove();
 }
 
-function updateQuestionNumbers() {
-    const questions = document.querySelectorAll('.question-card');
-    questions.forEach((question, index) => {
-        const header = question.querySelector('.card-header h6');
-        header.innerHTML = `<i class="fas fa-question-circle me-2"></i>Pregunta ${index + 1}`;
-    });
-}
-
-function updateNoQuestionsAlert() {
-    const container = document.getElementById('questionsContainer');
-    const alert = document.getElementById('noQuestionsAlert');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    if (container.children.length === 0) {
-        alert.classList.remove('d-none');
-        submitBtn.disabled = true;
-    } else {
-        alert.classList.add('d-none');
-        submitBtn.disabled = false;
-    }
-}
-
-function toggleOptions(questionId) {
+function handleQuestionType(questionId) {
     const select = document.querySelector(`select[name="question_type_${questionId}"]`);
-    const optionsContainer = document.getElementById(`options-container-${questionId}`);
-    const optionsList = document.getElementById(`options-list-${questionId}`);
+    const optionsContainer = document.getElementById(`options_${questionId}`);
     
     if (select.value === 'SELECCION_MULTIPLE') {
-        optionsContainer.style.display = 'block';
-        // Limpiar opciones existentes
-        optionsList.innerHTML = '';
-        // Agregar 2 opciones por defecto
+        optionsContainer.classList.remove('d-none');
         addOption(questionId);
         addOption(questionId);
     } else {
-        optionsContainer.style.display = 'none';
-        optionsList.innerHTML = '';
+        optionsContainer.classList.add('d-none');
+        document.getElementById(`optionsList_${questionId}`).innerHTML = '';
     }
 }
+
+let optionCounters = {};
 
 function addOption(questionId) {
-    const optionsList = document.getElementById(`options-list-${questionId}`);
-    const optionCount = optionsList.children.length + 1;
+    if (!optionCounters[questionId]) optionCounters[questionId] = 0;
+    optionCounters[questionId]++;
     
-    const optionDiv = document.createElement('div');
-    optionDiv.className = 'input-group mb-2';
-    optionDiv.innerHTML = `
-        <span class="input-group-text">Opción ${optionCount}</span>
-        <input type="text" class="form-control" name="option_${questionId}_${optionCount}" placeholder="Texto de la opción" required>
-        <button type="button" class="btn btn-outline-danger" onclick="removeOption(this)" title="Eliminar opción">
-            <i class="fas fa-trash"></i>
-        </button>
+    const optionsList = document.getElementById(`optionsList_${questionId}`);
+    const optionHtml = `
+        <div class="input-group mb-2" id="option_${questionId}_${optionCounters[questionId]}">
+            <input type="text" class="form-control" name="option_${questionId}_${optionCounters[questionId]}" placeholder="Opción ${optionCounters[questionId]}">
+            <button type="button" class="btn btn-outline-danger" onclick="removeOption(${questionId}, ${optionCounters[questionId]})">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
     `;
-    
-    optionsList.appendChild(optionDiv);
+    optionsList.insertAdjacentHTML('beforeend', optionHtml);
 }
 
-function removeOption(button) {
-    const optionDiv = button.parentElement;
-    const optionsList = optionDiv.parentElement;
-    optionDiv.remove();
-    
-    // Renumerar opciones
-    const options = optionsList.querySelectorAll('.input-group');
-    options.forEach((option, index) => {
-        const span = option.querySelector('.input-group-text');
-        span.textContent = `Opción ${index + 1}`;
-    });
+function removeOption(questionId, optionId) {
+    document.getElementById(`option_${questionId}_${optionId}`).remove();
 }
 
-// Validación del formulario
-document.getElementById('pollForm').addEventListener('submit', function(e) {
-    const questions = document.querySelectorAll('.question-card');
+function validateForm() {
+    const questionsContainer = document.getElementById('questionsContainer');
+    const alert = document.getElementById('questionsAlert');
     
-    if (questions.length === 0) {
-        e.preventDefault();
-        alert('Debes agregar al menos una pregunta.');
-        return;
+    if (questionsContainer.children.length === 0) {
+        alert.classList.remove('d-none');
+        questionsContainer.scrollIntoView({ behavior: 'smooth' });
+        return false;
     }
     
-    // Validar que las preguntas de selección múltiple tengan al menos 2 opciones
-    let valid = true;
-    questions.forEach(question => {
-        const questionId = question.id.split('-')[1];
-        const typeSelect = question.querySelector(`select[name="question_type_${questionId}"]`);
-        
-        if (typeSelect.value === 'SELECCION_MULTIPLE') {
-            const options = question.querySelectorAll(`input[name^="option_${questionId}_"]`);
-            const filledOptions = Array.from(options).filter(opt => opt.value.trim() !== '');
-            
-            if (filledOptions.length < 2) {
-                valid = false;
-                alert(`La pregunta ${question.querySelector('h6').textContent} debe tener al menos 2 opciones.`);
-            }
-        }
-    });
-    
-    if (!valid) {
-        e.preventDefault();
-    }
+    alert.classList.add('d-none');
+    return true;
+}
+
+// Agregar una pregunta por defecto al cargar
+document.addEventListener('DOMContentLoaded', function() {
+    addQuestion();
 });
-
-// Agregar primera pregunta por defecto
-addQuestion();
 </script>
 
 <style>
@@ -310,6 +239,20 @@ addQuestion();
 .form-select:focus {
     border-color: #184da1;
     box-shadow: 0 0 0 0.2rem rgba(24, 77, 161, 0.25);
+}
+
+.options-container.d-none {
+    display: none !important;
+}
+
+/* Asegurar que el sidebar llegue al final */
+.sidebar {
+    min-height: 100vh !important;
+}
+
+/* Ajustar altura cuando se agregan preguntas dinámicamente */
+body {
+    min-height: 100vh;
 }
 </style>
 {% endblock %}

@@ -1,13 +1,20 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.db.models import Count, Avg, Q
-from model_poll.models import Poll, Question, Options, Participation, QuestionDetails, User, Rol
+from django.core.paginator import Paginator
+from model_poll.models import Poll, Question, Options, Participation, QuestionDetails, User, Rol, SiteContent
 
 @login_required
 def poll_list(request):
     """Vista para mostrar todas las encuestas activas"""
+    # Verificar y actualizar estado de encuestas vencidas
+    active_polls = Poll.objects.filter(status='ACTIVA')
+    for poll in active_polls:
+        poll.check_and_update_status()
+    
+    # Obtener encuestas activas actualizadas
     polls = Poll.objects.filter(status='ACTIVA').order_by('-star_date')
     return render(request, 'posts/poll_list.html', {'polls': polls})
 
@@ -46,9 +53,60 @@ def poll_manager(request):
     # Trabajador: Ve todas las encuestas pero solo puede editar las suyas
     else:
         polls = Poll.objects.all().order_by('-star_date')
-        users = None
+        users = User.objects.all().order_by('username')
     
-    return render(request, 'posts/poll_manager.html', {'polls': polls, 'users': users})
+    # Verificar y actualizar encuestas vencidas
+    for poll in polls.filter(status='ACTIVA'):
+        poll.check_and_update_status()
+    
+    # Calcular estadísticas para el dashboard
+    active_polls = polls.filter(status='ACTIVA').count()
+    total_responses = Participation.objects.count()
+    total_users = User.objects.count()
+    
+    context = {
+        'polls': polls, 
+        'users': users,
+        'active_polls': active_polls,
+        'total_responses': total_responses,
+        'total_users': total_users
+    }
+    
+    return render(request, 'posts/poll_manager.html', context)
+
+@login_required
+def user_list(request):
+    """Vista para listado completo de usuarios - Administradores y Trabajadores"""
+    if not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']:
+        return HttpResponseForbidden("No tienes permisos para ver el listado de usuarios.")
+    
+    # Obtener todos los usuarios con estadísticas de participación
+    users = User.objects.all().order_by('username')
+    
+    # Agregar estadísticas de participación a cada usuario
+    for user in users:
+        user.participation_count = Participation.objects.filter(user=user).count()
+        user.last_participation = Participation.objects.filter(user=user).order_by('-sent_date').first()
+    
+    # Calcular estadísticas por rol
+    admin_count = users.filter(rol__name='Administrador').count()
+    worker_count = users.filter(rol__name='Trabajador').count()
+    user_count = users.filter(Q(rol__name='Usuario') | Q(rol__isnull=True)).count()
+    
+    # Paginación - 15 usuarios por página
+    paginator = Paginator(users, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'users': users,
+        'page_obj': page_obj,
+        'admin_count': admin_count,
+        'worker_count': worker_count,
+        'user_count': user_count,
+    }
+    
+    return render(request, 'posts/user_list.html', context)
 
 @login_required
 def create_poll(request):
@@ -60,7 +118,17 @@ def create_poll(request):
         title = request.POST.get('title')
         description = request.POST.get('description')
         status = request.POST.get('status', 'BORRADOR')
+        star_date = request.POST.get('star_date')
+        end_date = request.POST.get('end_date')
         image = request.FILES.get('image')
+        
+        # Las fechas son opcionales ahora
+        from django.utils import timezone
+        if not star_date:
+            star_date = timezone.now()
+        if not end_date:
+            star_date_obj = timezone.datetime.fromisoformat(star_date.replace('T', ' '))
+            end_date = star_date_obj + timezone.timedelta(days=30)
         
         # Crear encuesta
         poll = Poll.objects.create(
@@ -68,7 +136,9 @@ def create_poll(request):
             description=description,
             image=image,
             created_by=request.user,
-            status=status
+            status=status,
+            star_date=star_date,
+            end_date=end_date
         )
         
         # Procesar preguntas
@@ -273,11 +343,37 @@ def change_user_role(request, user_id, new_role):
     return redirect('posts:poll_manager')
 
 @login_required
+def answer_poll(request, poll_id):
+    """Vista para que usuarios y trabajadores respondan encuestas"""
+    poll = get_object_or_404(Poll, id=poll_id)
+    
+    # Verificar y actualizar estado si es necesario
+    if poll.check_and_update_status():
+        messages.error(request, 'Esta encuesta ha finalizado y ya no acepta respuestas.')
+        return redirect('posts:poll_list')
+    
+    # Verificar que esté activa
+    if poll.status != 'ACTIVA':
+        messages.error(request, 'Esta encuesta no está disponible para responder.')
+        return redirect('posts:poll_list')
+    
+    # Verificar si ya participó
+    if Participation.objects.filter(poll=poll, user=request.user).exists():
+        messages.error(request, 'Ya has participado en esta encuesta.')
+        return redirect('posts:poll_list')
+    
+    context = {
+        'poll': poll,
+    }
+    
+    return render(request, 'posts/answer_poll.html', context)
+
+@login_required
 def submit_poll(request, poll_id):
-    """Vista para procesar las respuestas de la encuesta - Solo usuarios normales"""
-    # Solo usuarios con rol 'Usuario' pueden responder encuestas
-    if request.user.rol and request.user.rol.name != 'Usuario':
-        messages.error(request, 'Solo los usuarios pueden responder encuestas.')
+    """Vista para procesar las respuestas de la encuesta - Usuarios y Trabajadores"""
+    # Usuarios y Trabajadores pueden responder encuestas
+    if request.user.rol and request.user.rol.name == 'Administrador':
+        messages.error(request, 'Los administradores no pueden responder encuestas.')
         return redirect('posts:poll_list')
     
     if request.method == 'POST':
@@ -402,3 +498,90 @@ def delete_poll(request, poll_id):
         return redirect('posts:poll_manager')
     
     return render(request, 'posts/confirm_delete.html', {'poll': poll})
+
+@login_required
+def content_manager(request):
+    """Vista para gestionar contenido del sitio - Administradores y Trabajadores"""
+    if not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']:
+        return HttpResponseForbidden("No tienes permisos para gestionar contenido.")
+    
+    if request.method == 'POST':
+        content_type = request.POST.get('content_type')
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        link_url = request.POST.get('link_url')
+        image = request.FILES.get('image')
+        
+        # Validar límite de imágenes
+        if content_type in ['HOME_IMAGE', 'ABOUT_IMAGE']:
+            existing_count = SiteContent.objects.filter(content_type=content_type, is_active=True).count()
+            if existing_count >= 3:
+                messages.error(request, f'Solo se permiten máximo 3 imágenes para {"Inicio" if content_type == "HOME_IMAGE" else "Acerca de"}.')
+                return redirect('posts:content_manager')
+        
+        # Procesar URL de YouTube si es transmisión en vivo
+        if content_type == 'LIVE_STREAM' and link_url:
+            # Convertir URL normal a embed si es necesario
+            if 'watch?v=' in link_url:
+                video_id = link_url.split('watch?v=')[1].split('&')[0]
+                link_url = f'https://www.youtube.com/embed/{video_id}?autoplay=0&mute=0&controls=1&rel=0'
+            elif 'embed/' in link_url and '?' not in link_url:
+                # Agregar parámetros si no los tiene
+                link_url += '?autoplay=0&mute=0&controls=1&rel=0'
+        
+        SiteContent.objects.create(
+            content_type=content_type,
+            title=title,
+            description=description,
+            link_url=link_url,
+            image=image,
+            created_by=request.user
+        )
+        
+        messages.success(request, 'Contenido agregado exitosamente.')
+        return redirect('posts:content_manager')
+    
+    # Obtener contenido por tipo
+    home_images = SiteContent.objects.filter(content_type='HOME_IMAGE', is_active=True)
+    about_images = SiteContent.objects.filter(content_type='ABOUT_IMAGE', is_active=True)
+    carousel_slides = SiteContent.objects.filter(content_type='CAROUSEL_SLIDE', is_active=True)
+    live_stream = SiteContent.objects.filter(content_type='LIVE_STREAM', is_active=True).first()
+    
+    context = {
+        'home_images': home_images,
+        'about_images': about_images,
+        'carousel_slides': carousel_slides,
+        'live_stream': live_stream,
+    }
+    
+    return render(request, 'posts/content_manager.html', context)
+
+@login_required
+def delete_content(request, content_id):
+    """Vista para eliminar contenido - Administradores y Trabajadores"""
+    if not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']:
+        return HttpResponseForbidden("No tienes permisos para eliminar contenido.")
+    
+    try:
+        content = SiteContent.objects.get(id=content_id)
+        content_title = content.title
+        content.delete()
+        messages.success(request, f'Contenido "{content_title}" eliminado exitosamente.')
+    except SiteContent.DoesNotExist:
+        messages.error(request, 'El contenido que intentas eliminar no existe.')
+    
+    return redirect('posts:content_manager')
+
+@login_required
+def poll_statistics(request):
+    """Vista para mostrar estadísticas de encuestas cerradas"""
+    if not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']:
+        return HttpResponseForbidden("No tienes permisos para ver estadísticas.")
+    
+    closed_polls = Poll.objects.filter(status='CERRADA').order_by('-end_date')
+    
+    context = {
+        'closed_polls': closed_polls,
+    }
+    
+    return render(request, 'posts/poll_statistics.html', context)

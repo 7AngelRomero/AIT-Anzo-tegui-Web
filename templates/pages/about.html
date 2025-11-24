@@ -5,23 +5,30 @@
 
 {% block content %}
     <!-- Video Live Section -->
+    {% if live_stream and live_stream.link_url %}
     <div class="video-live-section mb-5">
         <div class="video-container">
             <div class="ratio ratio-16x9">
                 <iframe 
-                    src="https://www.youtube.com/embed/LIVE_STREAM_ID" 
-                    title="Transmisión en Vivo" 
+                    src="{{ live_stream.link_url }}" 
+                    title="{{ live_stream.title }}" 
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
                     allowfullscreen>
                 </iframe>
             </div>
             <div class="video-overlay d-flex align-items-end">
                 <div class="video-info p-4">
-                    <h3 class="text-white fw-bold mb-2">Transmisión en Vivo</h3>
-                    <p class="text-white-50 mb-0">Sigue las últimas actualizaciones y anuncios importantes</p>
+                    <h3 class="text-white fw-bold mb-2">{{ live_stream.title }}</h3>
+                    {% if live_stream.description %}
+                    <p class="text-white-50 mb-0">{{ live_stream.description }}</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+    {% endif %}
 
     <div class="container container-custom my-5">
         <!-- Hero Section -->
@@ -55,10 +62,13 @@
         <div class="row mb-5 align-items-center">
             <div class="col-lg-4 order-lg-1">
                 <div class="image-placeholder">
-                    <!-- Espacio para imagen futura -->
+                    {% if about_images.0 %}
+                    <img src="{{ about_images.0.image.url }}" class="img-fluid rounded" alt="{{ about_images.0.title }}">
+                    {% else %}
                     <div class="placeholder-box d-flex align-items-center justify-content-center">
                         <i class="fas fa-target fa-3x text-muted"></i>
                     </div>
+                    {% endif %}
                 </div>
             </div>
             <div class="col-lg-8 order-lg-2">
@@ -79,10 +89,13 @@
             </div>
             <div class="col-lg-4">
                 <div class="image-placeholder">
-                    <!-- Espacio para imagen futura -->
+                    {% if about_images.1 %}
+                    <img src="{{ about_images.1.image.url }}" class="img-fluid rounded" alt="{{ about_images.1.title }}">
+                    {% else %}
                     <div class="placeholder-box d-flex align-items-center justify-content-center">
                         <i class="fas fa-eye fa-3x text-muted"></i>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

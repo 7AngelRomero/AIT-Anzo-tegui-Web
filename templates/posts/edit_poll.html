@@ -1,22 +1,10 @@
-{% extends "pages/layouts/_base.html" %}
+{% extends "pages/layouts/_base_manage.html" %}
 {% load static %}
 
 {% block title %}Editar Encuesta - AIT{% endblock %}
 
 {% block content %}
-<!-- Breadcrumb -->
-<div class="container mt-3">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'posts:poll_list' %}">Encuestas</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'posts:poll_manager' %}">Gestión</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Editar: {{ poll.title }}</li>
-        </ol>
-    </nav>
-</div>
-
-<div class="container my-5">
+<div class="container-fluid my-4">
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="card border-0 shadow-sm">
@@ -75,9 +63,7 @@
                                 <h4 class="fw-bold mb-1" style="color: #184da1;">Preguntas</h4>
                                 <small class="text-muted">Edita las preguntas existentes o agrega nuevas</small>
                             </div>
-                            <button type="button" class="btn btn-success" onclick="addNewQuestion()">
-                                <i class="fas fa-plus me-2"></i>Agregar Pregunta
-                            </button>
+                            <p class="text-muted">Edita las preguntas existentes usando los campos del formulario</p>
                         </div>
                         
                         <div id="questionsContainer" class="mb-4">
@@ -87,9 +73,7 @@
                                     <h6 class="mb-0 fw-bold" style="color: #184da1;">
                                         <i class="fas fa-question-circle me-2"></i>Pregunta {{ forloop.counter }}
                                     </h6>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeExistingQuestion({{ question.id }})" title="Eliminar pregunta">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <input type="checkbox" name="delete_question_{{ question.id }}" class="form-check-input" title="Marcar para eliminar">
                                 </div>
                                 <div class="card-body">
                                     <input type="hidden" name="existing_question_id_{{ question.id }}" value="{{ question.id }}">
@@ -102,7 +86,7 @@
                                     <div class="row mb-3">
                                         <div class="col-md-6">
                                             <label class="form-label fw-semibold">Tipo de Pregunta *</label>
-                                            <select class="form-select" name="existing_question_type_{{ question.id }}" onchange="toggleExistingOptions({{ question.id }})" required>
+                                            <select class="form-select" name="existing_question_type_{{ question.id }}" required>
                                                 <option value="TEXTO_LIBRE" {% if question.question_type == 'TEXTO_LIBRE' %}selected{% endif %}>📝 Texto Libre</option>
                                                 <option value="SELECCION_MULTIPLE" {% if question.question_type == 'SELECCION_MULTIPLE' %}selected{% endif %}>🔘 Selección Múltiple</option>
                                                 <option value="ESCALA_NUMERICA" {% if question.question_type == 'ESCALA_NUMERICA' %}selected{% endif %}>📊 Escala Numérica (1-5)</option>
@@ -120,9 +104,7 @@
                                     <div id="existing-options-container-{{ question.id }}" class="options-container" {% if question.question_type != 'SELECCION_MULTIPLE' %}style="display: none;"{% endif %}>
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <label class="form-label fw-semibold mb-0">Opciones de Respuesta</label>
-                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addExistingOption({{ question.id }})">
-                                                <i class="fas fa-plus me-1"></i>Agregar Opción
-                                            </button>
+                                            <small class="text-muted">Opciones existentes (edita el texto directamente)</small>
                                         </div>
                                         <div id="existing-options-list-{{ question.id }}">
                                             {% for option in question.opciones.all %}
@@ -130,9 +112,9 @@
                                                 <span class="input-group-text">Opción {{ forloop.counter }}</span>
                                                 <input type="hidden" name="existing_option_id_{{ question.id }}_{{ option.id }}" value="{{ option.id }}">
                                                 <input type="text" class="form-control" name="existing_option_text_{{ question.id }}_{{ option.id }}" value="{{ option.options_text }}" required>
-                                                <button type="button" class="btn btn-outline-danger" onclick="removeExistingOption(this, {{ question.id }}, {{ option.id }})" title="Eliminar opción">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
+                                                <div class="form-check">
+                                                    <input type="checkbox" name="delete_option_{{ question.id }}_{{ option.id }}" class="form-check-input" title="Eliminar">
+                                                </div>
                                             </div>
                                             {% endfor %}
                                         </div>
@@ -158,162 +140,7 @@
     </div>
 </div>
 
-<script>
-let newQuestionCount = 0;
 
-function addNewQuestion() {
-    newQuestionCount++;
-    const container = document.getElementById('questionsContainer');
-    
-    const questionDiv = document.createElement('div');
-    questionDiv.className = 'card mb-3 question-card';
-    questionDiv.id = `new-question-${newQuestionCount}`;
-    
-    questionDiv.innerHTML = `
-        <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #e8f5e8;">
-            <h6 class="mb-0 fw-bold" style="color: #27ae60;">
-                <i class="fas fa-plus-circle me-2"></i>Nueva Pregunta
-            </h6>
-            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeNewQuestion(${newQuestionCount})" title="Eliminar pregunta">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Texto de la Pregunta *</label>
-                <input type="text" class="form-control" name="new_question_text_${newQuestionCount}" placeholder="Escribe tu pregunta aquí..." required>
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">Tipo de Pregunta *</label>
-                    <select class="form-select" name="new_question_type_${newQuestionCount}" onchange="toggleNewOptions(${newQuestionCount})" required>
-                        <option value="">Seleccionar tipo</option>
-                        <option value="TEXTO_LIBRE">📝 Texto Libre</option>
-                        <option value="SELECCION_MULTIPLE">🔘 Selección Múltiple</option>
-                        <option value="ESCALA_NUMERICA">📊 Escala Numérica (1-5)</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">¿Es obligatoria?</label>
-                    <select class="form-select" name="new_is_obligatory_${newQuestionCount}">
-                        <option value="false">No</option>
-                        <option value="true">Sí</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div id="new-options-container-${newQuestionCount}" class="options-container" style="display: none;">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="form-label fw-semibold mb-0">Opciones de Respuesta</label>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addNewOption(${newQuestionCount})">
-                        <i class="fas fa-plus me-1"></i>Agregar Opción
-                    </button>
-                </div>
-                <div id="new-options-list-${newQuestionCount}">
-                    <!-- Opciones se agregarán aquí -->
-                </div>
-                <small class="text-muted">Agrega al menos 2 opciones para preguntas de selección múltiple</small>
-            </div>
-        </div>
-    `;
-    
-    container.appendChild(questionDiv);
-}
-
-function removeNewQuestion(questionId) {
-    if (confirm('¿Estás seguro de que quieres eliminar esta pregunta?')) {
-        document.getElementById(`new-question-${questionId}`).remove();
-    }
-}
-
-function removeExistingQuestion(questionId) {
-    if (confirm('¿Estás seguro de que quieres eliminar esta pregunta? Esta acción no se puede deshacer.')) {
-        const questionDiv = document.getElementById(`existing-question-${questionId}`);
-        questionDiv.style.display = 'none';
-        // Agregar campo oculto para marcar como eliminada
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = `delete_question_${questionId}`;
-        hiddenInput.value = 'true';
-        questionDiv.appendChild(hiddenInput);
-    }
-}
-
-function toggleExistingOptions(questionId) {
-    const select = document.querySelector(`select[name="existing_question_type_${questionId}"]`);
-    const optionsContainer = document.getElementById(`existing-options-container-${questionId}`);
-    
-    if (select.value === 'SELECCION_MULTIPLE') {
-        optionsContainer.style.display = 'block';
-    } else {
-        optionsContainer.style.display = 'none';
-    }
-}
-
-function toggleNewOptions(questionId) {
-    const select = document.querySelector(`select[name="new_question_type_${questionId}"]`);
-    const optionsContainer = document.getElementById(`new-options-container-${questionId}`);
-    const optionsList = document.getElementById(`new-options-list-${questionId}`);
-    
-    if (select.value === 'SELECCION_MULTIPLE') {
-        optionsContainer.style.display = 'block';
-        optionsList.innerHTML = '';
-        addNewOption(questionId);
-        addNewOption(questionId);
-    } else {
-        optionsContainer.style.display = 'none';
-        optionsList.innerHTML = '';
-    }
-}
-
-function addExistingOption(questionId) {
-    const optionsList = document.getElementById(`existing-options-list-${questionId}`);
-    const optionCount = optionsList.children.length + 1;
-    
-    const optionDiv = document.createElement('div');
-    optionDiv.className = 'input-group mb-2';
-    optionDiv.innerHTML = `
-        <span class="input-group-text">Opción ${optionCount}</span>
-        <input type="text" class="form-control" name="new_existing_option_${questionId}_${Date.now()}" placeholder="Texto de la opción" required>
-        <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()" title="Eliminar opción">
-            <i class="fas fa-trash"></i>
-        </button>
-    `;
-    
-    optionsList.appendChild(optionDiv);
-}
-
-function addNewOption(questionId) {
-    const optionsList = document.getElementById(`new-options-list-${questionId}`);
-    const optionCount = optionsList.children.length + 1;
-    
-    const optionDiv = document.createElement('div');
-    optionDiv.className = 'input-group mb-2';
-    optionDiv.innerHTML = `
-        <span class="input-group-text">Opción ${optionCount}</span>
-        <input type="text" class="form-control" name="new_option_${questionId}_${optionCount}" placeholder="Texto de la opción" required>
-        <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()" title="Eliminar opción">
-            <i class="fas fa-trash"></i>
-        </button>
-    `;
-    
-    optionsList.appendChild(optionDiv);
-}
-
-function removeExistingOption(button, questionId, optionId) {
-    if (confirm('¿Eliminar esta opción?')) {
-        const optionDiv = button.parentElement;
-        optionDiv.style.display = 'none';
-        // Marcar para eliminación
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = `delete_option_${questionId}_${optionId}`;
-        hiddenInput.value = 'true';
-        optionDiv.appendChild(hiddenInput);
-    }
-}
-</script>
 
 <style>
 .question-card {

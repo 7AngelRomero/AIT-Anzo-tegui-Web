@@ -113,7 +113,10 @@
                                     </div>
                                     <div class="col-md-4">
                                         <div class="text-center">
-                                            <canvas id="chart-{{ question.id }}" width="200" height="200"></canvas>
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-chart-pie me-2"></i>
+                                                <strong>Total:</strong> {{ question.total_responses }} respuestas
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -176,9 +179,9 @@
                         <a href="{% url 'posts:poll_manager' %}" class="btn btn-outline-secondary me-md-2">
                             <i class="fas fa-arrow-left me-2"></i>Volver a Gestión
                         </a>
-                        <button class="btn btn-success" onclick="window.print()">
-                            <i class="fas fa-print me-2"></i>Imprimir Resultados
-                        </button>
+                        <a href="#" class="btn btn-success">
+                            <i class="fas fa-download me-2"></i>Exportar Resultados
+                        </a>
                     </div>
                 </div>
             </div>
@@ -186,44 +189,10 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// Crear gráficos circulares para preguntas de selección múltiple
-{% for question in poll.preguntas.all %}
-    {% if question.question_type == 'SELECCION_MULTIPLE' %}
-    const ctx{{ question.id }} = document.getElementById('chart-{{ question.id }}').getContext('2d');
-    new Chart(ctx{{ question.id }}, {
-        type: 'doughnut',
-        data: {
-            labels: [{% for option in question.opciones.all %}'{{ option.options_text|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}],
-            datasets: [{
-                data: [{% for option in question.opciones.all %}{{ option.response_count }}{% if not forloop.last %},{% endif %}{% endfor %}],
-                backgroundColor: [
-                    '#184da1', '#2D64BB', '#3498db', '#27ae60', '#f39c12', 
-                    '#e74c3c', '#9b59b6', '#1abc9c', '#34495e', '#95a5a6'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
-    {% endif %}
-{% endfor %}
-</script>
+
 
 <style>
-@media print {
-    .btn, .accordion-button {
-        display: none !important;
-    }
-}
+
 
 .progress-bar {
     transition: width 0.6s ease;

@@ -7,7 +7,7 @@
 <div class="row">
     <div class="col-12">
         <h2 class="fw-bold mb-4" style="color: #184da1;">
-            <i class="fas fa-tachometer-alt me-2"></i>Dashboard Principal
+            <i class="fas fa-tachometer-alt me-2"></i>Dashboard de Gestión
         </h2>
     </div>
 </div>
@@ -56,10 +56,13 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
                     <i class="fas fa-list me-2"></i>Encuestas Recientes
                 </h5>
+                <a href="{% url 'posts:create_poll' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>Nueva Encuesta
+                </a>
             </div>
             <div class="card-body">
                 {% if polls %}
@@ -76,8 +79,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for poll in polls %}
-                            <tr{% if forloop.counter > 10 %} style="display: none;"{% endif %}>
+                            {% for poll in polls|slice:":10" %}
+                            <tr>
                                 <td>
                                     <strong>{{ poll.title }}</strong>
                                     {% if poll.description %}
@@ -97,7 +100,9 @@
                                         <a href="{% url 'posts:edit_poll' poll.id %}" class="btn btn-outline-primary" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>
-
+                                        <a href="{% url 'posts:poll_results' poll.id %}" class="btn btn-outline-info" title="Resultados">
+                                            <i class="fas fa-chart-bar"></i>
+                                        </a>
                                         <a href="{% url 'posts:delete_poll' poll.id %}" class="btn btn-outline-danger" title="Eliminar" onclick="return confirm('¿Eliminar esta encuesta?')">
                                             <i class="fas fa-trash"></i>
                                         </a>
@@ -108,20 +113,6 @@
                         </tbody>
                     </table>
                 </div>
-                {% if polls.count > 10 %}
-                <div class="text-center mt-3">
-                    <div class="btn-toolbar justify-content-center">
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-secondary" onclick="showAllPolls()">
-                                <i class="fas fa-list me-1"></i>Ver Todas ({{ polls.count }})
-                            </button>
-                            <button class="btn btn-outline-primary active" onclick="showRecentPolls()">
-                                <i class="fas fa-clock me-1"></i>Recientes (10)
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
                 {% else %}
                 <div class="text-center py-4">
                     <i class="fas fa-poll fa-3x text-muted mb-3"></i>
@@ -137,13 +128,14 @@
     </div>
 </div>
 
-<!-- Personal Administrador -->
+<!-- Gestión de usuarios (solo administradores) -->
+{% if user.rol.name == 'Administrador' %}
 <div class="row mt-4">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="fas fa-users-cog me-2"></i>Personal Administrador
+                    <i class="fas fa-users-cog me-2"></i>Gestión de Usuarios
                 </h5>
             </div>
             <div class="card-body">
@@ -160,7 +152,6 @@
                         </thead>
                         <tbody>
                             {% for usuario in users|slice:":5" %}
-                            {% if usuario.rol.name == 'Administrador' or usuario.rol.name == 'Trabajador' %}
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center">
@@ -183,49 +174,18 @@
                                 </td>
                                 <td>{{ usuario.date_joined|date:"d/m/Y" }}</td>
                             </tr>
-                            {% endif %}
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 <div class="text-center mt-3">
-                    <a href="{% url 'posts:user_list' %}" class="btn btn-outline-primary btn-sm">
+                    <button class="btn btn-outline-primary btn-sm" onclick="alert('Próximamente: Gestión completa de usuarios')">
                         Ver Todos los Usuarios
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-/* Ocultar encuestas después de la 10ma inicialmente */
-tbody tr:nth-child(n+11) {
-    display: none;
-}
-</style>
-
-<script>
-function showAllPolls() {
-    // Mostrar todas las filas de encuestas
-    const rows = document.querySelectorAll('tbody tr');
-    rows.forEach(row => row.style.display = '');
-    
-    // Actualizar botones
-    document.querySelector('button[onclick="showAllPolls()"]').classList.add('active');
-    document.querySelector('button[onclick="showRecentPolls()"]').classList.remove('active');
-}
-
-function showRecentPolls() {
-    // Mostrar solo las primeras 10 filas
-    const rows = document.querySelectorAll('tbody tr');
-    rows.forEach((row, index) => {
-        row.style.display = index < 10 ? '' : 'none';
-    });
-    
-    // Actualizar botones
-    document.querySelector('button[onclick="showRecentPolls()"]').classList.add('active');
-    document.querySelector('button[onclick="showAllPolls()"]').classList.remove('active');
-}
-</script>
+{% endif %}
 {% endblock %}

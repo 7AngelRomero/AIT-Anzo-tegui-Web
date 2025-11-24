@@ -65,9 +65,20 @@ class Poll(models.Model):
     description = models.TextField(blank=True, null=True, default='')
     image = models.ImageField(upload_to='polls/', blank=True, null=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.BORRADOR)
-    star_date = models.DateTimeField(auto_now_add=True)
-    end_date = models.DateTimeField(null=True, blank=True, help_text="Opcional: Dejar en blanco si no hay fecha límite")
+    star_date = models.DateTimeField(null=True, blank=True, help_text="Fecha y hora de inicio de la encuesta")
+    end_date = models.DateTimeField(null=True, blank=True, help_text="Fecha y hora de finalización de la encuesta")
 
+    def check_and_update_status(self):
+        """Verifica y actualiza el estado de la encuesta según las fechas"""
+        from django.utils import timezone
+        now = timezone.now()
+        
+        if self.end_date and now > self.end_date and self.status == 'ACTIVA':
+            self.status = 'CERRADA'
+            self.save(update_fields=['status'])
+            return True
+        return False
+    
     def __str__(self):
         return self.title 
 
@@ -134,3 +145,33 @@ class QuestionDetails(models.Model):
 
     def __str__(self):
         return f"Respuesta a Pregunta ID {self.question.id} (Participación ID {self.participation.id})"
+
+
+### Tabla de Contenido Dinámico
+
+class SiteContent(models.Model):
+    
+    class ContentType(models.TextChoices):
+        HOME_IMAGE = 'HOME_IMAGE', 'Imagen de Inicio'
+        ABOUT_IMAGE = 'ABOUT_IMAGE', 'Imagen de Acerca de'
+        CAROUSEL_SLIDE = 'CAROUSEL_SLIDE', 'Slide del Carousel'
+        LIVE_STREAM = 'LIVE_STREAM', 'Enlace de Transmisión en Vivo'
+    
+    content_type = models.CharField(max_length=20, choices=ContentType.choices)
+    title = models.CharField(max_length=200, help_text="Título o descripción del contenido")
+    image = models.ImageField(upload_to='content/', blank=True, null=True)
+    link_url = models.URLField(blank=True, null=True, help_text="URL de redirección (opcional)")
+    description = models.TextField(blank=True, null=True, help_text="Descripción adicional")
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0, help_text="Orden de visualización")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['content_type', 'order']
+        verbose_name = 'Contenido del Sitio'
+        verbose_name_plural = 'Contenidos del Sitio'
+    
+    def __str__(self):
+        return f"{self.get_content_type_display()} - {self.title}"

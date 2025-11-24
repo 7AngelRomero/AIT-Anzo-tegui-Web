@@ -1,0 +1,83 @@
+{% extends "pages/layouts/_base_manage.html" %}
+{% load static %}
+
+{% block title %}Estadísticas de Encuestas - AIT{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="fw-bold mb-4" style="color: #184da1;">
+            <i class="fas fa-chart-bar me-2"></i>Estadísticas de Encuestas Cerradas
+        </h2>
+    </div>
+</div>
+
+{% for poll in closed_polls %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">{{ poll.title }}</h5>
+        <small class="text-muted">{{ poll.participaciones.count }} participantes • Cerrada: {{ poll.end_date|date:"d/m/Y" }}</small>
+    </div>
+    <div class="card-body">
+        {% for question in poll.preguntas.all %}
+        <div class="mb-4">
+            <h6 class="fw-bold">{{ forloop.counter }}. {{ question.question_text }}</h6>
+            
+            {% if question.question_type == 'SELECCION_MULTIPLE' %}
+                {% with max_votes=0 max_option=None %}
+                    {% for option in question.opciones.all %}
+                        {% with votes=option.respuestas.count %}
+                            {% if votes > max_votes %}
+                                {% with max_votes=votes max_option=option %}{% endwith %}
+                            {% endif %}
+                        {% endwith %}
+                    {% endfor %}
+                    {% if max_option %}
+                    <div class="alert alert-info">
+                        <strong>Opción más votada:</strong> {{ max_option.options_text }} 
+                        ({{ max_votes }} votos - {% widthratio max_votes poll.participaciones.count 100 %}%)
+                    </div>
+                    {% endif %}
+                {% endwith %}
+                
+            {% elif question.question_type == 'TEXTO_LIBRE' %}
+                <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                    {% for response in question.respuestas.all %}
+                        {% if response.answer_text %}
+                        <div class="mb-2 p-2 bg-light rounded">
+                            <small class="text-muted">{{ response.participation.user.username }}:</small>
+                            <div>{{ response.answer_text }}</div>
+                        </div>
+                        {% endif %}
+                    {% empty %}
+                    <p class="text-muted">No hay respuestas de texto</p>
+                    {% endfor %}
+                </div>
+                
+            {% elif question.question_type == 'ESCALA_NUMERICA' %}
+                {% with total=0 sum=0 %}
+                    {% for response in question.respuestas.all %}
+                        {% if response.selected_options %}
+                            {% with total=total|add:1 sum=sum|add:response.selected_options.value %}{% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if total > 0 %}
+                    <div class="alert alert-success">
+                        <strong>Promedio:</strong> {% widthratio sum total 1 %}/5 
+                        ({{ total }} respuestas)
+                    </div>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% empty %}
+<div class="text-center py-5">
+    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+    <h4 class="text-muted">No hay encuestas cerradas</h4>
+    <p class="text-muted">Las estadísticas aparecerán cuando las encuestas se cierren</p>
+</div>
+{% endfor %}
+{% endblock %}

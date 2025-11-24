@@ -6,15 +6,42 @@
 {% block content %}
     <!-- Carousel Section -->
     <div id="homeCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+        {% if carousel_slides %}
         <div class="carousel-indicators">
-            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
-            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+            {% for slide in carousel_slides %}
+            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="Slide {{ forloop.counter }}"></button>
+            {% endfor %}
         </div>
         
         <div class="carousel-inner">
-            <!-- Slide 1 -->
+            {% for slide in carousel_slides %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                {% if slide.image %}
+                <img src="{{ slide.image.url }}" class="d-block w-100" alt="{{ slide.title }}" style="height: 500px; object-fit: cover;">
+                {% else %}
+                <div class="carousel-slide d-flex align-items-center justify-content-center">
+                {% endif %}
+                    <div class="carousel-caption d-none d-md-block">
+                        <h2 class="display-5 fw-bold mb-3">{{ slide.title }}</h2>
+                        {% if slide.description %}
+                        <p class="lead mb-4">{{ slide.description }}</p>
+                        {% endif %}
+                        {% if slide.link_url %}
+                        <a href="{{ slide.link_url }}" class="btn btn-primary btn-lg">Ver más</a>
+                        {% endif %}
+                    </div>
+                {% if not slide.image %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Carousel por defecto si no hay slides dinámicos -->
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        </div>
+        <div class="carousel-inner">
             <div class="carousel-item active">
                 <div class="carousel-slide d-flex align-items-center justify-content-center">
                     <div class="carousel-content text-center text-white">
@@ -23,37 +50,8 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Slide 2 -->
-            <div class="carousel-item">
-                <div class="carousel-slide d-flex align-items-center justify-content-center">
-                    <div class="carousel-content text-center text-white">
-                        <h2 class="display-5 fw-bold mb-3">Tecnología e Innovación</h2>
-                        <p class="lead mb-4">Desarrollando soluciones tecnológicas para el futuro</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Slide 3 -->
-            <div class="carousel-item">
-                <div class="carousel-slide d-flex align-items-center justify-content-center">
-                    <div class="carousel-content text-center text-white">
-                        <h2 class="display-5 fw-bold mb-3">Talento Humano</h2>
-                        <p class="lead mb-4">Fortaleciendo las capacidades del capital humano venezolano</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Slide 4 -->
-            <div class="carousel-item">
-                <div class="carousel-slide d-flex align-items-center justify-content-center">
-                    <div class="carousel-content text-center text-white">
-                        <h2 class="display-5 fw-bold mb-3">Proyectos Estratégicos</h2>
-                        <p class="lead mb-4">Iniciativas que transforman el panorama tecnológico nacional</p>
-                    </div>
-                </div>
-            </div>
         </div>
+        {% endif %}
         
         <!-- Controles del carousel -->
         <button class="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev">
@@ -87,10 +85,13 @@
             </div>
             <div class="col-lg-4">
                 <div class="image-placeholder">
-                    <!-- Espacio para imagen futura -->
+                    {% if home_images.0 %}
+                    <img src="{{ home_images.0.image.url }}" class="img-fluid rounded" alt="{{ home_images.0.title }}">
+                    {% else %}
                     <div class="placeholder-box d-flex align-items-center justify-content-center">
                         <i class="fas fa-history fa-3x text-muted"></i>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -99,10 +100,13 @@
         <div class="row mb-5 align-items-center">
             <div class="col-lg-4 order-lg-1">
                 <div class="image-placeholder">
-                    <!-- Espacio para imagen futura -->
+                    {% if home_images.1 %}
+                    <img src="{{ home_images.1.image.url }}" class="img-fluid rounded" alt="{{ home_images.1.title }}">
+                    {% else %}
                     <div class="placeholder-box d-flex align-items-center justify-content-center">
-                        <i href="627e33432ad38e160e39f6a7_dodge_viper_gts-r_concept_6.jpeg" class="fas fa-users fa-3x text-muted"></i>
+                        <i class="fas fa-users fa-3x text-muted"></i>
                     </div>
+                    {% endif %}
                 </div>
             </div>
             <div class="col-lg-8 order-lg-2">
@@ -123,10 +127,13 @@
             </div>
             <div class="col-lg-4">
                 <div class="image-placeholder">
-                    <!-- Espacio para imagen futura -->
+                    {% if home_images.2 %}
+                    <img src="{{ home_images.2.image.url }}" class="img-fluid rounded" alt="{{ home_images.2.title }}">
+                    {% else %}
                     <div class="placeholder-box d-flex align-items-center justify-content-center">
-                        <i class="fas fa-rocket fa-3x text-muted"></i> 
+                        <i class="fas fa-rocket fa-3x text-muted"></i>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

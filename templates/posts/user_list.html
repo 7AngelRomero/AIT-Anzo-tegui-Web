@@ -1,0 +1,217 @@
+{% extends "pages/layouts/_base_manage.html" %}
+{% load static %}
+
+{% block title %}Listado de Usuarios - AIT{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="fw-bold mb-4" style="color: #184da1;">
+            <i class="fas fa-users me-2"></i>Listado de Usuarios
+        </h2>
+    </div>
+</div>
+
+<!-- Estadísticas de usuarios -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-user-shield fa-2x mb-2"></i>
+                <h4>{{ admin_count }}</h4>
+                <p class="mb-0">Administradores</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-user-tie fa-2x mb-2"></i>
+                <h4>{{ worker_count }}</h4>
+                <p class="mb-0">Trabajadores</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-secondary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-user fa-2x mb-2"></i>
+                <h4>{{ user_count }}</h4>
+                <p class="mb-0">Usuarios</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de usuarios -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>Todos los Usuarios ({{ users.count }} total)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Nombre Completo</th>
+                                <th>Email</th>
+                                <th>Fecha Creación</th>
+                                <th>Activo</th>
+                                <th>Rol</th>
+                                <th>Staff Status</th>
+                                {% if user.rol.name == 'Administrador' %}
+                                <th>Acciones</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usuario in page_obj %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if usuario.profile_image %}
+                                            <img src="{{ usuario.profile_image.url }}" class="rounded-circle me-2" width="32" height="32">
+                                        {% else %}
+                                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                <span class="text-white fw-bold">{{ usuario.username|first|upper }}</span>
+                                            </div>
+                                        {% endif %}
+                                        <strong 
+                                            data-bs-toggle="tooltip" 
+                                            data-bs-placement="top" 
+                                            data-bs-html="true"
+                                            title="<div class='text-start'><strong>{{ usuario.get_full_name|default:usuario.username }}</strong><br><small>📊 Participaciones: {{ usuario.participation_count }}</small>{% if usuario.last_participation %}<br><small>📅 Última: {{ usuario.last_participation.sent_date|date:'d/m/Y' }}</small>{% endif %}<br><small>📧 {{ usuario.email }}</small></div>"
+                                            style="cursor: help;"
+                                        >{{ usuario.username }}</strong>
+                                    </div>
+                                </td>
+                                <td>{{ usuario.get_full_name|default:"-" }}</td>
+                                <td>{{ usuario.email }}</td>
+                                <td>{{ usuario.date_joined|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if usuario.is_active %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if usuario.rol.name == 'Administrador' %}danger{% elif usuario.rol.name == 'Trabajador' %}warning{% else %}secondary{% endif %}">
+                                        {{ usuario.rol.name|default:"Usuario" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if usuario.is_staff %}
+                                        <span class="badge bg-info">Staff</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">No Staff</span>
+                                    {% endif %}
+                                </td>
+                                {% if user.rol.name == 'Administrador' %}
+                                <td>
+                                    {% if usuario.id != user.id %}
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            Cambiar Rol
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" onclick="changeRole({{ usuario.id }}, 'Usuario')">Usuario</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="changeRole({{ usuario.id }}, 'Trabajador')">Trabajador</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="changeRole({{ usuario.id }}, 'Administrador')">Administrador</a></li>
+                                        </ul>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted">Tu cuenta</span>
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Paginación de usuarios">
+                    <ul class="pagination justify-content-center mt-4">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">Primera</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Inicializar tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
+{% if user.rol.name == 'Administrador' %}
+function changeRole(userId, newRole) {
+    if (confirm(`¿Cambiar rol a ${newRole}?`)) {
+        fetch(`/polls/change_user_role/${userId}/${newRole}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error al cambiar el rol');
+        });
+    }
+}
+{% endif %}
+</script>
+{% if user.rol.name == 'Administrador' %}
+{% csrf_token %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,144 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard - AIT Anzoátegui{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    
+    <!-- React CDN para notificaciones -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="svg-container">
+            <img src="{% static 'SVG/GOB AIT White_2.svg' %}" class="svg_ait" alt="Logo AIT">
+        </div>
+    </header>
+    <nav class="navbar navbar-expand-lg custom-navbar">
+        <div class="container custom-nav-container">
+            <div class="navbar-nav">
+                <a class="nav-link text-white" href="{% url 'home' %}">Inicio</a>
+                <span class="nav-link text-white-50">></span>
+                <a class="nav-link text-white" href="{% url 'posts:poll_list' %}">Encuestas</a>
+                <span class="nav-link text-white-50">></span>
+                <span class="nav-link text-white-50">Dashboard</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenedor principal -->
+    <div class="container-fluid">
+        <div class="row" style="min-height: 100vh;">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 p-0 d-flex flex-column">
+                <div class="sidebar bg-light flex-grow-1 position-relative">
+                    
+                    <!-- Menú sidebar -->
+                    <div class="p-3 pb-5">
+                        <ul class="nav nav-pills flex-column">
+                            <li class="nav-item mb-2">
+                                <a class="nav-link" href="{% url 'posts:poll_list' %}">
+                                    <i class="fas fa-arrow-left me-2"></i>Volver a Encuestas
+                                </a>
+                            </li>
+                            <li class="nav-item mb-2">
+                                <a class="nav-link" href="{% url 'posts:poll_manager' %}">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard Principal
+                                </a>
+                            </li>
+                            <li class="nav-item mb-2">
+                                <a class="nav-link" href="{% url 'posts:create_poll' %}">
+                                    <i class="fas fa-plus me-2"></i>Crear Encuesta
+                                </a>
+                            </li>
+                            <li class="nav-item mb-2">
+                                <a class="nav-link" href="{% url 'posts:user_list' %}">
+                                    <i class="fas fa-users me-2"></i>Listado de Usuarios
+                                </a>
+                            </li>
+                            <li class="nav-item mb-2">
+                                <a class="nav-link" href="{% url 'posts:poll_statistics' %}">
+                                    <i class="fas fa-chart-bar me-2"></i>Estadísticas de Encuestas
+                                </a>
+                            </li>
+                            <li class="nav-item mb-2">
+                                <a class="nav-link" href="{% url 'posts:content_manager' %}">
+                                    <i class="fas fa-paperclip me-2"></i>Adjuntar Contenido
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Usuario al final del sidebar -->
+                    <div class="position-absolute bottom-0 start-0 end-0 p-3 border-top bg-light">
+                        <div class="d-flex align-items-center">
+                            {% if user.profile_image %}
+                                <img src="{{ user.profile_image.url }}" class="rounded-circle me-2" width="40" height="40">
+                            {% else %}
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                    <span class="text-white fw-bold">{{ user.username|first|upper }}</span>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <div class="fw-bold">{{ user.first_name|default:user.username }}</div>
+                                <small class="text-muted">{{ user.rol.name|default:"Usuario" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido principal -->
+            <div class="col-md-9 col-lg-10">
+                <div class="p-4">
+                    <!-- Mensajes de Django (ocultos, procesados por React) -->
+                    {% if messages %}
+                        <div style="display: none;">
+                            {% for message in messages %}
+                                <div class="django-message" data-type="{% if message.tags == 'error' %}error{% else %}{{ message.tags }}{% endif %}">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Contenedor para notificaciones React -->
+                    <div id="notification-root"></div>
+                    
+                    {% block content %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Funciones de notificaciones -->
+    <script src="{% static 'js/notifications.js' %}"></script>
+    
+    <!-- Sistema de Notificaciones React -->
+    <script type="text/babel" src="{% static 'js/react/NotificationSystem.js' %}"></script>
+    <script type="text/babel">
+        // Renderizar sistema de notificaciones
+        const notificationRoot = ReactDOM.createRoot(document.getElementById('notification-root'));
+        notificationRoot.render(<NotificationSystem />);
+    </script>
+    
+
+</body>
+</html>

@@ -1,0 +1,234 @@
+{% extends "pages/layouts/_base_manage.html" %}
+{% load static %}
+
+{% block title %}Gestión de Contenido - AIT{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="fw-bold mb-4" style="color: #184da1;">
+            <i class="fas fa-paperclip me-2"></i>Gestión de Contenido del Sitio
+        </h2>
+    </div>
+</div>
+
+<!-- Formulario para agregar contenido -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus me-2"></i>Agregar Nuevo Contenido
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="content_type" class="form-label fw-semibold">Tipo de Contenido *</label>
+                            <select class="form-select" id="content_type" name="content_type" required onchange="showImageSpecs()">
+                                <option value="">Seleccionar...</option>
+                                <option value="HOME_IMAGE">Imagen de Inicio (Máx. 3)</option>
+                                <option value="ABOUT_IMAGE">Imagen de Acerca de (Máx. 3)</option>
+                                <option value="CAROUSEL_SLIDE">Slide del Carousel</option>
+                                <option value="LIVE_STREAM">Enlace de Transmisión en Vivo</option>
+                            </select>
+                            <div id="imageSpecs" class="form-text d-none">
+                                <strong>Medidas recomendadas:</strong><br>
+                                <span id="specsText"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="title" class="form-label fw-semibold">Título *</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="image" class="form-label fw-semibold">Imagen</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                            <div class="form-text">Formatos: JPG, PNG, WebP. Tamaño máximo: 5MB</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="link_url" class="form-label fw-semibold">URL de Redirección</label>
+                            <input type="url" class="form-control" id="link_url" name="link_url" placeholder="https://...">
+                            <div class="form-text">
+                                <strong>Para YouTube:</strong> Cambiar <code>watch?v=</code> por <code>embed/</code><br>
+                                <small class="text-muted">Ej: youtube.com/embed/VIDEO_ID</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-semibold">Descripción</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Guardar Contenido
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido existente -->
+<div class="row">
+    <!-- Imágenes de Inicio -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-home me-2"></i>Imágenes de Inicio ({{ home_images.count }})
+                </h6>
+            </div>
+            <div class="card-body">
+                {% for content in home_images %}
+                <div class="d-flex align-items-center mb-2 p-2 border rounded">
+                    {% if content.image %}
+                    <img src="{{ content.image.url }}" class="me-2" width="50" height="50" style="object-fit: cover;">
+                    {% endif %}
+                    <div class="flex-grow-1">
+                        <strong>{{ content.title }}</strong>
+                        {% if content.description %}
+                        <br><small class="text-muted">{{ content.description|truncatechars:50 }}</small>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'posts:delete_content' content.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este contenido?')">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+                {% empty %}
+                <p class="text-muted">No hay imágenes de inicio</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Imágenes de Acerca de -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Imágenes de Acerca de ({{ about_images.count }})
+                </h6>
+            </div>
+            <div class="card-body">
+                {% for content in about_images %}
+                <div class="d-flex align-items-center mb-2 p-2 border rounded">
+                    {% if content.image %}
+                    <img src="{{ content.image.url }}" class="me-2" width="50" height="50" style="object-fit: cover;">
+                    {% endif %}
+                    <div class="flex-grow-1">
+                        <strong>{{ content.title }}</strong>
+                        {% if content.description %}
+                        <br><small class="text-muted">{{ content.description|truncatechars:50 }}</small>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'posts:delete_content' content.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este contenido?')">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+                {% empty %}
+                <p class="text-muted">No hay imágenes de acerca de</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Slides del Carousel -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-images me-2"></i>Slides del Carousel ({{ carousel_slides.count }})
+                </h6>
+            </div>
+            <div class="card-body">
+                {% for content in carousel_slides %}
+                <div class="d-flex align-items-center mb-2 p-2 border rounded">
+                    {% if content.image %}
+                    <img src="{{ content.image.url }}" class="me-2" width="50" height="50" style="object-fit: cover;">
+                    {% endif %}
+                    <div class="flex-grow-1">
+                        <strong>{{ content.title }}</strong>
+                        {% if content.link_url %}
+                        <br><small class="text-primary">🔗 {{ content.link_url|truncatechars:30 }}</small>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'posts:delete_content' content.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este contenido?')">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+                {% empty %}
+                <p class="text-muted">No hay slides del carousel</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Transmisión en Vivo -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-video me-2"></i>Transmisión en Vivo
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if live_stream %}
+                <div class="p-3 border rounded bg-light">
+                    <strong>{{ live_stream.title }}</strong>
+                    {% if live_stream.link_url %}
+                    <br><a href="{{ live_stream.link_url }}" target="_blank" class="text-primary">
+                        <i class="fas fa-external-link-alt me-1"></i>{{ live_stream.link_url }}
+                    </a>
+                    {% endif %}
+                    {% if live_stream.description %}
+                    <br><small class="text-muted">{{ live_stream.description }}</small>
+                    {% endif %}
+                    <div class="mt-2">
+                        <a href="{% url 'posts:delete_content' live_stream.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este enlace?')">
+                            <i class="fas fa-trash me-1"></i>Eliminar
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted">No hay enlace de transmisión configurado</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showImageSpecs() {
+    const contentType = document.getElementById('content_type').value;
+    const specsDiv = document.getElementById('imageSpecs');
+    const specsText = document.getElementById('specsText');
+    
+    if (contentType) {
+        let specs = '';
+        switch(contentType) {
+            case 'HOME_IMAGE':
+            case 'ABOUT_IMAGE':
+                specs = '400x300px (4:3) - Imágenes para secciones de contenido';
+                break;
+            case 'CAROUSEL_SLIDE':
+                specs = '1200x500px (16:9) - Imágenes para carousel principal';
+                break;
+            case 'LIVE_STREAM':
+                specs = 'URL de YouTube (normal o embed). Se convertirá automáticamente';
+                break;
+        }
+        specsText.textContent = specs;
+        specsDiv.classList.remove('d-none');
+    } else {
+        specsDiv.classList.add('d-none');
+    }
+}
+</script>
+{% endblock %}
