@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'django_base.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'python_test',
+        'NAME': 'db.django',
         'USER': 'root',
         'PASSWORD': 'Barcelona2007*',
         'HOST': '127.0.0.1',
@@ -161,7 +161,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'asebastianbrito@gmail.com'  # Tu email con contraseña de app
 EMAIL_HOST_PASSWORD = 'rqzl chwx edsx tkaj'  # Tu contraseña de aplicación
 # DEFAULT_FROM_EMAIL: Email que ve el usuario (puede ser ficticio pero profesional)
-DEFAULT_FROM_EMAIL = 'AIT Anzoátegui <noreply@aitanzoategui.gov.ve>'
+DEFAULT_FROM_EMAIL = 'AIT Anzoátegui <asebastianbrito@gmail.com>'
 
 # URLs de redirección después del reset
 LOGIN_REDIRECT_URL = '/'
