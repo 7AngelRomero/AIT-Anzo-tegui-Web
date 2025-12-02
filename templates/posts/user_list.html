@@ -189,29 +189,37 @@ document.addEventListener('DOMContentLoaded', function() {
 {% if user.rol.name == 'Administrador' %}
 function changeRole(userId, newRole) {
     if (confirm(`¿Cambiar rol a ${newRole}?`)) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}';
+        
         fetch(`/polls/change_user_role/${userId}/${newRole}/`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
+                alert(data.message);
                 location.reload();
             } else {
                 alert('Error: ' + data.error);
             }
         })
         .catch(error => {
-            alert('Error al cambiar el rol');
+            console.error('Error:', error);
+            alert('Error al cambiar el rol: ' + error.message);
         });
     }
 }
 {% endif %}
 </script>
-{% if user.rol.name == 'Administrador' %}
 {% csrf_token %}
-{% endif %}
 {% endblock %}

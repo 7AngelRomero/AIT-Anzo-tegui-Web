@@ -320,7 +320,7 @@ def change_user_role(request, user_id, new_role):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': False, 'error': 'No puedes cambiar tu propio rol por seguridad.'})
         messages.error(request, 'No puedes cambiar tu propio rol por seguridad.')
-        return redirect('posts:poll_manager')
+        return redirect('posts:user_list')
     
     try:
         role = Rol.objects.get(name=new_role)
@@ -340,7 +340,7 @@ def change_user_role(request, user_id, new_role):
         })
     
     messages.success(request, f'Rol de {user.username} cambiado a {new_role} exitosamente.')
-    return redirect('posts:poll_manager')
+    return redirect('posts:user_list')
 
 @login_required
 def answer_poll(request, poll_id):

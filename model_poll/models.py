@@ -43,6 +43,8 @@ class User(AbstractUser):
             else:
                 # Usuarios normales tienen rol de Usuario
                 user_role, created = Rol.objects.get_or_create(name='Usuario')
+                # Crear también el rol de Trabajador para evitar problemas 
+                worker_role, created = Rol.objects.get_or_create(name='Trabajador')
                 self.rol = user_role
         
         super().save(*args, **kwargs)
