@@ -26,7 +26,7 @@
 <body>
     <header>
         <div class="svg-container">
-            <img src="{% static 'SVG/GOB AIT White_2.svg' %}" class="svg_ait" alt="Logo AIT">
+            <img src="{% static 'SVG/AIT White lateral.svg' %}" class="svg_ait" alt="Logo AIT">
         </div>
     </header>
     <nav class="navbar navbar-expand-lg custom-navbar">
@@ -86,18 +86,30 @@
                     
                     <!-- Usuario al final del sidebar -->
                     <div class="position-absolute bottom-0 start-0 end-0 p-3 border-top bg-light">
-                        <div class="d-flex align-items-center">
-                            {% if user.profile_image %}
-                                <img src="{{ user.profile_image.url }}" class="rounded-circle me-2" width="40" height="40">
-                            {% else %}
-                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
-                                    <span class="text-white fw-bold">{{ user.username|first|upper }}</span>
+                        <div class="dropdown">
+                            <button class="btn btn-light d-flex align-items-center w-100 text-start" type="button" data-bs-toggle="dropdown">
+                                {% if user.profile_image %}
+                                    <img src="{{ user.profile_image.url }}" class="rounded-circle me-2" width="40" height="40">
+                                {% else %}
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                        <span class="text-white fw-bold">{{ user.username|first|upper }}</span>
+                                    </div>
+                                {% endif %}
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">{{ user.first_name|default:user.username }}</div>
+                                    <small class="text-muted">{{ user.rol.name|default:"Usuario" }}</small>
                                 </div>
-                            {% endif %}
-                            <div>
-                                <div class="fw-bold">{{ user.first_name|default:user.username }}</div>
-                                <small class="text-muted">{{ user.rol.name|default:"Usuario" }}</small>
-                            </div>
+                                <i class="fas fa-chevron-up"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end w-100">
+                                <li><a class="dropdown-item" href="{% url 'profile' %}">
+                                    <i class="fas fa-user me-2"></i>Gestionar Perfil
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                </a></li>
+                            </ul>
                         </div>
                     </div>
                 </div>

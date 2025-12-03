@@ -4,6 +4,66 @@
 {% block title %}Encuestas - AIT{% endblock %}
 
 {% block content %}
+<!-- Carousel Section -->
+<div id="pollCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+    {% if carousel_slides %}
+    <div class="carousel-indicators">
+        {% for slide in carousel_slides %}
+        <button type="button" data-bs-target="#pollCarousel" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="Slide {{ forloop.counter }}"></button>
+        {% endfor %}
+    </div>
+    
+    <div class="carousel-inner">
+        {% for slide in carousel_slides %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            {% if slide.image %}
+            <img src="{{ slide.image.url }}" class="d-block w-100" alt="{{ slide.title }}" style="height: 500px; object-fit: cover;">
+            {% else %}
+            <div class="carousel-slide d-flex align-items-center justify-content-center">
+            {% endif %}
+                <div class="carousel-caption d-none d-md-block">
+                    <h2 class="display-5 fw-bold mb-3">{{ slide.title }}</h2>
+                    {% if slide.description %}
+                    <p class="lead mb-4">{{ slide.description }}</p>
+                    {% endif %}
+                    {% if slide.link_url %}
+                    <a href="{{ slide.link_url }}" class="btn btn-primary btn-lg">Ver más</a>
+                    {% endif %}
+                </div>
+            {% if not slide.image %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Carousel por defecto si no hay slides dinámicos -->
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#pollCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+    </div>
+    <div class="carousel-inner">
+        <div class="carousel-item active">
+            <div class="carousel-slide d-flex align-items-center justify-content-center">
+                <div class="carousel-content text-center text-white">
+                    <h2 class="display-5 fw-bold mb-3">Encuestas AIT Anzoátegui</h2>
+                    <p class="lead mb-4">Participa en nuestras encuestas y ayuda a mejorar</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Controles del carousel -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#pollCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#pollCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Siguiente</span>
+    </button>
+</div>
+
 <!-- Breadcrumb -->
 <div class="container mt-3">
     <nav aria-label="breadcrumb">
@@ -47,13 +107,22 @@
                                     <i class="fas fa-play me-2"></i>Responder Encuesta
                                 </a>
                             {% else %}
-                            <div class="btn-group w-100">
-                                <a href="{% url 'posts:edit_poll' poll.id %}" class="btn btn-outline-primary">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="{% url 'posts:poll_results' poll.id %}" class="btn btn-outline-info">
-                                    <i class="fas fa-chart-bar"></i>
-                                </a>
+                            <div class="dropdown w-100">
+                                <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog me-2"></i>Gestionar
+                                </button>
+                                <ul class="dropdown-menu w-100">
+                                    <li><a class="dropdown-item" href="{% url 'posts:edit_poll' poll.id %}">
+                                        <i class="fas fa-edit me-2"></i>Editar Encuesta
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'posts:poll_results' poll.id %}">
+                                        <i class="fas fa-chart-bar me-2"></i>Ver Resultados
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="confirmDelete({{ poll.id }}, '{{ poll.title|escapejs }}')">
+                                        <i class="fas fa-trash me-2"></i>Eliminar
+                                    </a></li>
+                                </ul>
                             </div>
                             {% endif %}
                         </div>
@@ -71,6 +140,12 @@
             {% endfor %}
         </div>
     </div>
-    
 
+<script>
+function confirmDelete(pollId, pollTitle) {
+    if (confirm(`¿Estás seguro de eliminar la encuesta "${pollTitle}"?`)) {
+        window.location.href = `/polls/delete/${pollId}/`;
+    }
+}
+</script>
 {% endblock %}

@@ -16,7 +16,16 @@ def poll_list(request):
     
     # Obtener encuestas activas actualizadas
     polls = Poll.objects.filter(status='ACTIVA').order_by('-star_date')
-    return render(request, 'posts/poll_list.html', {'polls': polls})
+    
+    # Obtener slides del carousel
+    carousel_slides = SiteContent.objects.filter(content_type='CAROUSEL_SLIDE', is_active=True).order_by('order')
+    
+    context = {
+        'polls': polls,
+        'carousel_slides': carousel_slides,
+    }
+    
+    return render(request, 'posts/poll_list.html', context)
 
 @login_required
 def poll_detail(request, poll_id):
@@ -574,14 +583,33 @@ def delete_content(request, content_id):
 
 @login_required
 def poll_statistics(request):
-    """Vista para mostrar estadísticas de encuestas cerradas"""
+    """Vista para mostrar estadísticas de todas las encuestas creadas"""
     if not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']:
         return HttpResponseForbidden("No tienes permisos para ver estadísticas.")
     
-    closed_polls = Poll.objects.filter(status='CERRADA').order_by('-end_date')
+    all_polls = Poll.objects.all().order_by('-star_date')
+    
+    # Agregar estadísticas de participación a cada encuesta
+    for poll in all_polls:
+        poll.total_participations = poll.participaciones.count()
+        poll.unique_participants = poll.participaciones.values('user').distinct().count()
+        
+        # Obtener participaciones recientes
+        poll.recent_participations = poll.participaciones.select_related('user').order_by('-sent_date')[:5]
+        
+        # Calcular promedio de respuestas por pregunta
+        total_questions = poll.preguntas.count()
+        total_responses = QuestionDetails.objects.filter(question__poll=poll).count()
+        poll.avg_responses_per_question = (total_responses / total_questions) if total_questions > 0 else 0
+    
+    # Estadísticas generales
+    total_participations = Participation.objects.count()
+    total_active_users = User.objects.filter(participaciones__isnull=False).distinct().count()
     
     context = {
-        'closed_polls': closed_polls,
+        'all_polls': all_polls,
+        'total_participations': total_participations,
+        'total_active_users': total_active_users,
     }
     
     return render(request, 'posts/poll_statistics.html', context)
