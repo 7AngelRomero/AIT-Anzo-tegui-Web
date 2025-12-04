@@ -8,14 +8,14 @@ from model_poll.models import Poll, Question, Options, Participation, QuestionDe
 
 @login_required
 def poll_list(request):
-    """Vista para mostrar todas las encuestas activas"""
+    """Vista para mostrar todas las encuestas"""
     # Verificar y actualizar estado de encuestas vencidas
     active_polls = Poll.objects.filter(status='ACTIVA')
     for poll in active_polls:
         poll.check_and_update_status()
     
-    # Obtener encuestas activas actualizadas
-    polls = Poll.objects.filter(status='ACTIVA').order_by('-star_date')
+    # Obtener todas las encuestas (activas y cerradas) excluyendo borradores
+    polls = Poll.objects.exclude(status='BORRADOR').order_by('-star_date')
     
     # Obtener slides del carousel
     carousel_slides = SiteContent.objects.filter(content_type='CAROUSEL_SLIDE', is_active=True).order_by('order')
@@ -211,7 +211,13 @@ def edit_poll(request, poll_id):
         poll.status = request.POST.get('status')
         
         # Manejar imagen
-        if 'image' in request.FILES:
+        if request.POST.get('remove_image'):
+            # Eliminar imagen existente
+            if poll.image:
+                poll.image.delete()
+                poll.image = None
+        elif 'image' in request.FILES:
+            # Reemplazar con nueva imagen
             poll.image = request.FILES['image']
         
         poll.save()
@@ -430,16 +436,23 @@ def submit_poll(request, poll_id):
 
 @login_required
 def poll_results(request, poll_id):
-    """Vista para mostrar resultados de encuesta - Solo Administradores y Trabajadores"""
-    if not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']:
-        return HttpResponseForbidden("No tienes permisos para ver resultados.")
+    """Vista para mostrar resultados de encuesta - Todos los usuarios pueden ver resultados de encuestas cerradas"""
+    poll = get_object_or_404(Poll, id=poll_id)
     
-    # Administrador: Puede ver resultados de cualquier encuesta
-    if request.user.rol.name == 'Administrador':
-        poll = get_object_or_404(Poll, id=poll_id)
-    # Trabajador: Solo puede ver resultados de sus propias encuestas
-    else:
-        poll = get_object_or_404(Poll, id=poll_id, created_by=request.user)
+    # Solo administradores y trabajadores pueden ver resultados de encuestas activas
+    if poll.status == 'ACTIVA' and (not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']):
+        return HttpResponseForbidden("No tienes permisos para ver resultados de encuestas activas.")
+    
+    # Para encuestas cerradas, verificar permisos según el rol
+    if poll.status == 'ACTIVA':
+        # Administrador: Puede ver resultados de cualquier encuesta activa
+        if request.user.rol.name == 'Administrador':
+            pass  # Puede ver cualquier encuesta
+        # Trabajador: Solo puede ver resultados de sus propias encuestas activas
+        elif request.user.rol.name == 'Trabajador':
+            if poll.created_by != request.user:
+                return HttpResponseForbidden("Solo puedes ver resultados de tus propias encuestas activas.")
+    # Las encuestas cerradas son públicas para todos los usuarios autenticados
     
     # Calcular estadísticas
     total_participations = poll.participaciones.count()
@@ -490,7 +503,11 @@ def poll_results(request, poll_id):
         'total_participations': total_participations,
     }
     
-    return render(request, 'posts/poll_results.html', context)
+    # Si es una petición AJAX, devolver solo el contenido del modal
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'posts/poll_results_modal.html', context)
+    
+    return render(request, 'posts/poll_results_modal.html', context)
 
 @login_required
 def delete_poll(request, poll_id):
@@ -503,10 +520,15 @@ def delete_poll(request, poll_id):
     if request.method == 'POST':
         poll_title = poll.title
         poll.delete()
+        
+        # Si es petición AJAX, devolver respuesta JSON
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': f'Encuesta "{poll_title}" eliminada exitosamente.'})
+        
         messages.success(request, f'Encuesta "{poll_title}" eliminada exitosamente.')
         return redirect('posts:poll_manager')
     
-    return render(request, 'posts/confirm_delete.html', {'poll': poll})
+    return HttpResponseForbidden("Método no permitido.")
 
 @login_required
 def content_manager(request):

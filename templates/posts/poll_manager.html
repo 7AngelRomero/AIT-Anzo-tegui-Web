@@ -98,9 +98,9 @@
                                             <i class="fas fa-edit"></i>
                                         </a>
 
-                                        <a href="{% url 'posts:delete_poll' poll.id %}" class="btn btn-outline-danger" title="Eliminar" onclick="return confirm('¿Eliminar esta encuesta?')">
+                                        <button type="button" class="btn btn-outline-danger" title="Eliminar" onclick="confirmDelete('{% url 'posts:delete_poll' poll.id %}', '{{ poll.title|escapejs }}')">
                                             <i class="fas fa-trash"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -227,5 +227,48 @@ function showRecentPolls() {
     document.querySelector('button[onclick="showRecentPolls()"]').classList.add('active');
     document.querySelector('button[onclick="showAllPolls()"]').classList.remove('active');
 }
+
+function confirmDelete(deleteUrl, pollTitle) {
+    if (confirm(`¿Estás seguro de que deseas eliminar la encuesta "${pollTitle}"?\n\nEsta acción no se puede deshacer y se eliminarán todas las respuestas asociadas.`)) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        if (!csrfToken) {
+            alert('Error: Token de seguridad no encontrado');
+            return;
+        }
+        
+        fetch(deleteUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                // Si no es JSON, probablemente fue exitoso pero sin respuesta JSON
+                return { success: true };
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error al eliminar la encuesta: ' + (data.error || 'Error desconocido'));
+            }
+        })
+        .catch(error => {
+            console.error('Error completo:', error);
+            alert('Error de conexión: ' + error.message);
+        });
+    }
+}
 </script>
+
+{% csrf_token %}
 {% endblock %}

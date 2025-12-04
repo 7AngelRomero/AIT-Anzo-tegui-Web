@@ -103,9 +103,9 @@
                                         <a href="{% url 'posts:poll_results' poll.id %}" class="btn btn-outline-info" title="Resultados">
                                             <i class="fas fa-chart-bar"></i>
                                         </a>
-                                        <a href="{% url 'posts:delete_poll' poll.id %}" class="btn btn-outline-danger" title="Eliminar" onclick="return confirm('¿Eliminar esta encuesta?')">
+                                        <button type="button" class="btn btn-outline-danger" title="Eliminar" onclick="confirmDelete({{ poll.id }}, '{{ poll.title|escapejs }}')">
                                             <i class="fas fa-trash"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -188,4 +188,31 @@
     </div>
 </div>
 {% endif %}
+
+{% csrf_token %}
+<script>
+function confirmDelete(pollId, pollTitle) {
+    if (confirm(`¿Estás seguro de que deseas eliminar la encuesta "${pollTitle}"?\n\nEsta acción no se puede deshacer y se eliminarán todas las respuestas asociadas.`)) {
+        fetch(`/posts/${pollId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error al eliminar la encuesta: ' + (data.error || 'Error desconocido'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de conexión al eliminar la encuesta');
+        });
+    }
+}
+</script>
 {% endblock %}
