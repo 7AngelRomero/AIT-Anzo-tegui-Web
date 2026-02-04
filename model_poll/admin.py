@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
-from .models import User, Rol, Poll, Question, Options, Participation, QuestionDetails
+from .models import User, Rol, Poll, Question, Options, Participation, QuestionDetails, SiteContent
 
 # Configuración personalizada para el modelo User
 class CustomUserAdmin(UserAdmin):
@@ -102,6 +102,13 @@ class QuestionAdmin(admin.ModelAdmin):
         return obj.question_text[:50] + '...' if len(obj.question_text) > 50 else obj.question_text
     question_text_short.short_description = 'Pregunta'
 
+# Configuración para SiteContent
+class SiteContentAdmin(admin.ModelAdmin):
+    list_display = ('title', 'content_type', 'is_active', 'order', 'created_by', 'created_at')
+    list_filter = ('content_type', 'is_active', 'created_by')
+    search_fields = ('title', 'description')
+    ordering = ('content_type', 'order')
+
 # Registrar modelos en el admin
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Rol, RolAdmin)
@@ -110,6 +117,7 @@ admin.site.register(Question, QuestionAdmin)
 admin.site.register(Options)
 admin.site.register(Participation)
 admin.site.register(QuestionDetails)
+admin.site.register(SiteContent, SiteContentAdmin)
 
 # Personalizar títulos del admin
 admin.site.site_header = "AIT Anzoátegui - Administración"
