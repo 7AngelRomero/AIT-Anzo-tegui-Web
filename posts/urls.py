@@ -18,4 +18,5 @@ urlpatterns = [
     path('content/', views.content_manager, name='content_manager'),
     path('content/<int:content_id>/delete/', views.delete_content, name='delete_content'),
     path('statistics/', views.poll_statistics, name='poll_statistics'),
+    path('export-pdf/<int:poll_id>/', views.export_poll_pdf, name='export_poll_pdf'),
 ]

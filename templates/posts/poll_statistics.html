@@ -66,6 +66,14 @@
                         {% endif %}
                     {% endfor %}
                 </div>
+            {% elif question.question_type == 'SELECCION_MULTIPLE' %}
+                <div style="position: relative; height: 300px; width: 100%; max-width: 400px; margin: 0 auto;">
+                    <canvas id="chart_{{ poll.id }}_{{ question.id }}"></canvas>
+                </div>
+            {% elif question.question_type == 'ESCALA_NUMERICA' %}
+                <div style="position: relative; height: 300px; width: 100%; max-width: 500px; margin: 0 auto;">
+                    <canvas id="chart_{{ poll.id }}_{{ question.id }}"></canvas>
+                </div>
             {% else %}
                 <p class="text-muted mt-2">Gráficas próximamente...</p>
             {% endif %}
@@ -87,9 +95,70 @@
 </div>
 {% endfor %}
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chartData = {{ chart_data|safe }};
+    
+    {% for poll in all_polls %}
+        {% for question in poll.preguntas.all %}
+            {% if question.question_type == 'SELECCION_MULTIPLE' or question.question_type == 'ESCALA_NUMERICA' %}
+            const canvas_{{ poll.id }}_{{ question.id }} = document.getElementById('chart_{{ poll.id }}_{{ question.id }}');
+            if (canvas_{{ poll.id }}_{{ question.id }} && chartData[{{ poll.id }}] && chartData[{{ poll.id }}][{{ question.id }}]) {
+                const data = chartData[{{ poll.id }}][{{ question.id }}];
+                const chartType = data.type || 'pie';
+                
+                const config = {
+                    type: chartType,
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.data,
+                            backgroundColor: chartType === 'bar' ? '#36A2EB' : ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: chartType === 'pie',
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        if (chartType === 'pie') {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                        } else {
+                                            return 'Calificación ' + context.label + ': ' + context.parsed + ' respuestas';
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        scales: chartType === 'bar' ? {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        } : {}
+                    }
+                };
+                
+                new Chart(canvas_{{ poll.id }}_{{ question.id }}, config);
+            }
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+});
+
 function exportToPDF(pollId) {
-    alert('Funcionalidad de exportar PDF en desarrollo');
+    window.open(`/polls/export-pdf/${pollId}/`, '_blank');
 }
 </script>
 {% endblock %}

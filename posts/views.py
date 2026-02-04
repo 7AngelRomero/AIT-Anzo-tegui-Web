@@ -1,10 +1,21 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden, JsonResponse
+from django.http import HttpResponseForbidden, JsonResponse, HttpResponse
 from django.db.models import Count, Avg, Q
 from django.core.paginator import Paginator
 from model_poll.models import Poll, Question, Options, Participation, QuestionDetails, User, Rol, SiteContent
+import json
+from django.conf import settings
+import os
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from io import BytesIO
+from datetime import datetime
 
 @login_required
 def poll_list(request):
@@ -410,7 +421,7 @@ def submit_poll(request, poll_id):
             question_key = f'question_{question.id}'
             
             if question_key in request.POST:
-                if question.question_type == 'SELECCION_MULTIPLE':
+                if question.question_type in ['SELECCION_MULTIPLE', 'ESCALA_NUMERICA']:
                     option_id = request.POST[question_key]
                     if option_id:
                         option = question.opciones.get(id=option_id)
@@ -611,10 +622,12 @@ def poll_statistics(request):
     
     all_polls = Poll.objects.all().order_by('-star_date')
     
-    # Crear diccionario con respuestas de texto libre
+    # Crear diccionario con respuestas de texto libre y datos de gráficas
     text_responses = {}
+    chart_data = {}
     for poll in all_polls:
         text_responses[poll.id] = {}
+        chart_data[poll.id] = {}
         for question in poll.preguntas.all():
             if question.question_type == 'TEXTO_LIBRE':
                 responses = QuestionDetails.objects.filter(
@@ -623,10 +636,195 @@ def poll_statistics(request):
                     answer_text__gt=''
                 ).select_related('participation__user')
                 text_responses[poll.id][question.id] = list(responses)
+            
+            elif question.question_type == 'SELECCION_MULTIPLE':
+                labels = []
+                data = []
+                for option in question.opciones.all():
+                    count = QuestionDetails.objects.filter(
+                        question=question,
+                        selected_options=option
+                    ).count()
+                    labels.append(option.options_text)
+                    data.append(count)
+                
+                chart_data[poll.id][question.id] = {
+                    'labels': labels,
+                    'data': data,
+                    'type': 'pie'
+                }
+            
+            elif question.question_type == 'ESCALA_NUMERICA':
+                labels = ['1', '2', '3', '4', '5']
+                data = []
+                
+                for i in range(1, 6):
+                    # Buscar por valor numérico primero
+                    count = QuestionDetails.objects.filter(
+                        question=question,
+                        selected_options__value=i
+                    ).count()
+                    
+                    # Si no hay resultados, buscar por texto (encuestas antiguas)
+                    if count == 0:
+                        count = QuestionDetails.objects.filter(
+                            question=question,
+                            selected_options__options_text=str(i)
+                        ).count()
+                    
+                    data.append(count)
+                
+                chart_data[poll.id][question.id] = {
+                    'labels': labels,
+                    'data': data,
+                    'type': 'bar'
+                }
     
     context = {
         'all_polls': all_polls,
         'text_responses': text_responses,
+        'chart_data': json.dumps(chart_data),
     }
     
     return render(request, 'posts/poll_statistics.html', context)
+
+@login_required
+def export_poll_pdf(request, poll_id):
+    """Vista para exportar encuesta a PDF"""
+    if not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']:
+        return HttpResponseForbidden("No tienes permisos para exportar reportes.")
+    
+    poll = get_object_or_404(Poll, id=poll_id)
+    
+    # Crear respuesta HTTP para PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Reporte_{poll.title.replace(" ", "_")}.pdf"'
+    
+    # Crear documento PDF
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+    
+    # Estilos
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=18, spaceAfter=30, alignment=TA_CENTER)
+    heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontSize=14, spaceAfter=12, textColor=colors.HexColor('#184da1'))
+    normal_style = styles['Normal']
+    
+    # Contenido del PDF
+    story = []
+    
+    # Encabezado sin logo
+    story.append(Paragraph("AGENCIA DE INNOVACIÓN TECNOLÓGICA", title_style))
+    story.append(Paragraph("ESTADO ANZOÁTEGUI", title_style))
+    story.append(Spacer(1, 30))
+    
+    # Título del reporte
+    story.append(Paragraph(f"REPORTE DE ENCUESTA: {poll.title.upper()}", title_style))
+    story.append(Spacer(1, 20))
+    
+    # Información básica
+    story.append(Paragraph("INFORMACIÓN GENERAL", heading_style))
+    info_data = [
+        ['Título:', poll.title],
+        ['Descripción:', poll.description or 'Sin descripción'],
+        ['Estado:', poll.status],
+        ['Fecha de inicio:', poll.star_date.strftime('%d/%m/%Y %H:%M') if poll.star_date else 'No definida'],
+        ['Fecha de fin:', poll.end_date.strftime('%d/%m/%Y %H:%M') if poll.end_date else 'No definida'],
+        ['Total participaciones:', str(poll.participaciones.count())],
+        ['Fecha del reporte:', datetime.now().strftime('%d/%m/%Y %H:%M')]
+    ]
+    
+    info_table = Table(info_data, colWidths=[2*inch, 4*inch])
+    info_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8f9fa')),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    story.append(info_table)
+    story.append(Spacer(1, 30))
+    
+    # Preguntas y respuestas
+    story.append(Paragraph("PREGUNTAS Y RESPUESTAS", heading_style))
+    
+    for i, question in enumerate(poll.preguntas.all(), 1):
+        story.append(Paragraph(f"Pregunta {i}: {question.question_text}", ParagraphStyle('QuestionStyle', parent=styles['Normal'], fontSize=12, fontName='Helvetica-Bold', spaceAfter=10)))
+        story.append(Paragraph(f"Tipo: {question.get_question_type_display()}", normal_style))
+        
+        if question.question_type == 'TEXTO_LIBRE':
+            responses = QuestionDetails.objects.filter(
+                question=question,
+                answer_text__isnull=False,
+                answer_text__gt=''
+            ).select_related('participation__user')
+            
+            if responses.exists():
+                story.append(Paragraph("Respuestas:", ParagraphStyle('SubHeading', parent=styles['Normal'], fontName='Helvetica-Bold', spaceAfter=5)))
+                for resp in responses:
+                    story.append(Paragraph(f"• {resp.participation.user.username} ({resp.participation.sent_date.strftime('%d/%m/%Y %H:%M')}): {resp.answer_text}", normal_style))
+            else:
+                story.append(Paragraph("No hay respuestas", normal_style))
+        
+        elif question.question_type in ['SELECCION_MULTIPLE', 'ESCALA_NUMERICA']:
+            # Estadísticas de opciones
+            stats_data = [['Opción', 'Respuestas', 'Porcentaje']]
+            total_responses = QuestionDetails.objects.filter(question=question, selected_options__isnull=False).count()
+            
+            if question.question_type == 'SELECCION_MULTIPLE':
+                for option in question.opciones.all():
+                    count = QuestionDetails.objects.filter(question=question, selected_options=option).count()
+                    percentage = (count / total_responses * 100) if total_responses > 0 else 0
+                    stats_data.append([option.options_text, str(count), f"{percentage:.1f}%"])
+            
+            elif question.question_type == 'ESCALA_NUMERICA':
+                for i in range(1, 6):
+                    count = QuestionDetails.objects.filter(
+                        question=question,
+                        selected_options__value=i
+                    ).count()
+                    if count == 0:
+                        count = QuestionDetails.objects.filter(
+                            question=question,
+                            selected_options__options_text=str(i)
+                        ).count()
+                    percentage = (count / total_responses * 100) if total_responses > 0 else 0
+                    stats_data.append([f"Calificación {i}", str(count), f"{percentage:.1f}%"])
+            
+            if len(stats_data) > 1:
+                stats_table = Table(stats_data, colWidths=[2*inch, 1*inch, 1*inch])
+                stats_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#184da1')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 10),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                story.append(stats_table)
+            else:
+                story.append(Paragraph("No hay respuestas", normal_style))
+            
+            # Respuestas individuales
+            individual_responses = QuestionDetails.objects.filter(
+                question=question,
+                selected_options__isnull=False
+            ).select_related('participation__user', 'selected_options')
+            
+            if individual_responses.exists():
+                story.append(Paragraph("Respuestas individuales:", ParagraphStyle('SubHeading', parent=styles['Normal'], fontName='Helvetica-Bold', spaceAfter=5, spaceBefore=10)))
+                for resp in individual_responses:
+                    story.append(Paragraph(f"• {resp.participation.user.username} ({resp.participation.sent_date.strftime('%d/%m/%Y %H:%M')}): {resp.selected_options.options_text}", normal_style))
+        
+        story.append(Spacer(1, 20))
+    
+    # Construir PDF
+    doc.build(story)
+    
+    # Obtener contenido del buffer
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+    
+    return response
