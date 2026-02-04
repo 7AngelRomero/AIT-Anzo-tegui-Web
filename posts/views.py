@@ -611,27 +611,22 @@ def poll_statistics(request):
     
     all_polls = Poll.objects.all().order_by('-star_date')
     
-    # Agregar estadísticas de participación a cada encuesta
+    # Crear diccionario con respuestas de texto libre
+    text_responses = {}
     for poll in all_polls:
-        poll.total_participations = poll.participaciones.count()
-        poll.unique_participants = poll.participaciones.values('user').distinct().count()
-        
-        # Obtener participaciones recientes
-        poll.recent_participations = poll.participaciones.select_related('user').order_by('-sent_date')[:5]
-        
-        # Calcular promedio de respuestas por pregunta
-        total_questions = poll.preguntas.count()
-        total_responses = QuestionDetails.objects.filter(question__poll=poll).count()
-        poll.avg_responses_per_question = (total_responses / total_questions) if total_questions > 0 else 0
-    
-    # Estadísticas generales
-    total_participations = Participation.objects.count()
-    total_active_users = User.objects.filter(participaciones__isnull=False).distinct().count()
+        text_responses[poll.id] = {}
+        for question in poll.preguntas.all():
+            if question.question_type == 'TEXTO_LIBRE':
+                responses = QuestionDetails.objects.filter(
+                    question=question,
+                    answer_text__isnull=False,
+                    answer_text__gt=''
+                ).select_related('participation__user')
+                text_responses[poll.id][question.id] = list(responses)
     
     context = {
         'all_polls': all_polls,
-        'total_participations': total_participations,
-        'total_active_users': total_active_users,
+        'text_responses': text_responses,
     }
     
     return render(request, 'posts/poll_statistics.html', context)

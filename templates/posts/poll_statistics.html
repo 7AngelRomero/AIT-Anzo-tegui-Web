@@ -23,75 +23,60 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card bg-success text-white">
-            <div class="card-body text-center">
-                <i class="fas fa-users fa-2x mb-2"></i>
-                <h4>{{ total_participations }}</h4>
-                <p class="mb-0">Total Participaciones</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-info text-white">
-            <div class="card-body text-center">
-                <i class="fas fa-user-check fa-2x mb-2"></i>
-                <h4>{{ total_active_users }}</h4>
-                <p class="mb-0">Usuarios Activos</p>
-            </div>
-        </div>
-    </div>
 </div>
 
 {% for poll in all_polls %}
 <div class="card mb-4">
     <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h5 class="mb-0">{{ poll.title }}</h5>
-                <small class="text-muted">{{ poll.total_participations }} participaciones • Estado: 
-                    <span class="badge bg-{% if poll.status == 'ACTIVA' %}success{% elif poll.status == 'CERRADA' %}danger{% else %}secondary{% endif %}">
-                        {{ poll.status }}
-                    </span>
-                </small>
-            </div>
-            <div class="text-end">
-                <small class="text-muted">Creada: {{ poll.star_date|date:"d/m/Y" }}</small>
-                {% if poll.end_date %}
-                <br><small class="text-muted">Finaliza: {{ poll.end_date|date:"d/m/Y" }}</small>
-                {% endif %}
-            </div>
-        </div>
+        <h5 class="mb-1">{{ poll.title }}</h5>
+        <p class="mb-2 text-muted">{{ poll.description }}</p>
+        <small class="text-muted">{{ poll.participaciones.count }} participaciones • {{ poll.preguntas.count }} preguntas • Estado: {{ poll.status }}</small>
     </div>
     <div class="card-body">
-        <!-- Lista de participantes -->
-        {% if poll.recent_participations %}
+        {% for question in poll.preguntas.all %}
         <div class="mb-4">
-            <h6 class="fw-bold">Participantes ({{ poll.total_participations }}):</h6>
-            <ul class="list-group">
-                {% for participation in poll.recent_participations %}
-                <li class="list-group-item d-flex align-items-center">
-                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                        <span class="text-white fw-bold">{{ participation.user.username|first|upper }}</span>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-bold">{{ participation.user.username }}</div>
-                        <small class="text-muted">{{ participation.sent_date|date:"d/m/Y H:i" }}</small>
-                    </div>
-                    <span 
-                        class="badge bg-info" 
-                        data-bs-toggle="tooltip" 
-                        data-bs-placement="left" 
-                        data-bs-html="true"
-                        title="<div class='text-start' style='max-width: 300px;'>{% for response in participation.respuestas.all %}<strong>{{ response.question.question_text }}:</strong><br>{% if response.selected_options %}{{ response.selected_options.options_text }}{% elif response.answer_text %}{{ response.answer_text }}{% endif %}<br><br>{% endfor %}</div>"
-                    >
-                        <i class="fas fa-eye"></i> Ver Respuestas
-                    </span>
-                </li>
-                {% endfor %}
-            </ul>
+            {% if question.question_type == 'TEXTO_LIBRE' %}
+                <div class="list-group">
+                    {% for poll_id, questions in text_responses.items %}
+                        {% if poll_id == poll.id %}
+                            {% for question_id, responses in questions.items %}
+                                {% if question_id == question.id %}
+                                    {% for response in responses %}
+                                    <div class="list-group-item">
+                                        <div class="d-flex align-items-center mb-2">
+                                            {% if response.participation.user.profile_image %}
+                                                <img src="{{ response.participation.user.profile_image.url }}" class="rounded-circle me-2" width="24" height="24">
+                                            {% else %}
+                                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                                                    <span class="text-white" style="font-size: 10px;">{{ response.participation.user.username|first|upper }}</span>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-bold">{{ response.participation.user.username }}</div>
+                                                <div class="text-muted">{{ response.answer_text }}</div>
+                                                <small class="text-muted">{{ response.participation.sent_date|date:"d/m/Y H:i" }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% empty %}
+                                    <div class="list-group-item text-muted">No hay respuestas</div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted mt-2">Gráficas próximamente...</p>
+            {% endif %}
         </div>
-        {% endif %}
+        {% endfor %}
+        
+        <div class="text-end mt-3">
+            <button class="btn btn-danger" onclick="exportToPDF({{ poll.id }})">
+                <i class="fas fa-file-pdf me-2"></i>Exportar PDF
+            </button>
+        </div>
     </div>
 </div>
 {% empty %}
@@ -102,28 +87,9 @@
 </div>
 {% endfor %}
 
-<style>
-.tooltip {
-    max-width: 350px !important;
-    opacity: 0.8 !important;
-}
-.tooltip-inner {
-    max-width: 350px !important;
-    text-align: left !important;
-    white-space: pre-wrap;
-}
-</style>
-
 <script>
-// Inicializar tooltips
-document.addEventListener('DOMContentLoaded', function() {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl, {
-            boundary: 'viewport',
-            customClass: 'custom-tooltip'
-        });
-    });
-});
+function exportToPDF(pollId) {
+    alert('Funcionalidad de exportar PDF en desarrollo');
+}
 </script>
 {% endblock %}
