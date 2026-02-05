@@ -9,13 +9,16 @@ import json
 from django.conf import settings
 import os
 from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from io import BytesIO
 from datetime import datetime
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')  # Backend sin GUI
 
 @login_required
 def poll_list(request):
@@ -713,9 +716,22 @@ def export_poll_pdf(request, poll_id):
     # Contenido del PDF
     story = []
     
-    # Encabezado sin logo
-    story.append(Paragraph("AGENCIA DE INNOVACIÓN TECNOLÓGICA", title_style))
-    story.append(Paragraph("ESTADO ANZOÁTEGUI", title_style))
+    # Encabezado institucional mejorado
+    header_style = ParagraphStyle('Header', parent=styles['Normal'], fontSize=16, fontName='Helvetica-Bold', alignment=TA_CENTER, textColor=colors.HexColor('#184da1'))
+    subheader_style = ParagraphStyle('SubHeader', parent=styles['Normal'], fontSize=12, alignment=TA_CENTER, textColor=colors.HexColor('#666666'))
+    
+    story.append(Paragraph("REPÚBLICA BOLIVARIANA DE VENEZUELA", subheader_style))
+    story.append(Paragraph("GOBERNACIÓN DEL ESTADO ANZOÁTEGUI", subheader_style))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("DIRECCIÓN DE AUTOMATIZACIÓN, INFORMÁTICA Y TELECOMUNICACIONES", header_style))
+    story.append(Paragraph("(AIT ANZOÁTEGUI)", header_style))
+    story.append(Spacer(1, 20))
+    
+    # Línea separadora
+    line_data = [['', '']]
+    line_table = Table(line_data, colWidths=[6*inch])
+    line_table.setStyle(TableStyle([('LINEBELOW', (0, 0), (-1, -1), 2, colors.HexColor('#184da1'))]))
+    story.append(line_table)
     story.append(Spacer(1, 30))
     
     # Título del reporte
@@ -724,9 +740,15 @@ def export_poll_pdf(request, poll_id):
     
     # Información básica
     story.append(Paragraph("INFORMACIÓN GENERAL", heading_style))
+    
+    # Truncar descripción si es muy larga
+    description = poll.description or 'Sin descripción'
+    if len(description) > 100:
+        description = description[:100] + '...'
+    
     info_data = [
         ['Título:', poll.title],
-        ['Descripción:', poll.description or 'Sin descripción'],
+        ['Descripción:', description],
         ['Estado:', poll.status],
         ['Fecha de inicio:', poll.star_date.strftime('%d/%m/%Y %H:%M') if poll.star_date else 'No definida'],
         ['Fecha de fin:', poll.end_date.strftime('%d/%m/%Y %H:%M') if poll.end_date else 'No definida'],
@@ -739,9 +761,11 @@ def export_poll_pdf(request, poll_id):
         ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8f9fa')),
         ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('WORDWRAP', (1, 0), (1, -1), True)
     ]))
     story.append(info_table)
     story.append(Spacer(1, 30))
@@ -768,6 +792,55 @@ def export_poll_pdf(request, poll_id):
                 story.append(Paragraph("No hay respuestas", normal_style))
         
         elif question.question_type in ['SELECCION_MULTIPLE', 'ESCALA_NUMERICA']:
+            # Generar gráfica
+            chart_buffer = BytesIO()
+            fig, ax = plt.subplots(figsize=(8, 6))
+            
+            if question.question_type == 'SELECCION_MULTIPLE':
+                labels = []
+                sizes = []
+                colors_list = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
+                
+                for option in question.opciones.all():
+                    count = QuestionDetails.objects.filter(question=question, selected_options=option).count()
+                    if count > 0:
+                        labels.append(option.options_text)
+                        sizes.append(count)
+                
+                if sizes:
+                    ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors_list[:len(sizes)])
+                    ax.set_title(f'Resultados: {question.question_text[:50]}...', fontsize=12, fontweight='bold')
+                else:
+                    ax.text(0.5, 0.5, 'Sin respuestas', ha='center', va='center', transform=ax.transAxes, fontsize=14)
+                    ax.set_title(f'Resultados: {question.question_text[:50]}...', fontsize=12, fontweight='bold')
+            
+            elif question.question_type == 'ESCALA_NUMERICA':
+                labels = ['1', '2', '3', '4', '5']
+                values = []
+                
+                for i in range(1, 6):
+                    count = QuestionDetails.objects.filter(question=question, selected_options__value=i).count()
+                    if count == 0:
+                        count = QuestionDetails.objects.filter(question=question, selected_options__options_text=str(i)).count()
+                    values.append(count)
+                
+                ax.bar(labels, values, color='#36A2EB')
+                ax.set_xlabel('Calificación')
+                ax.set_ylabel('Número de respuestas')
+                ax.set_title(f'Resultados: {question.question_text[:50]}...', fontsize=12, fontweight='bold')
+                ax.set_ylim(0, max(values) + 1 if max(values) > 0 else 1)
+            
+            plt.tight_layout()
+            plt.savefig(chart_buffer, format='png', dpi=150, bbox_inches='tight')
+            plt.close()
+            
+            # Añadir gráfica al PDF
+            chart_buffer.seek(0)
+            chart_img = Image(chart_buffer, width=5*inch, height=3.75*inch)
+            chart_img.hAlign = 'CENTER'
+            story.append(chart_img)
+            story.append(Spacer(1, 20))
+            
             # Estadísticas de opciones
             stats_data = [['Opción', 'Respuestas', 'Porcentaje']]
             total_responses = QuestionDetails.objects.filter(question=question, selected_options__isnull=False).count()

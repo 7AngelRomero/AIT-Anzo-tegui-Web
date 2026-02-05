@@ -1,3 +1,4 @@
 django>=4.0
 reportlab>=3.6.0
 pillow>=9.0.0
+matplotlib>=3.5.0
