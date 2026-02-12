@@ -18,19 +18,28 @@
             <div class="carousel-item {% if forloop.first %}active{% endif %}">
                 {% if slide.image %}
                 <img src="{{ slide.image.url }}" class="d-block w-100" alt="{{ slide.title }}" style="height: 500px; object-fit: cover;">
-                {% else %}
-                <div class="carousel-slide d-flex align-items-center justify-content-center">
-                {% endif %}
-                    <div class="carousel-caption d-none d-md-block">
-                        <h2 class="display-5 fw-bold mb-3">{{ slide.title }}</h2>
+                <div class="carousel-caption d-flex align-items-center justify-content-center h-100">
+                    <div class="text-center">
+                        <h2 class="display-5 fw-bold mb-3 text-white" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.5);">{{ slide.title }}</h2>
                         {% if slide.description %}
-                        <p class="lead mb-4">{{ slide.description }}</p>
+                        <p class="lead mb-4 text-white" style="opacity: 0.95; font-size: 1rem; text-shadow: 2px 2px 6px rgba(0,0,0,0.5);">{{ slide.description }}</p>
                         {% endif %}
                         {% if slide.link_url %}
                         <a href="{{ slide.link_url }}" class="btn btn-primary btn-lg">Ver más</a>
                         {% endif %}
                     </div>
-                {% if not slide.image %}
+                </div>
+                {% else %}
+                <div class="carousel-slide d-flex align-items-center justify-content-center">
+                    <div class="text-center text-white">
+                        <h2 class="display-5 fw-bold mb-3" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.5);">{{ slide.title }}</h2>
+                        {% if slide.description %}
+                        <p class="lead mb-4" style="opacity: 0.95; font-size: 1rem; text-shadow: 2px 2px 6px rgba(0,0,0,0.5);">{{ slide.description }}</p>
+                        {% endif %}
+                        {% if slide.link_url %}
+                        <a href="{{ slide.link_url }}" class="btn btn-primary btn-lg">Ver más</a>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -45,8 +54,8 @@
             <div class="carousel-item active">
                 <div class="carousel-slide d-flex align-items-center justify-content-center">
                     <div class="carousel-content text-center text-white">
-                        <h2 class="display-5 fw-bold mb-3">AIT Anzoátegui</h2>
-                        <p class="lead mb-4">Impulsando la innovación tecnológica en el estado</p>
+                        <h2 class="display-5 fw-bold mb-3" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.5);">AIT Anzoátegui</h2>
+                        <p class="lead mb-4" style="text-shadow: 2px 2px 6px rgba(0,0,0,0.5);">Impulsando la innovación tecnológica en el estado</p>
                     </div>
                 </div>
             </div>
@@ -68,8 +77,9 @@
         <!-- Hero Section -->
         <div class="row mb-5">
             <div class="col-12">
-                <div class="text-start">
-                    <h1 class="display-4 fw-bold mb-3" style="color: #184da1;">Tecnología e Innovación Venezolana</h1>
+                <div class="text-center">
+                    <h1 class="display-4 fw-bold mb-3" style="color: #184da1;">Tecnología e Innovación</h1>
+                    <hr style="width: 350px; height: 3px; background-color: #184da1; opacity: 1; margin: 1rem auto;">
                     <p class="lead text-muted">Construyendo el futuro con talento humano y desarrollo tecnológico</p>
                 </div>
             </div>

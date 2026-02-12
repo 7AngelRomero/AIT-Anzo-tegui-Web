@@ -1,92 +1,92 @@
-<h6 class="fw-bold mb-3">{{ poll.title }}</h6>
-<p class="text-muted mb-4">{{ total_participations }} participaciones</p>
+<!-- Encabezado con imagen y descripción -->
+<div class="row mb-4">
+    {% if poll.image %}
+    <div class="col-md-4">
+        <img src="{{ poll.image.url }}" class="img-fluid rounded shadow-sm" alt="{{ poll.title }}" style="width: 100%; height: 200px; object-fit: cover;">
+    </div>
+    <div class="col-md-8">
+        <h4 class="fw-bold mb-3" style="color: #184da1;">{{ poll.title }}</h4>
+        <p class="text-muted mb-2"><i class="fas fa-users me-2"></i>{{ total_participations }} participaciones</p>
+        {% if poll.description %}
+        <p class="text-secondary">{{ poll.description }}</p>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="col-12">
+        <h4 class="fw-bold mb-3" style="color: #184da1;">{{ poll.title }}</h4>
+        <p class="text-muted mb-2"><i class="fas fa-users me-2"></i>{{ total_participations }} participaciones</p>
+        {% if poll.description %}
+        <p class="text-secondary">{{ poll.description }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
 
-{% for question in poll.preguntas.all %}
-<div class="mb-4">
-    <h6 class="fw-bold">{{ forloop.counter }}. {{ question.question_text }}</h6>
+<hr class="mb-4">
+
+<!-- Resultados por pregunta -->
+{% for question in questions_with_results %}
+<div class="mb-5">
+    <div class="bg-light p-3 rounded mb-3">
+        <h6 class="fw-bold mb-0" style="color: #184da1;">{{ forloop.counter }}. {{ question.text }}</h6>
+    </div>
     
-    {% if question.question_type == 'SELECCION_MULTIPLE' %}
-        {% with max_votes=0 max_option=None %}
-            {% for option in question.opciones.all %}
-                {% with votes=option.respuestas.count %}
-                    {% if votes > max_votes %}
-                        {% with max_votes=votes max_option=option %}{% endwith %}
-                    {% endif %}
-                {% endwith %}
-            {% endfor %}
-            {% if max_option %}
-            <div class="alert alert-info">
-                <strong>Opción más votada:</strong> {{ max_option.options_text }} 
-                ({{ max_votes }} votos - {% widthratio max_votes total_participations 100 %}%)
+    {% if question.type == 'SELECCION_MULTIPLE' %}
+        <!-- Gráfico de barras simple -->
+        {% for option in question.options_list %}
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="fw-semibold">{{ option.text }}</span>
+                    <span class="badge bg-primary">{{ option.count }} votos ({{ option.percentage|floatformat:1 }}%)</span>
+                </div>
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar bg-primary" style="width: {{ option.percentage }}%"></div>
+                </div>
             </div>
-            
-            <!-- Gráfico de barras simple -->
-            {% for option in question.opciones.all %}
-                {% with votes=option.respuestas.count %}
-                <div class="mb-2">
-                    <div class="d-flex justify-content-between">
-                        <span>{{ option.options_text }}</span>
-                        <span>{{ votes }} ({% widthratio votes total_participations 100 %}%)</span>
-                    </div>
-                    <div class="progress" style="height: 20px;">
-                        <div class="progress-bar" style="width: {% widthratio votes total_participations 100 %}%"></div>
-                    </div>
-                </div>
-                {% endwith %}
-            {% endfor %}
-            {% endif %}
-        {% endwith %}
+        {% endfor %}
         
-    {% elif question.question_type == 'TEXTO_LIBRE' %}
-        <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
-            {% for response in question.respuestas.all %}
-                {% if response.answer_text %}
-                <div class="mb-2 p-2 bg-light rounded">
-                    <small class="text-muted">{{ response.participation.user.username }}:</small>
-                    <div>{{ response.answer_text }}</div>
+    {% elif question.type == 'TEXTO_LIBRE' %}
+        <div class="border rounded p-3 bg-white" style="max-height: 300px; overflow-y: auto;">
+            {% for response in question.text_responses %}
+                <div class="mb-3 p-3 bg-light rounded">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-user-circle me-2" style="color: #184da1;"></i>
+                        <strong class="text-primary">{{ response.participation.user.username }}</strong>
+                    </div>
+                    <p class="mb-0">{{ response.answer_text }}</p>
                 </div>
-                {% endif %}
             {% empty %}
-            <p class="text-muted">No hay respuestas de texto</p>
+            <p class="text-muted text-center py-3"><i class="fas fa-inbox me-2"></i>No hay respuestas de texto</p>
             {% endfor %}
         </div>
         
-    {% elif question.question_type == 'ESCALA_NUMERICA' %}
-        {% with total=0 sum=0 %}
-            {% for response in question.respuestas.all %}
-                {% if response.selected_options %}
-                    {% with total=total|add:1 sum=sum|add:response.selected_options.value %}{% endwith %}
-                {% endif %}
-            {% endfor %}
-            {% if total > 0 %}
-            <div class="alert alert-success">
-                <strong>Promedio:</strong> {% widthratio sum total 1 %}/5 
-                ({{ total }} respuestas)
+    {% elif question.type == 'ESCALA_NUMERICA' %}
+        {% if question.average_rating > 0 %}
+        <div class="alert alert-success d-flex align-items-center mb-4">
+            <i class="fas fa-star me-3" style="font-size: 1.5rem;"></i>
+            <div>
+                <strong>Promedio:</strong> {{ question.average_rating|floatformat:2 }}/5
             </div>
-            
-            <!-- Distribución de calificaciones -->
-            <div class="row">
-                {% for i in "12345" %}
-                    {% with rating=i|add:0 count=0 %}
-                        {% for response in question.respuestas.all %}
-                            {% if response.selected_options.value == rating %}
-                                {% with count=count|add:1 %}{% endwith %}
-                            {% endif %}
-                        {% endfor %}
-                        <div class="col">
-                            <div class="text-center">
-                                <div class="fw-bold">{{ rating }}</div>
-                                <div class="progress" style="height: 60px; writing-mode: vertical-lr;">
-                                    <div class="progress-bar" style="height: {% widthratio count total 100 %}%"></div>
-                                </div>
-                                <small>{{ count }}</small>
-                            </div>
+        </div>
+        
+        <!-- Distribución de calificaciones -->
+        <div class="row g-2">
+            {% for count in question.rating_counts %}
+                <div class="col">
+                    <div class="text-center p-2 border rounded bg-light">
+                        <div class="fw-bold mb-2" style="color: #184da1; font-size: 1.2rem;">{{ forloop.counter }}</div>
+                        <div class="progress" style="height: 80px; writing-mode: vertical-lr;">
+                            {% widthratio count question.rating_counts|length 100 as percentage %}
+                            <div class="progress-bar bg-success" style="height: {{ percentage }}%"></div>
                         </div>
-                    {% endwith %}
-                {% endfor %}
-            </div>
-            {% endif %}
-        {% endwith %}
+                        <small class="d-block mt-2 fw-semibold">{{ count }}</small>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-3"><i class="fas fa-inbox me-2"></i>No hay respuestas para esta pregunta</p>
+        {% endif %}
     {% endif %}
 </div>
 {% endfor %}

@@ -378,22 +378,32 @@ def answer_poll(request, poll_id):
     
     # Verificar y actualizar estado si es necesario
     if poll.check_and_update_status():
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return HttpResponse('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Esta encuesta ha finalizado y ya no acepta respuestas.</div>')
         messages.error(request, 'Esta encuesta ha finalizado y ya no acepta respuestas.')
         return redirect('posts:poll_list')
     
     # Verificar que esté activa
     if poll.status != 'ACTIVA':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return HttpResponse('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Esta encuesta no está disponible para responder.</div>')
         messages.error(request, 'Esta encuesta no está disponible para responder.')
         return redirect('posts:poll_list')
     
     # Verificar si ya participó
     if Participation.objects.filter(poll=poll, user=request.user).exists():
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return HttpResponse('<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Ya has participado en esta encuesta.</div>')
         messages.error(request, 'Ya has participado en esta encuesta.')
         return redirect('posts:poll_list')
     
     context = {
         'poll': poll,
     }
+    
+    # Si es petición AJAX, devolver solo el contenido del modal
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'posts/answer_poll_modal.html', context)
     
     return render(request, 'posts/answer_poll.html', context)
 
@@ -471,20 +481,37 @@ def poll_results(request, poll_id):
     # Calcular estadísticas
     total_participations = poll.participaciones.count()
     
-    # Procesar resultados por pregunta
-    for question in poll.preguntas.all():
+    # Crear lista de preguntas con sus resultados
+    questions_with_results = []
+    
+    for question in Question.objects.filter(poll=poll).prefetch_related('opciones'):
+        question_data = {
+            'id': question.id,
+            'text': question.question_text,
+            'type': question.question_type,
+            'options_list': [],
+            'text_responses': [],
+            'average_rating': 0,
+            'rating_counts': [0, 0, 0, 0, 0]
+        }
+        
         if question.question_type == 'SELECCION_MULTIPLE':
             # Calcular porcentajes para opciones
             for option in question.opciones.all():
-                option.response_count = QuestionDetails.objects.filter(
-                    question=question, 
+                count = QuestionDetails.objects.filter(
+                    question=question,
                     selected_options=option
                 ).count()
-                option.percentage = (option.response_count / total_participations * 100) if total_participations > 0 else 0
+                percentage = (count / total_participations * 100) if total_participations > 0 else 0
+                question_data['options_list'].append({
+                    'text': option.options_text,
+                    'count': count,
+                    'percentage': percentage
+                })
         
         elif question.question_type == 'TEXTO_LIBRE':
             # Obtener respuestas de texto
-            question.text_responses = QuestionDetails.objects.filter(
+            question_data['text_responses'] = QuestionDetails.objects.filter(
                 question=question,
                 answer_text__isnull=False
             ).select_related('participation__user')
@@ -497,7 +524,6 @@ def poll_results(request, poll_id):
             )
             
             if responses.exists():
-                # Asumir que las opciones de escala tienen valores 1-5
                 ratings = []
                 for response in responses:
                     try:
@@ -506,15 +532,15 @@ def poll_results(request, poll_id):
                     except (ValueError, AttributeError):
                         pass
                 
-                question.average_rating = sum(ratings) / len(ratings) if ratings else 0
-                question.rating_counts = [ratings.count(i) for i in range(1, 6)]
-            else:
-                question.average_rating = 0
-                question.rating_counts = [0, 0, 0, 0, 0]
+                question_data['average_rating'] = sum(ratings) / len(ratings) if ratings else 0
+                question_data['rating_counts'] = [ratings.count(i) for i in range(1, 6)]
+        
+        questions_with_results.append(question_data)
     
     context = {
         'poll': poll,
         'total_participations': total_participations,
+        'questions_with_results': questions_with_results,
     }
     
     # Si es una petición AJAX, devolver solo el contenido del modal
@@ -562,6 +588,22 @@ def content_manager(request):
             existing_count = SiteContent.objects.filter(content_type=content_type, is_active=True).count()
             if existing_count >= 3:
                 messages.error(request, f'Solo se permiten máximo 3 imágenes para {"Inicio" if content_type == "HOME_IMAGE" else "Acerca de"}.')
+                return redirect('posts:content_manager')
+        
+        # Validar límite de slides del carousel
+        if content_type == 'CAROUSEL_SLIDE':
+            existing_count = SiteContent.objects.filter(content_type=content_type, is_active=True).count()
+            if existing_count >= 5:
+                messages.error(request, 'Solo se permiten máximo 5 slides en el carousel.')
+                return redirect('posts:content_manager')
+            
+            # Validar longitud de título y descripción para carousel
+            if len(title) > 15:
+                messages.error(request, 'El título del slide no puede exceder 15 caracteres.')
+                return redirect('posts:content_manager')
+            
+            if description and len(description) > 50:
+                messages.error(request, 'La descripción del slide no puede exceder 50 caracteres.')
                 return redirect('posts:content_manager')
         
         # Procesar URL de YouTube si es transmisión en vivo

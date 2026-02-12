@@ -9,6 +9,9 @@
     <!-- Google Fonts - Noto Sans y Open Sans -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -45,18 +48,14 @@
                     <li class="nav-item">
                         <a class="nav-link" href="https://anzoategui.gob.ve/">La Gobernación</a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'poll' in request.resolver_match.url_name %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
-                            Encuestas
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'posts:poll_list' %}">Ver Encuestas</a></li>
-                            {% if user.is_authenticated and user.rol.name in 'Administrador,Trabajador' %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'posts:poll_manager' %}">Gestionar Encuestas</a></li>
-                            {% endif %}
-                        </ul>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'poll' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'posts:poll_list' %}">Encuestas</a>
                     </li>
+                    {% if user.is_authenticated and user.rol.name in 'Administrador,Trabajador' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'manager' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'posts:poll_manager' %}">Dashboard</a>
+                        </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}" href="{% url 'contact'%}">Contacto</a>
                     </li>
@@ -67,24 +66,43 @@
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
-                                <div class="profile-avatar me-2">
-                                    {% if user.profile_image %}
-                                        <img src="{{ user.profile_image.url }}" alt="Perfil" class="rounded-circle" width="32" height="32">
-                                    {% else %}
-                                        <i class="fas fa-user-circle fa-2x"></i>
-                                    {% endif %}
-                                </div>
+                                {% if user.profile_image %}
+                                    <img src="{{ user.profile_image.url }}" alt="Perfil" class="rounded-circle me-2" width="32" height="32" style="object-fit: cover; border: 2px solid #fff;">
+                                {% else %}
+                                    <div class="rounded-circle bg-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-user" style="color: #184da1; font-size: 14px;"></i>
+                                    </div>
+                                {% endif %}
                                 <span class="d-none d-md-inline">{{ user.first_name|default:user.username }}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><h6 class="dropdown-header">Mi Perfil</h6></li>
-                                <li><a class="dropdown-item" href="{% url 'profile' %}">
-                                    <i class="fas fa-user-cog me-2"></i>Configurar Perfil
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'logout' %}">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
-                                </a></li>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="min-width: 250px; border-radius: 8px; margin-top: 8px;">
+                                <li class="px-3 py-2" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); border-radius: 8px 8px 0 0;">
+                                    <div class="d-flex align-items-center text-white">
+                                        {% if user.profile_image %}
+                                            <img src="{{ user.profile_image.url }}" alt="Perfil" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover; border: 2px solid #fff;">
+                                        {% else %}
+                                            <div class="rounded-circle bg-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-user" style="color: #184da1;"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-bold">{{ user.first_name }} {{ user.last_name }}</div>
+                                            <small class="opacity-75">@{{ user.username }}</small>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider my-0"></li>
+                                <li>
+                                    <a class="dropdown-item py-2" href="{% url 'profile' %}" style="transition: all 0.2s;">
+                                        <i class="fas fa-user-edit me-2" style="color: #184da1; width: 20px;"></i>Mi Perfil
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-0"></li>
+                                <li>
+                                    <a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}" style="transition: all 0.2s;">
+                                        <i class="fas fa-sign-out-alt me-2" style="width: 20px;"></i>Cerrar Sesión
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                     {% else %}
@@ -113,6 +131,8 @@
     {% endblock %}
     
     <!-- Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Funciones de notificaciones -->

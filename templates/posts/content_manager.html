@@ -41,7 +41,10 @@
                         </div>
                         <div class="col-md-8">
                             <label for="title" class="form-label fw-semibold">Título *</label>
-                            <input type="text" class="form-control" id="title" name="title" required>
+                            <input type="text" class="form-control" id="title" name="title" maxlength="100" required>
+                            <div class="form-text">
+                                <span id="titleCounter">0/100 caracteres</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -63,7 +66,10 @@
                     
                     <div class="mb-3">
                         <label for="description" class="form-label fw-semibold">Descripción</label>
-                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        <textarea class="form-control" id="description" name="description" rows="3" maxlength="200"></textarea>
+                        <div class="form-text">
+                            <span id="descCounter">0/200 caracteres</span>
+                        </div>
                     </div>
                     
                     <button type="submit" class="btn btn-primary">
@@ -209,6 +215,10 @@ function showImageSpecs() {
     const contentType = document.getElementById('content_type').value;
     const specsDiv = document.getElementById('imageSpecs');
     const specsText = document.getElementById('specsText');
+    const titleInput = document.getElementById('title');
+    const descInput = document.getElementById('description');
+    const titleCounter = document.getElementById('titleCounter');
+    const descCounter = document.getElementById('descCounter');
     
     if (contentType) {
         let specs = '';
@@ -216,19 +226,51 @@ function showImageSpecs() {
             case 'HOME_IMAGE':
             case 'ABOUT_IMAGE':
                 specs = '400x300px (4:3) - Imágenes para secciones de contenido';
+                titleInput.maxLength = 100;
+                descInput.maxLength = 200;
+                titleCounter.textContent = titleInput.value.length + '/100 caracteres';
+                descCounter.textContent = descInput.value.length + '/200 caracteres';
                 break;
             case 'CAROUSEL_SLIDE':
                 specs = '1200x500px (16:9) - Imágenes para carousel principal';
+                titleInput.maxLength = 15;
+                descInput.maxLength = 50;
+                titleCounter.textContent = titleInput.value.length + '/15 caracteres (carousel)';
+                descCounter.textContent = descInput.value.length + '/50 caracteres (carousel)';
                 break;
             case 'LIVE_STREAM':
                 specs = 'URL de YouTube (normal o embed). Se convertirá automáticamente';
+                titleInput.maxLength = 100;
+                descInput.maxLength = 200;
+                titleCounter.textContent = titleInput.value.length + '/100 caracteres';
+                descCounter.textContent = descInput.value.length + '/200 caracteres';
                 break;
         }
         specsText.textContent = specs;
         specsDiv.classList.remove('d-none');
     } else {
         specsDiv.classList.add('d-none');
+        titleInput.maxLength = 100;
+        descInput.maxLength = 200;
+        titleCounter.textContent = '0/100 caracteres';
+        descCounter.textContent = '0/200 caracteres';
     }
 }
+
+// Contador de caracteres para título
+document.getElementById('title').addEventListener('input', function() {
+    const counter = document.getElementById('titleCounter');
+    const maxLen = this.maxLength;
+    const suffix = maxLen === 15 ? ' caracteres (carousel)' : ' caracteres';
+    counter.textContent = this.value.length + '/' + maxLen + suffix;
+});
+
+// Contador de caracteres para descripción
+document.getElementById('description').addEventListener('input', function() {
+    const counter = document.getElementById('descCounter');
+    const maxLen = this.maxLength;
+    const suffix = maxLen === 50 ? ' caracteres (carousel)' : ' caracteres';
+    counter.textContent = this.value.length + '/' + maxLen + suffix;
+});
 </script>
 {% endblock %}
