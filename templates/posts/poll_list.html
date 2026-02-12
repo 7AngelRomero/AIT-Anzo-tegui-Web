@@ -87,53 +87,62 @@
     <div class="row">
         {% for poll in polls %}
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100 border-0 shadow-sm" style="transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0.125rem 0.25rem rgba(0,0,0,0.075)'">
                 {% if poll.image %}
-                <img src="{{ poll.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;">
-                {% endif %}
-                <div class="card-body d-flex flex-column">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="card-title fw-bold" style="color: #184da1;">{{ poll.title }}</h5>
-                        <span class="badge bg-{% if poll.status == 'ACTIVA' %}success{% else %}danger{% endif %}">
-                            {{ poll.status }}
+                <div style="position: relative; overflow: hidden;">
+                    <img src="{{ poll.image.url }}" class="card-img-top" style="height: 220px; object-fit: cover;">
+                    <div style="position: absolute; top: 10px; right: 10px;">
+                        <span class="badge {% if poll.status == 'ACTIVA' %}bg-success{% else %}bg-danger{% endif %}" style="font-size: 0.85rem; padding: 0.5rem 0.75rem;">
+                            <i class="fas fa-circle" style="font-size: 0.5rem; me-1;"></i> {{ poll.status }}
                         </span>
                     </div>
-                    <p class="card-text text-muted flex-grow-1">{{ poll.description|truncatechars:100 }}</p>
+                </div>
+                {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 220px;">
+                    <i class="fas fa-poll fa-3x text-muted" style="opacity: 0.3;"></i>
+                </div>
+                <div style="position: absolute; top: 10px; right: 10px;">
+                    <span class="badge {% if poll.status == 'ACTIVA' %}bg-success{% else %}bg-danger{% endif %}" style="font-size: 0.85rem; padding: 0.5rem 0.75rem;">
+                        <i class="fas fa-circle" style="font-size: 0.5rem; me-1;"></i> {{ poll.status }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                <div class="card-body d-flex flex-column p-4">
+                    <h5 class="card-title fw-bold mb-3" style="color: #184da1; font-size: 1.25rem;">{{ poll.title }}</h5>
+                    <p class="card-text text-secondary mb-3" style="line-height: 1.6;">{{ poll.description|truncatechars:120 }}</p>
+                    
                     <div class="mt-auto">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <small class="text-muted">
-                                <i class="fas fa-calendar me-1"></i>{{ poll.star_date|date:"d/m/Y" }}
-                            </small>
-                            <small class="text-muted">
-                                <i class="fas fa-user me-1"></i>{{ poll.created_by.username|default:"Sistema" }}
-                            </small>
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-calendar-alt me-2" style="color: #184da1;"></i>
+                                <small class="text-muted">{{ poll.star_date|date:"d/m/Y" }}</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user me-2" style="color: #184da1;"></i>
+                                <small class="text-muted">{{ poll.created_by.username|default:"Sistema" }}</small>
+                            </div>
                         </div>
                         
                         {% if poll.status == 'CERRADA' %}
-                            <button class="btn btn-info w-100" onclick="showResults({{ poll.id }})">
+                            <button class="btn btn-info w-100 py-2" onclick="showResults({{ poll.id }})" style="font-weight: 600;">
                                 <i class="fas fa-chart-bar me-2"></i>Ver Resultados
                             </button>
                         {% elif poll.status == 'ACTIVA' and user.rol.name != 'Administrador' %}
-                            <a href="{% url 'posts:answer_poll' poll.id %}" class="btn btn-primary w-100">
-                                <i class="fas fa-play me-2"></i>participar
-                            </a>
-                        {% else %}
-                        <div class="dropdown w-100">
-                            <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-cog me-2"></i>Gestionar
+                            <button class="btn btn-primary w-100 py-2" onclick="showAnswerModal({{ poll.id }})" style="font-weight: 600;">
+                                <i class="fas fa-edit me-2"></i>Participar
                             </button>
-                            <ul class="dropdown-menu w-100">
-                                <li><a class="dropdown-item" href="{% url 'posts:edit_poll' poll.id %}">
-                                    <i class="fas fa-edit me-2"></i>Editar Encuesta
-                                </a></li>
-                                <li><a class="dropdown-item" href="#" onclick="showResults({{ poll.id }})">
-                                    <i class="fas fa-chart-bar me-2"></i>Ver Resultados
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="#" onclick="confirmDelete({{ poll.id }}, '{{ poll.title|escapejs }}')">
-                                    <i class="fas fa-trash me-2"></i>Eliminar
-                                </a></li>
-                            </ul>
+                        {% else %}
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'posts:edit_poll' poll.id %}" class="btn btn-outline-primary py-2" style="font-weight: 600;">
+                                <i class="fas fa-edit me-2"></i>Editar
+                            </a>
+                            <button class="btn btn-outline-info py-2" onclick="showResults({{ poll.id }})" style="font-weight: 600;">
+                                <i class="fas fa-chart-bar me-2"></i>Resultados
+                            </button>
+                            <button class="btn btn-outline-danger py-2" onclick="confirmDelete({{ poll.id }}, '{{ poll.title|escapejs }}')" style="font-weight: 600;">
+                                <i class="fas fa-trash me-2"></i>Eliminar
+                            </button>
                         </div>
                         {% endif %}
                     </div>
@@ -142,9 +151,9 @@
         </div>
         {% empty %}
         <div class="col-12">
-            <div class="text-center no-polls-message">
-                <i class="fas fa-poll fa-3x text-muted mb-3"></i>
-                <h4 class="text-muted">No hay encuestas disponibles</h4>
+            <div class="text-center no-polls-message py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-4" style="opacity: 0.3;"></i>
+                <h4 class="text-muted fw-bold">No hay encuestas disponibles</h4>
                 <p class="text-muted">Vuelve pronto para participar en nuevas encuestas</p>
             </div>
         </div>
@@ -156,11 +165,30 @@
 <div class="modal fade" id="resultsModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Resultados de la Encuesta</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white;">
+                <h5 class="modal-title"><i class="fas fa-chart-bar me-2"></i>Resultados de la Encuesta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="resultsContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Responder Encuesta -->
+<div class="modal fade" id="answerModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white;">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Responder Encuesta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="answerContent">
                 <div class="text-center">
                     <div class="spinner-border" role="status">
                         <span class="visually-hidden">Cargando...</span>
@@ -222,7 +250,6 @@ function confirmDelete(pollId, pollTitle) {
         })
         .then(response => {
             if (response.ok) {
-                // Eliminar la tarjeta del DOM
                 const pollCard = document.querySelector(`[onclick*="${pollId}"]`).closest('.col-md-6');
                 if (pollCard) {
                     pollCard.remove();
@@ -242,7 +269,6 @@ function showResults(pollId) {
     const modal = new bootstrap.Modal(document.getElementById('resultsModal'));
     const content = document.getElementById('resultsContent');
     
-    // Mostrar spinner
     content.innerHTML = `
         <div class="text-center">
             <div class="spinner-border" role="status">
@@ -253,8 +279,11 @@ function showResults(pollId) {
     
     modal.show();
     
-    // Cargar resultados via AJAX
-    fetch(`/polls/${pollId}/results/`)
+    fetch(`/polls/${pollId}/results/`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
         .then(response => response.text())
         .then(html => {
             content.innerHTML = html;
@@ -267,6 +296,65 @@ function showResults(pollId) {
                 </div>
             `;
         });
+}
+
+function showAnswerModal(pollId) {
+    const modal = new bootstrap.Modal(document.getElementById('answerModal'));
+    const content = document.getElementById('answerContent');
+    
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+    
+    fetch(`/polls/${pollId}/answer/`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => response.text())
+        .then(html => {
+            content.innerHTML = html;
+        })
+        .catch(error => {
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error al cargar la encuesta. Inténtalo de nuevo.
+                </div>
+            `;
+        });
+}
+
+function submitPollAnswer(event, pollId) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    fetch(`/polls/${pollId}/submit/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('answerModal')).hide();
+            alert('¡Gracias por participar en la encuesta!');
+            location.reload();
+        } else {
+            alert('Error al enviar las respuestas. Por favor, intenta de nuevo.');
+        }
+    })
+    .catch(error => {
+        alert('Error al enviar las respuestas. Por favor, intenta de nuevo.');
+    });
 }
 </script>
 {% csrf_token %}

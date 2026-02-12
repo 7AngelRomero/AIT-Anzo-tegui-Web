@@ -378,22 +378,32 @@ def answer_poll(request, poll_id):
     
     # Verificar y actualizar estado si es necesario
     if poll.check_and_update_status():
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return HttpResponse('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Esta encuesta ha finalizado y ya no acepta respuestas.</div>')
         messages.error(request, 'Esta encuesta ha finalizado y ya no acepta respuestas.')
         return redirect('posts:poll_list')
     
     # Verificar que esté activa
     if poll.status != 'ACTIVA':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return HttpResponse('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Esta encuesta no está disponible para responder.</div>')
         messages.error(request, 'Esta encuesta no está disponible para responder.')
         return redirect('posts:poll_list')
     
     # Verificar si ya participó
     if Participation.objects.filter(poll=poll, user=request.user).exists():
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return HttpResponse('<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Ya has participado en esta encuesta.</div>')
         messages.error(request, 'Ya has participado en esta encuesta.')
         return redirect('posts:poll_list')
     
     context = {
         'poll': poll,
     }
+    
+    # Si es petición AJAX, devolver solo el contenido del modal
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'posts/answer_poll_modal.html', context)
     
     return render(request, 'posts/answer_poll.html', context)
 
