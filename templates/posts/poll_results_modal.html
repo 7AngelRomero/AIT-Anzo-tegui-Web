@@ -62,24 +62,41 @@
         
     {% elif question.type == 'ESCALA_NUMERICA' %}
         {% if question.average_rating > 0 %}
-        <div class="alert alert-success d-flex align-items-center mb-4">
-            <i class="fas fa-star me-3" style="font-size: 1.5rem;"></i>
+        <div class="alert alert-info d-flex align-items-center mb-4" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: none;">
+            <i class="fas fa-star me-3" style="font-size: 2rem; color: #ffc107;"></i>
             <div>
-                <strong>Promedio:</strong> {{ question.average_rating|floatformat:2 }}/5
+                <div class="fw-bold" style="font-size: 1.1rem; color: #184da1;">Calificación Promedio</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #184da1;">{{ question.average_rating|floatformat:2 }} <small style="font-size: 1rem; color: #666;">/5.0</small></div>
             </div>
         </div>
         
         <!-- Distribución de calificaciones -->
-        <div class="row g-2">
+        <div class="mb-3">
+            <h6 class="fw-semibold mb-3" style="color: #184da1;"><i class="fas fa-chart-bar me-2"></i>Distribución de Respuestas</h6>
+        </div>
+        <div class="row g-3">
             {% for count in question.rating_counts %}
                 <div class="col">
-                    <div class="text-center p-2 border rounded bg-light">
-                        <div class="fw-bold mb-2" style="color: #184da1; font-size: 1.2rem;">{{ forloop.counter }}</div>
-                        <div class="progress" style="height: 80px; writing-mode: vertical-lr;">
-                            {% widthratio count question.rating_counts|length 100 as percentage %}
-                            <div class="progress-bar bg-success" style="height: {{ percentage }}%"></div>
+                    <div class="text-center p-3 border rounded" style="background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                        <!-- Estrella con número -->
+                        <div class="mb-2">
+                            <i class="fas fa-star" style="color: #ffc107; font-size: 1.5rem;"></i>
                         </div>
-                        <small class="d-block mt-2 fw-semibold">{{ count }}</small>
+                        <div class="fw-bold mb-2" style="color: #184da1; font-size: 1.5rem;">{{ forloop.counter }}</div>
+                        
+                        <!-- Barra vertical -->
+                        <div class="d-flex justify-content-center mb-2">
+                            <div class="position-relative" style="width: 40px; height: 100px; background: #e9ecef; border-radius: 20px; overflow: hidden;">
+                                {% if count > 0 %}
+                                    {% widthratio count question.max_rating_count 100 as bar_height %}
+                                    <div class="position-absolute bottom-0 w-100" style="height: {{ bar_height }}%; background: linear-gradient(180deg, #4caf50 0%, #66bb6a 100%); transition: height 0.5s ease;"></div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Contador -->
+                        <div class="fw-bold" style="color: #184da1; font-size: 1.2rem;">{{ count }}</div>
+                        <small class="text-muted">respuesta{{ count|pluralize }}</small>
                     </div>
                 </div>
             {% endfor %}
