@@ -18,19 +18,25 @@
         <div class="carousel-item {% if forloop.first %}active{% endif %}">
             {% if slide.image %}
             <img src="{{ slide.image.url }}" class="d-block w-100" alt="{{ slide.title }}" style="height: 500px; object-fit: cover;">
+            <div class="carousel-caption d-flex align-items-center justify-content-center h-100">
+                <div class="text-center">
+                    <h2 class="display-5 fw-bold mb-3 text-white" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.5);">{{ slide.title }}</h2>
+                    {% if slide.description %}
+                    <p class="lead mb-4 text-white" style="opacity: 0.95; font-size: 1rem; text-shadow: 2px 2px 6px rgba(0,0,0,0.5);">{{ slide.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
             {% else %}
             <div class="carousel-slide d-flex align-items-center justify-content-center">
-            {% endif %}
-                <div class="carousel-caption d-none d-md-block">
-                    <h2 class="display-5 fw-bold mb-3">{{ slide.title }}</h2>
+                <div class="text-center text-white">
+                    <h2 class="display-5 fw-bold mb-3" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.5);">{{ slide.title }}</h2>
                     {% if slide.description %}
-                    <p class="lead mb-4">{{ slide.description }}</p>
+                    <p class="lead mb-4" style="opacity: 0.95; font-size: 1rem; text-shadow: 2px 2px 6px rgba(0,0,0,0.5);">{{ slide.description }}</p>
                     {% endif %}
                     {% if slide.link_url %}
                     <a href="{{ slide.link_url }}" class="btn btn-primary btn-lg">Ver más</a>
                     {% endif %}
                 </div>
-            {% if not slide.image %}
             </div>
             {% endif %}
         </div>
@@ -45,8 +51,8 @@
         <div class="carousel-item active">
             <div class="carousel-slide d-flex align-items-center justify-content-center">
                 <div class="carousel-content text-center text-white">
-                    <h2 class="display-5 fw-bold mb-3">Encuestas AIT Anzoátegui</h2>
-                    <p class="lead mb-4">Participa en nuestras encuestas y ayuda a mejorar</p>
+                    <h2 class="display-5 fw-bold mb-3" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.5);">Encuestas AIT Anzoátegui</h2>
+                    <p class="lead mb-4" style="text-shadow: 2px 2px 6px rgba(0,0,0,0.5);">Participa en nuestras encuestas y ayuda a mejorar</p>
                 </div>
             </div>
         </div>
@@ -64,18 +70,20 @@
     </button>
 </div>
 
-<!-- Breadcrumb -->
-<div class="container mt-3">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Encuestas</li>
-        </ol>
-    </nav>
-</div>
+
 
 <!-- Polls List -->
 <div class="container my-2">
+        <div class="row mb-5">
+        <div class="col-12">
+            <div class="text-center">
+                <h1 class="display-4 fw-bold mb-3" style="color: #184da1;">Encuestas</h1>
+                <hr style="width: 350px; height: 3px; background-color: #184da1; opacity: 1; margin: 1rem auto;">
+                <p class="lead text-muted">Participa y comparte tu opinión</p>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         {% for poll in polls %}
         <div class="col-md-6 col-lg-4 mb-4">

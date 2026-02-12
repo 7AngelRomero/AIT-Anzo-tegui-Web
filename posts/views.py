@@ -564,6 +564,22 @@ def content_manager(request):
                 messages.error(request, f'Solo se permiten máximo 3 imágenes para {"Inicio" if content_type == "HOME_IMAGE" else "Acerca de"}.')
                 return redirect('posts:content_manager')
         
+        # Validar límite de slides del carousel
+        if content_type == 'CAROUSEL_SLIDE':
+            existing_count = SiteContent.objects.filter(content_type=content_type, is_active=True).count()
+            if existing_count >= 5:
+                messages.error(request, 'Solo se permiten máximo 5 slides en el carousel.')
+                return redirect('posts:content_manager')
+            
+            # Validar longitud de título y descripción para carousel
+            if len(title) > 15:
+                messages.error(request, 'El título del slide no puede exceder 15 caracteres.')
+                return redirect('posts:content_manager')
+            
+            if description and len(description) > 50:
+                messages.error(request, 'La descripción del slide no puede exceder 50 caracteres.')
+                return redirect('posts:content_manager')
+        
         # Procesar URL de YouTube si es transmisión en vivo
         if content_type == 'LIVE_STREAM' and link_url:
             # Convertir URL normal a embed si es necesario

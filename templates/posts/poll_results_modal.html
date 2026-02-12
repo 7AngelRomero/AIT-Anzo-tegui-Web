@@ -6,36 +6,25 @@
     <h6 class="fw-bold">{{ forloop.counter }}. {{ question.question_text }}</h6>
     
     {% if question.question_type == 'SELECCION_MULTIPLE' %}
-        {% with max_votes=0 max_option=None %}
-            {% for option in question.opciones.all %}
-                {% with votes=option.respuestas.count %}
-                    {% if votes > max_votes %}
-                        {% with max_votes=votes max_option=option %}{% endwith %}
-                    {% endif %}
-                {% endwith %}
-            {% endfor %}
-            {% if max_option %}
-            <div class="alert alert-info">
-                <strong>Opción más votada:</strong> {{ max_option.options_text }} 
-                ({{ max_votes }} votos - {% widthratio max_votes total_participations 100 %}%)
-            </div>
-            
-            <!-- Gráfico de barras simple -->
-            {% for option in question.opciones.all %}
-                {% with votes=option.respuestas.count %}
-                <div class="mb-2">
+        <!-- Gráfico de barras simple -->
+        {% for option in question.opciones.all %}
+            <div class="mb-2">
+                {% with votes=0 %}
+                    {% for resp in question.respuestas.all %}
+                        {% if resp.selected_options.id == option.id %}
+                            {% with votes=votes|add:1 %}{% endwith %}
+                        {% endif %}
+                    {% endfor %}
                     <div class="d-flex justify-content-between">
                         <span>{{ option.options_text }}</span>
-                        <span>{{ votes }} ({% widthratio votes total_participations 100 %}%)</span>
+                        <span>{{ votes }} ({% if total_participations > 0 %}{% widthratio votes total_participations 100 %}{% else %}0{% endif %}%)</span>
                     </div>
                     <div class="progress" style="height: 20px;">
-                        <div class="progress-bar" style="width: {% widthratio votes total_participations 100 %}%"></div>
+                        <div class="progress-bar bg-primary" style="width: {% if total_participations > 0 %}{% widthratio votes total_participations 100 %}{% else %}0{% endif %}%"></div>
                     </div>
-                </div>
                 {% endwith %}
-            {% endfor %}
-            {% endif %}
-        {% endwith %}
+            </div>
+        {% endfor %}
         
     {% elif question.question_type == 'TEXTO_LIBRE' %}
         <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
@@ -54,7 +43,7 @@
     {% elif question.question_type == 'ESCALA_NUMERICA' %}
         {% with total=0 sum=0 %}
             {% for response in question.respuestas.all %}
-                {% if response.selected_options %}
+                {% if response.selected_options and response.selected_options.value %}
                     {% with total=total|add:1 sum=sum|add:response.selected_options.value %}{% endwith %}
                 {% endif %}
             {% endfor %}
@@ -67,24 +56,26 @@
             <!-- Distribución de calificaciones -->
             <div class="row">
                 {% for i in "12345" %}
-                    {% with rating=i|add:0 count=0 %}
-                        {% for response in question.respuestas.all %}
-                            {% if response.selected_options.value == rating %}
-                                {% with count=count|add:1 %}{% endwith %}
-                            {% endif %}
-                        {% endfor %}
-                        <div class="col">
+                    <div class="col">
+                        {% with rating=i count=0 %}
+                            {% for response in question.respuestas.all %}
+                                {% if response.selected_options and response.selected_options.value|stringformat:"s" == rating %}
+                                    {% with count=count|add:1 %}{% endwith %}
+                                {% endif %}
+                            {% endfor %}
                             <div class="text-center">
                                 <div class="fw-bold">{{ rating }}</div>
                                 <div class="progress" style="height: 60px; writing-mode: vertical-lr;">
-                                    <div class="progress-bar" style="height: {% widthratio count total 100 %}%"></div>
+                                    <div class="progress-bar bg-success" style="height: {% if total > 0 %}{% widthratio count total 100 %}{% else %}0{% endif %}%"></div>
                                 </div>
                                 <small>{{ count }}</small>
                             </div>
-                        </div>
-                    {% endwith %}
+                        {% endwith %}
+                    </div>
                 {% endfor %}
             </div>
+            {% else %}
+            <p class="text-muted">No hay respuestas para esta pregunta</p>
             {% endif %}
         {% endwith %}
     {% endif %}
