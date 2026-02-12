@@ -73,7 +73,7 @@
 
 
 <!-- Polls List -->
-<div class="container my-2">
+<div class="container my-2 mb-5" style="margin-bottom: 5rem !important;">
         <div class="row mb-5">
         <div class="col-12">
             <div class="text-center">
@@ -133,16 +133,17 @@
                                 <i class="fas fa-edit me-2"></i>Participar
                             </button>
                         {% else %}
-                        <div class="d-grid gap-2">
-                            <a href="{% url 'posts:edit_poll' poll.id %}" class="btn btn-outline-primary py-2" style="font-weight: 600;">
-                                <i class="fas fa-edit me-2"></i>Editar
-                            </a>
-                            <button class="btn btn-outline-info py-2" onclick="showResults({{ poll.id }})" style="font-weight: 600;">
-                                <i class="fas fa-chart-bar me-2"></i>Resultados
-                            </button>
-                            <button class="btn btn-outline-danger py-2" onclick="confirmDelete({{ poll.id }}, '{{ poll.title|escapejs }}')" style="font-weight: 600;">
-                                <i class="fas fa-trash me-2"></i>Eliminar
-                            </button>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <a href="{% url 'posts:edit_poll' poll.id %}" class="btn btn-outline-primary w-100 py-2" style="font-weight: 600;">
+                                    <i class="fas fa-edit me-2"></i>Editar
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-outline-info w-100 py-2" onclick="showResults({{ poll.id }})" style="font-weight: 600;">
+                                    <i class="fas fa-chart-bar me-2"></i>Resultados
+                                </button>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
@@ -160,6 +161,7 @@
         {% endfor %}
     </div>
 </div>
+<div style="margin-bottom: 5rem;"></div>
 
 <!-- Modal de Resultados -->
 <div class="modal fade" id="resultsModal" tabindex="-1">
