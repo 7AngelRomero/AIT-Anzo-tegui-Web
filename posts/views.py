@@ -534,6 +534,7 @@ def poll_results(request, poll_id):
                 
                 question_data['average_rating'] = sum(ratings) / len(ratings) if ratings else 0
                 question_data['rating_counts'] = [ratings.count(i) for i in range(1, 6)]
+                question_data['max_rating_count'] = max(question_data['rating_counts']) if question_data['rating_counts'] else 1
         
         questions_with_results.append(question_data)
     
