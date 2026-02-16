@@ -1157,3 +1157,14 @@ figure {
     background-color: rgba(255, 255, 255, 0.2) !important;
     border-radius: 8px;
 }
+
+
+/* Prevenir desplazamiento del contenido al abrir modal */
+body.modal-open {
+    padding-right: 0 !important;
+    overflow: hidden;
+}
+
+body.modal-open .flex-grow-1 {
+    padding-right: 0 !important;
+}

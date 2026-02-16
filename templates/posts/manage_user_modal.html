@@ -1,0 +1,189 @@
+<form id="manageUserForm" method="post">
+    {% csrf_token %}
+    
+    <!-- Información del usuario -->
+    <div class="text-center mb-4">
+        {% if usuario.profile_image %}
+            <img src="{{ usuario.profile_image.url }}" class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover; border: 4px solid #184da1;">
+        {% else %}
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px; background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white; border: 4px solid #184da1;">
+                <span class="fw-bold" style="font-size: 2rem;">{{ usuario.username|first|upper }}</span>
+            </div>
+        {% endif %}
+        <h5 class="fw-bold" style="color: #184da1;">{{ usuario.get_full_name|default:usuario.username }}</h5>
+        <p class="text-muted mb-0">ID: <code>{{ usuario.id }}</code> | Creado: {{ usuario.date_joined|date:"d/m/Y" }}</p>
+    </div>
+
+    <hr>
+
+    <!-- Datos del usuario -->
+    <h6 class="fw-bold mb-3" style="color: #184da1;"><i class="fas fa-user-edit me-2"></i>Datos del Usuario</h6>
+    
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Cédula *</label>
+            <input type="text" class="form-control" name="cedula" value="{{ usuario.cedula }}" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Nombre de Usuario *</label>
+            <input type="text" class="form-control" name="username" value="{{ usuario.username }}" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Correo Electrónico *</label>
+            <input type="email" class="form-control" name="email" value="{{ usuario.email }}" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Nombre</label>
+            <input type="text" class="form-control" name="first_name" value="{{ usuario.first_name }}">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Apellido</label>
+            <input type="text" class="form-control" name="last_name" value="{{ usuario.last_name }}">
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Rol y permisos -->
+    <h6 class="fw-bold mb-3" style="color: #184da1;"><i class="fas fa-user-tag me-2"></i>Rol y Permisos</h6>
+    
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Rol</label>
+            <select class="form-select" name="role">
+                <option value="Usuario" {% if usuario.rol.name == 'Usuario' or not usuario.rol %}selected{% endif %}>Usuario</option>
+                <option value="Trabajador" {% if usuario.rol.name == 'Trabajador' %}selected{% endif %}>Trabajador</option>
+                <option value="Administrador" {% if usuario.rol.name == 'Administrador' %}selected{% endif %}>Administrador</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Permisos</label>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="is_staff" id="is_staff" {% if usuario.is_staff %}checked{% endif %}>
+                <label class="form-check-label" for="is_staff">
+                    Acceso al panel de administración Django
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="is_superuser" id="is_superuser" {% if usuario.is_superuser %}checked{% endif %}>
+                <label class="form-check-label" for="is_superuser">
+                    Superusuario (todos los permisos)
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Acciones -->
+    <h6 class="fw-bold mb-3" style="color: #184da1;"><i class="fas fa-cogs me-2"></i>Acciones</h6>
+    
+    <div class="d-flex gap-2 mb-3">
+        <button type="submit" name="action" value="update" class="btn flex-grow-1" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white; border: none;">
+            <i class="fas fa-save me-2"></i>Guardar Cambios
+        </button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Cancelar
+        </button>
+    </div>
+</form>
+
+<div class="d-flex gap-2">
+    {% if usuario.is_active %}
+        <button type="button" class="btn flex-grow-1" style="background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); color: white; border: none;" onclick="toggleUserStatus({{ usuario.id }}, false)">
+            <i class="fas fa-ban me-2"></i>Desactivar Usuario
+        </button>
+    {% else %}
+        <button type="button" class="btn flex-grow-1" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: white; border: none;" onclick="toggleUserStatus({{ usuario.id }}, true)">
+            <i class="fas fa-check me-2"></i>Activar Usuario
+        </button>
+    {% endif %}
+    <button type="button" class="btn flex-grow-1" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none;" onclick="deleteUser({{ usuario.id }}, '{{ usuario.username|escapejs }}')">
+        <i class="fas fa-trash me-2"></i>Eliminar Usuario
+    </button>
+</div>
+
+<script>
+function toggleUserStatus(userId, activate) {
+    const action = activate ? 'activar' : 'desactivar';
+    if (confirm(`¿Estás seguro de ${action} este usuario?`)) {
+        const csrfToken = '{{ csrf_token }}';
+        
+        fetch(`/polls/toggle_user/${userId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ activate: activate })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cambiar el estado del usuario.');
+        });
+    }
+}
+
+function deleteUser(userId, username) {
+    if (confirm(`¿Estás seguro de ELIMINAR permanentemente al usuario "${username}"?\n\nEsta acción NO se puede deshacer.`)) {
+        const csrfToken = '{{ csrf_token }}';
+        
+        fetch(`/polls/delete_user/${userId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar el usuario.');
+        });
+    }
+}
+
+document.getElementById('manageUserForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(`/polls/manage_user/{{ usuario.id }}/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar el usuario.');
+    });
+});
+</script>

@@ -23,6 +23,7 @@ class Rol(models.Model):
 
 class User(AbstractUser):
 
+    cedula = models.CharField(max_length=9, unique=True, help_text="Cédula de identidad", null=True, blank=True)
     full_name = models.CharField(max_length=255, blank=True, default='')
     profile_image = models.ImageField(upload_to='profiles/', blank=True, null=True)
         
