@@ -21,7 +21,7 @@
                 <form method="get" class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label fw-semibold"><i class="fas fa-search me-2"></i>Buscar</label>
-                        <input type="text" class="form-control" name="search" placeholder="ID, usuario, nombre..." value="{{ request.GET.search }}">
+                        <input type="text" class="form-control" name="search" placeholder="cédula, usuario, nombre..." value="{{ request.GET.search }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-semibold"><i class="fas fa-user-tag me-2"></i>Rol</label>
@@ -177,6 +177,10 @@
 </div>
 
 <script>
+function getCsrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
 function openManageModal(userId) {
     const modal = new bootstrap.Modal(document.getElementById('manageUserModal'));
     const content = document.getElementById('manageUserContent');
@@ -199,6 +203,7 @@ function openManageModal(userId) {
         .then(response => response.text())
         .then(html => {
             content.innerHTML = html;
+            setupModalHandlers(userId);
         })
         .catch(error => {
             content.innerHTML = `
@@ -208,6 +213,99 @@ function openManageModal(userId) {
                 </div>
             `;
         });
+}
+
+function setupModalHandlers(userId) {
+    const form = document.getElementById('manageUserForm');
+    const toggleBtn = document.querySelector('.btn-toggle-user');
+    const deleteBtn = document.querySelector('.btn-delete-user');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch(`/polls/manage_user/${userId}/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Error desconocido'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al actualizar el usuario.');
+            });
+        });
+    }
+    
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            const activate = this.dataset.activate === 'true';
+            const action = activate ? 'activar' : 'desactivar';
+            
+            if (confirm(`¿Estás seguro de ${action} este usuario?`)) {
+                fetch(`/polls/toggle_user/${userId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ activate: activate })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (data.error || 'Error desconocido'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cambiar el estado del usuario.');
+                });
+            }
+        });
+    }
+    
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function() {
+            const username = this.dataset.username;
+            
+            if (confirm(`¿Estás seguro de ELIMINAR permanentemente al usuario "${username}"?\n\nEsta acción NO se puede deshacer.`)) {
+                fetch(`/polls/delete_user/${userId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (data.error || 'Error desconocido'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al eliminar el usuario.');
+                });
+            }
+        });
+    }
 }
 </script>
 {% csrf_token %}

@@ -978,32 +978,35 @@ def manage_user(request, user_id):
         return HttpResponseForbidden("No puedes gestionar tu propia cuenta.")
     
     if request.method == 'POST':
-        action = request.POST.get('action')
+        # Actualizar datos del usuario
+        usuario.cedula = request.POST.get('cedula', '')
+        usuario.username = request.POST.get('username')
+        usuario.email = request.POST.get('email')
+        usuario.first_name = request.POST.get('first_name', '')
+        usuario.last_name = request.POST.get('last_name', '')
         
-        if action == 'update':
-            # Actualizar datos del usuario
-            usuario.username = request.POST.get('username')
-            usuario.email = request.POST.get('email')
-            usuario.first_name = request.POST.get('first_name', '')
-            usuario.last_name = request.POST.get('last_name', '')
-            
-            # Actualizar rol
-            role_name = request.POST.get('role')
-            try:
-                role = Rol.objects.get(name=role_name)
-            except Rol.DoesNotExist:
-                role = Rol.objects.create(name=role_name, descripcion=f'Rol {role_name}')
-            usuario.rol = role
-            
-            # Actualizar permisos
-            usuario.is_staff = request.POST.get('is_staff') == 'on'
-            usuario.is_superuser = request.POST.get('is_superuser') == 'on'
-            
+        # Actualizar rol
+        role_name = request.POST.get('role')
+        try:
+            role = Rol.objects.get(name=role_name)
+        except Rol.DoesNotExist:
+            role = Rol.objects.create(name=role_name, descripcion=f'Rol {role_name}')
+        usuario.rol = role
+        
+        # Actualizar permisos
+        usuario.is_staff = request.POST.get('is_staff') == 'on'
+        usuario.is_superuser = request.POST.get('is_superuser') == 'on'
+        
+        try:
             usuario.save()
-            
             return JsonResponse({
                 'success': True,
                 'message': f'Usuario {usuario.username} actualizado exitosamente.'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
             })
     
     # Si es petición AJAX, devolver el modal
@@ -1062,4 +1065,3 @@ def delete_user(request, user_id):
         })
     
     return JsonResponse({'success': False, 'error': 'Método no permitido.'})
-
