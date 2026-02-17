@@ -27,7 +27,7 @@
     <!-- Contenedor principal -->
     <div class="d-flex" style="min-height: 100vh;">
         <!-- Sidebar -->
-        <div class="d-flex flex-column" style="width: 280px; background: linear-gradient(180deg, #184da1 0%, #2D64BB 100%); box-shadow: 2px 0 10px rgba(0,0,0,0.1);">
+        <div class="d-flex flex-column" style="width: 280px; min-width: 280px; background: linear-gradient(180deg, #184da1 0%, #2D64BB 100%); box-shadow: 2px 0 10px rgba(0,0,0,0.1); position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;">
             <!-- Logo -->
             <div class="p-3 text-center border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
                 <img src="{% static 'SVG/AIT White lateral.svg' %}" alt="Logo AIT" style="max-width: 200px; width: 100%;">
@@ -59,27 +59,27 @@
                         </a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a class="nav-link text-white d-flex align-items-center" href="{% url 'posts:poll_manager' %}" style="transition: all 0.2s;">
+                        <a class="nav-link text-white d-flex align-items-center" href="/dashboard/home/" style="transition: all 0.2s;">
                             <i class="fas fa-tachometer-alt me-3" style="width: 20px;"></i>Dashboard Principal
                         </a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a class="nav-link text-white d-flex align-items-center" href="{% url 'posts:create_poll' %}" style="transition: all 0.2s;">
+                        <a class="nav-link text-white d-flex align-items-center" href="/dashboard/create/" style="transition: all 0.2s;">
                             <i class="fas fa-plus me-3" style="width: 20px;"></i>Crear Encuesta
                         </a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a class="nav-link text-white d-flex align-items-center" href="{% url 'posts:user_list' %}" style="transition: all 0.2s;">
-                            <i class="fas fa-users me-3" style="width: 20px;"></i>Usuarios
+                        <a class="nav-link text-white d-flex align-items-center" href="/dashboard/users/" style="transition: all 0.2s;">
+                            <i class="fas fa-users me-3" style="width: 20px;"></i>Gestión de Usuarios
                         </a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a class="nav-link text-white d-flex align-items-center" href="{% url 'posts:poll_statistics' %}" style="transition: all 0.2s;">
-                            <i class="fas fa-chart-bar me-3" style="width: 20px;"></i>Estadísticas
+                        <a class="nav-link text-white d-flex align-items-center" href="/dashboard/statistics/" style="transition: all 0.2s;">
+                            <i class="fas fa-chart-bar me-3" style="width: 20px;"></i>Reportes
                         </a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a class="nav-link text-white d-flex align-items-center" href="{% url 'posts:content_manager' %}" style="transition: all 0.2s;">
+                        <a class="nav-link text-white d-flex align-items-center" href="/dashboard/content/" style="transition: all 0.2s;">
                             <i class="fas fa-paperclip me-3" style="width: 20px;"></i>Contenido
                         </a>
                     </li>
@@ -89,7 +89,7 @@
             <!-- Opciones de usuario al final -->
             <div class="p-3 border-top" style="border-color: rgba(255,255,255,0.1) !important;">
                 <a href="{% url 'profile' %}" class="btn btn-light w-100 mb-2 d-flex align-items-center justify-content-center" style="font-size: 0.9rem;">
-                    <i class="fas fa-user-edit me-2"></i>Mi Perfil
+                    <i class="fas fa-user-edit me-2"></i>Perfil de Usuario
                 </a>
                 <a href="{% url 'logout' %}" class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center" style="font-size: 0.9rem;">
                     <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
@@ -98,8 +98,8 @@
         </div>
 
         <!-- Contenido principal -->
-        <div class="flex-grow-1" style="background-color: #f8f9fa;">
-            <div class="p-4">
+        <div class="flex-grow-1" style="background-color: #f8f9fa; overflow-x: hidden; margin-left: 280px;">
+            <div class="p-4" style="max-width: 100%;">
                 <!-- Mensajes de Django (ocultos, procesados por React) -->
                 {% if messages %}
                     <div style="display: none;">

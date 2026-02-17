@@ -1168,3 +1168,101 @@ body.modal-open {
 body.modal-open .flex-grow-1 {
     padding-right: 0 !important;
 }
+
+/* Estilos para campos flotantes con underline */
+.floating-input {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.floating-field {
+    width: 100%;
+    padding: 0.75rem 0 0.5rem 0;
+    font-size: 1rem;
+    border: none;
+    border-bottom: 2px solid #dee2e6;
+    background: transparent;
+    outline: none;
+    transition: border-color 0.3s ease;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.floating-field:focus {
+    border-bottom-color: #184da1;
+}
+
+.floating-field:focus ~ .floating-label,
+.floating-field:not(:placeholder-shown) ~ .floating-label {
+    top: -0.5rem;
+    font-size: 0.75rem;
+    color: #184da1;
+}
+
+.floating-label {
+    position: absolute;
+    left: 0;
+    top: 0.75rem;
+    font-size: 1rem;
+    color: #6c757d;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    font-family: 'Open Sans', sans-serif;
+}
+
+/* Ajuste para campos de Django form */
+.floating-input input[type="text"],
+.floating-input input[type="password"],
+.floating-input input[type="email"] {
+    width: 100%;
+    padding: 0.75rem 0 0.5rem 0;
+    font-size: 1rem;
+    border: none;
+    border-bottom: 2px solid #dee2e6;
+    background: transparent;
+    outline: none;
+    transition: border-color 0.3s ease;
+    font-family: 'Open Sans', sans-serif;
+    border-radius: 0;
+}
+
+.floating-input input:focus {
+    border-bottom-color: #184da1;
+    box-shadow: none;
+}
+
+/* Ajuste para botón de login */
+.login-submit-btn {
+    background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%);
+    border: none;
+    padding: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.login-submit-btn:hover {
+    background: linear-gradient(135deg, #0f3a7a 0%, #1f4d8f 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(24, 77, 161, 0.3);
+}
+
+/* Animaciones para modales */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    transform: scale(0.9) translateY(-50px);
+    opacity: 0;
+}
+
+.modal.show .modal-dialog {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+/* Animación suave para el backdrop */
+.modal-backdrop.fade {
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+}
+
+.modal-backdrop.show {
+    opacity: 0.5;
+}

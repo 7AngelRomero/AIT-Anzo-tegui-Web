@@ -95,7 +95,7 @@ def poll_manager(request):
         'total_users': total_users
     }
     
-    return render(request, 'posts/poll_manager.html', context)
+    return render(request, 'posts/dashboard_home.html', context)
 
 @login_required
 def user_list(request):
@@ -146,7 +146,7 @@ def user_list(request):
         'user_count': user_count,
     }
     
-    return render(request, 'posts/user_list.html', context)
+    return render(request, 'posts/dashboard_users.html', context)
 
 @login_required
 def create_poll(request):
@@ -346,6 +346,10 @@ def edit_poll(request, poll_id):
         
         messages.success(request, 'Encuesta actualizada exitosamente con todas sus preguntas.')
         return redirect('posts:poll_manager')
+    
+    # Si es petición AJAX GET, devolver el template parcial para el modal
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'posts/dashboard_edit_modal.html', {'poll': poll})
     
     return render(request, 'posts/edit_poll.html', {'poll': poll})
 
@@ -685,6 +689,30 @@ def poll_statistics(request):
     
     all_polls = Poll.objects.all().order_by('-star_date')
     
+    # Aplicar filtros
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
+    if search_query:
+        all_polls = all_polls.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(created_by__username__icontains=search_query) |
+            Q(created_by__first_name__icontains=search_query) |
+            Q(created_by__last_name__icontains=search_query)
+        )
+    
+    if status_filter:
+        all_polls = all_polls.filter(status=status_filter)
+    
+    if date_from:
+        all_polls = all_polls.filter(star_date__gte=date_from)
+    
+    if date_to:
+        all_polls = all_polls.filter(star_date__lte=date_to)
+    
     # Crear diccionario con respuestas de texto libre y datos de gráficas
     text_responses = {}
     chart_data = {}
@@ -749,7 +777,7 @@ def poll_statistics(request):
         'chart_data': json.dumps(chart_data),
     }
     
-    return render(request, 'posts/poll_statistics.html', context)
+    return render(request, 'posts/dashboard_statistics.html', context)
 
 @login_required
 def export_poll_pdf(request, poll_id):
@@ -1017,13 +1045,13 @@ def manage_user(request, user_id):
 
 @login_required
 def toggle_user(request, user_id):
-    """Vista para activar/desactivar usuario - Solo Administradores"""
-    if not request.user.rol or request.user.rol.name != 'Administrador':
+    """Vista para activar/desactivar usuario - Administradores y Trabajadores"""
+    if not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']:
         return JsonResponse({'success': False, 'error': 'No tienes permisos.'})
     
     usuario = get_object_or_404(User, id=user_id)
     
-    # Evitar que el administrador se desactive a sí mismo
+    # Evitar que el usuario se desactive a sí mismo
     if usuario.id == request.user.id:
         return JsonResponse({'success': False, 'error': 'No puedes desactivar tu propia cuenta.'})
     
@@ -1047,7 +1075,7 @@ def toggle_user(request, user_id):
 def delete_user(request, user_id):
     """Vista para eliminar usuario - Solo Administradores"""
     if not request.user.rol or request.user.rol.name != 'Administrador':
-        return JsonResponse({'success': False, 'error': 'No tienes permisos.'})
+        return JsonResponse({'success': False, 'error': 'Solo los administradores pueden eliminar usuarios.'})
     
     usuario = get_object_or_404(User, id=user_id)
     

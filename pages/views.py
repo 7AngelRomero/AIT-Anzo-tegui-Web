@@ -23,11 +23,11 @@ def contact(request):
 def about(request):
     # Obtener contenido dinámico
     about_images = SiteContent.objects.filter(content_type='ABOUT_IMAGE', is_active=True).order_by('order')
-    live_stream = SiteContent.objects.filter(content_type='LIVE_STREAM', is_active=True).first()
+    carousel_slides = SiteContent.objects.filter(content_type='CAROUSEL_SLIDE', is_active=True).order_by('order')
     
     context = {
         'about_images': about_images,
-        'live_stream': live_stream,
+        'carousel_slides': carousel_slides,
     }
     return render(request, 'pages/about.html', context)
 
@@ -56,6 +56,7 @@ def user_logout(request):
 
 def register(request):
     if request.method == 'POST':
+        cedula = request.POST.get('cedula')
         username = request.POST['username']
         first_name = request.POST['first_name']
         last_name = request.POST['last_name']
@@ -80,6 +81,10 @@ def register(request):
             messages.error(request, 'El email ya está registrado')
             return render(request, 'pages/registration/register.html')
         
+        if cedula and User.objects.filter(cedula=cedula).exists():
+            messages.error(request, 'La cédula ya está registrada')
+            return render(request, 'pages/registration/register.html')
+        
         # Crear usuario con rol de Usuario por defecto
         user_role, created = Rol.objects.get_or_create(name='Usuario')
         user = User.objects.create_user(
@@ -88,6 +93,7 @@ def register(request):
             last_name=last_name,
             email=email,
             password=password1,
+            cedula=cedula,
             rol=user_role
         )
         
@@ -104,16 +110,27 @@ def profile(request):
             request.user.profile_image = request.FILES['profile_image']
             request.user.save()
             messages.success(request, 'Foto de perfil actualizada exitosamente.')
+            return redirect('profile')
             
-        # Cambio de username
+        # Actualizar datos personales
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
         new_username = request.POST.get('username')
+        email = request.POST.get('email')
+        
+        if first_name:
+            request.user.first_name = first_name
+        if last_name:
+            request.user.last_name = last_name
+        if email:
+            request.user.email = email
+            
         if new_username and new_username != request.user.username:
             if User.objects.filter(username=new_username).exists():
                 messages.error(request, 'Este nombre de usuario ya existe.')
+                return redirect('profile')
             else:
                 request.user.username = new_username
-                request.user.save()
-                messages.success(request, 'Nombre de usuario actualizado exitosamente.')
                 
         # Cambio de contraseña
         old_password = request.POST.get('old_password')
@@ -126,12 +143,17 @@ def profile(request):
                     request.user.set_password(new_password1)
                     request.user.save()
                     update_session_auth_hash(request, request.user)
-                    messages.success(request, 'Contraseña cambiada exitosamente.')
+                    messages.success(request, 'Perfil y contraseña actualizados exitosamente.')
+                    return redirect('profile')
                 else:
                     messages.error(request, 'La contraseña actual es incorrecta.')
+                    return redirect('profile')
             else:
                 messages.error(request, 'Las nuevas contraseñas no coinciden.')
+                return redirect('profile')
         
+        request.user.save()
+        messages.success(request, 'Perfil actualizado exitosamente.')
         return redirect('profile')
     
     return render(request, 'pages/profile.html')

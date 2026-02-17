@@ -4,22 +4,52 @@
 {% block title %}Estadísticas de Encuestas - AIT{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="container-fluid">
+<div class="row mb-2">
     <div class="col-12">
-        <h2 class="fw-bold mb-4" style="color: #184da1;">
+        <h2 class="fw-bold mb-2" style="color: #184da1;">
             <i class="fas fa-chart-bar me-2"></i>Estadísticas de Encuestas
         </h2>
+        <p class="text-muted">Total: <strong>{{ all_polls.count }}</strong> encuestas</p>
     </div>
 </div>
 
-<!-- Estadísticas generales -->
+<!-- Filtro de búsqueda -->
 <div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card bg-primary text-white">
-            <div class="card-body text-center">
-                <i class="fas fa-poll fa-2x mb-2"></i>
-                <h4>{{ all_polls.count }}</h4>
-                <p class="mb-0">Total Encuestas</p>
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold"><i class="fas fa-search me-2"></i>Buscar</label>
+                        <input type="text" class="form-control" name="search" placeholder="título, autor, descripción..." value="{{ request.GET.search }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold"><i class="fas fa-toggle-on me-2"></i>Estado</label>
+                        <select class="form-select" name="status">
+                            <option value="">Todos</option>
+                            <option value="ACTIVA" {% if request.GET.status == 'ACTIVA' %}selected{% endif %}>Activa</option>
+                            <option value="BORRADOR" {% if request.GET.status == 'BORRADOR' %}selected{% endif %}>Borrador</option>
+                            <option value="CERRADA" {% if request.GET.status == 'CERRADA' %}selected{% endif %}>Cerrada</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold"><i class="fas fa-calendar me-2"></i>Desde</label>
+                        <input type="date" class="form-control" name="date_from" value="{{ request.GET.date_from }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold"><i class="fas fa-calendar me-2"></i>Hasta</label>
+                        <input type="date" class="form-control" name="date_to" value="{{ request.GET.date_to }}">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1" style="background-color: #184da1; border: none;">
+                            <i class="fas fa-filter me-2"></i>Filtrar
+                        </button>
+                        <a href="{% url 'posts:poll_statistics' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -27,14 +57,26 @@
 
 {% for poll in all_polls %}
 <div class="card mb-4">
-    <div class="card-header">
-        <h5 class="mb-1">{{ poll.title }}</h5>
-        <p class="mb-2 text-muted">{{ poll.description }}</p>
-        <small class="text-muted">{{ poll.participaciones.count }} participaciones • {{ poll.preguntas.count }} preguntas • Estado: {{ poll.status }}</small>
+    <div class="card-header" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white;">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <h5 class="mb-2 fw-bold">{{ poll.title }}</h5>
+                <p class="mb-4 small" style="opacity: 0.9;">{{ poll.description }}</p>
+                <div class="d-flex flex-wrap gap-3 small">
+                    <span><i class="fas fa-user me-1"></i>Autor: {{ poll.created_by.get_full_name|default:poll.created_by.username }}</span>
+                    <span><i class="fas fa-calendar-alt me-1"></i>Inicio: {{ poll.star_date|date:"d/m/Y" }}</span>
+                    <span><i class="fas fa-calendar-check me-1"></i>Fin: {{ poll.end_date|date:"d/m/Y"|default:"Sin fecha" }}</span>
+                    <span><i class="fas fa-users me-1"></i>{{ poll.participaciones.count }} participaciones</span>
+                    <span><i class="fas fa-question-circle me-1"></i>{{ poll.preguntas.count }} preguntas</span>
+                    <span class="badge" style="background: {% if poll.status == 'ACTIVA' %}rgba(40, 167, 69, 0.9){% elif poll.status == 'BORRADOR' %}rgba(255, 193, 7, 0.9){% else %}rgba(108, 117, 125, 0.9){% endif %};">{{ poll.status }}</span>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="card-body">
         {% for question in poll.preguntas.all %}
         <div class="mb-4">
+            <h6 class="fw-bold mb-3" style="color: #184da1;">{{ question.question_text }}</h6>
             {% if question.question_type == 'TEXTO_LIBRE' %}
                 <div class="list-group">
                     {% for poll_id, questions in text_responses.items %}
@@ -67,12 +109,46 @@
                     {% endfor %}
                 </div>
             {% elif question.question_type == 'SELECCION_MULTIPLE' %}
-                <div style="position: relative; height: 300px; width: 100%; max-width: 400px; margin: 0 auto;">
-                    <canvas id="chart_{{ poll.id }}_{{ question.id }}"></canvas>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="chart_{{ poll.id }}_{{ question.id }}"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-3" style="background-color: #f8f9fa;">
+                            <h6 class="fw-bold mb-3">Opciones:</h6>
+                            <ul class="list-unstyled mb-0">
+                                {% for option in question.opciones.all %}
+                                <li class="mb-2">
+                                    <span class="badge" style="background-color: {{ forloop.counter0|divisibleby:6|yesno:'#FF6384,#36A2EB,#FFCE56,#4BC0C0,#9966FF,#FF9F40' }}; width: 15px; height: 15px; display: inline-block; border-radius: 3px;"></span>
+                                    <strong>{{ option.options_text }}</strong>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             {% elif question.question_type == 'ESCALA_NUMERICA' %}
-                <div style="position: relative; height: 300px; width: 100%; max-width: 500px; margin: 0 auto;">
-                    <canvas id="chart_{{ poll.id }}_{{ question.id }}"></canvas>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="chart_{{ poll.id }}_{{ question.id }}"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-3" style="background-color: #f8f9fa;">
+                            <h6 class="fw-bold mb-3">Escala:</h6>
+                            <ul class="list-unstyled mb-0">
+                                {% for i in "12345" %}
+                                <li class="mb-2">
+                                    <span class="badge" style="background-color: #36A2EB; width: 15px; height: 15px; display: inline-block; border-radius: 3px;"></span>
+                                    <strong>Calificación {{ i }}</strong>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             {% else %}
                 <p class="text-muted mt-2">Gráficas próximamente...</p>
@@ -94,6 +170,7 @@
     <p class="text-muted">Las estadísticas aparecerán cuando se creen encuestas</p>
 </div>
 {% endfor %}
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -158,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function exportToPDF(pollId) {
-    window.open(`/polls/export-pdf/${pollId}/`, '_blank');
+    window.open(`/dashboard/export-pdf/${pollId}/`, '_blank');
 }
 </script>
 {% endblock %}

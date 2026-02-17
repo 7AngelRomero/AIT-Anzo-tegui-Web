@@ -5,7 +5,7 @@ app_name = 'posts'
 
 urlpatterns = [
     path('', views.poll_list, name='poll_list'),
-    path('manager/', views.poll_manager, name='poll_manager'),
+    path('home/', views.poll_manager, name='poll_manager'),
     path('users/', views.user_list, name='user_list'),
     path('create/', views.create_poll, name='create_poll'),
     path('change_user_role/<int:user_id>/<str:new_role>/', views.change_user_role, name='change_user_role'),

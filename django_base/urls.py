@@ -25,12 +25,14 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('pages.urls')),
     path('polls/', include('posts.urls')),
+    path('dashboard/', include('posts.urls')),
     
     # URLs para reset de contraseña
     path('password_reset/', auth_views.PasswordResetView.as_view(
         template_name='pages/registration/password_reset.html',
         email_template_name='registration/password_reset_email.txt',
-        subject_template_name='registration/password_reset_subject.txt'
+        subject_template_name='registration/password_reset_subject.txt',
+        success_url='/login/?reset_sent=true'
     ), name='password_reset'),
     path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='pages/registration/password_reset_done.html'), name='password_reset_done'),
     path('reset/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),

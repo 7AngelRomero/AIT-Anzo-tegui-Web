@@ -53,7 +53,7 @@
                     </li>
                     {% if user.is_authenticated and user.rol.name in 'Administrador,Trabajador' %}
                         <li class="nav-item">
-                            <a class="nav-link {% if 'manager' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'posts:poll_manager' %}">Dashboard</a>
+                            <a class="nav-link {% if 'manager' in request.resolver_match.url_name %}active{% endif %}" href="/dashboard/home/">Dashboard</a>
                         </li>
                     {% endif %}
                     <li class="nav-item">
@@ -75,7 +75,7 @@
                                 {% endif %}
                                 <span class="d-none d-md-inline">{{ user.first_name|default:user.username }}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="min-width: 250px; border-radius: 8px; margin-top: 8px;">
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 pt-0" style="min-width: 250px; border-radius: 12px;">
                                 <li class="px-3 py-2" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); border-radius: 8px 8px 0 0;">
                                     <div class="d-flex align-items-center text-white">
                                         {% if user.profile_image %}
@@ -91,13 +91,13 @@
                                         </div>
                                     </div>
                                 </li>
-                                <li><hr class="dropdown-divider my-0"></li>
+                                <li><hr class="dropdown-divider m-0"></li>
                                 <li>
                                     <a class="dropdown-item py-2" href="{% url 'profile' %}" style="transition: all 0.2s;">
                                         <i class="fas fa-user-edit me-2" style="color: #184da1; width: 20px;"></i>Mi Perfil
                                     </a>
                                 </li>
-                                <li><hr class="dropdown-divider my-0"></li>
+                                <li><hr class="dropdown-divider m-0"></li>
                                 <li>
                                     <a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}" style="transition: all 0.2s;">
                                         <i class="fas fa-sign-out-alt me-2" style="width: 20px;"></i>Cerrar Sesión

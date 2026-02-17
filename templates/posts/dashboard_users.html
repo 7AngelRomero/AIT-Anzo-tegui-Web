@@ -44,7 +44,7 @@
                         <button type="submit" class="btn btn-primary flex-grow-1" style="background-color: #184da1; border: none;">
                             <i class="fas fa-filter me-2"></i>Filtrar
                         </button>
-                        <a href="{% url 'posts:user_list' %}" class="btn btn-outline-secondary">
+                        <a href="/dashboard/users/" class="btn btn-outline-secondary">
                             <i class="fas fa-times"></i>
                         </a>
                     </div>
@@ -67,9 +67,7 @@
                         <th>Cédula</th>
                         <th>Fecha Creación</th>
                         <th>Rol</th>
-                        {% if user.rol.name == 'Administrador' %}
                         <th>Acciones</th>
-                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -93,25 +91,32 @@
                         </td>
                         <td><code>{{ usuario.cedula|default:"-" }}</code></td>
                         <td>{{ usuario.date_joined|date:"d/m/Y" }}</td>
-                        <td>
-                            <span class="badge" style="background: {% if usuario.rol.name == 'Administrador' %}linear-gradient(135deg, #dc3545 0%, #c82333 100%){% elif usuario.rol.name == 'Trabajador' %}linear-gradient(135deg, #ffc107 0%, #e0a800 100%){% else %}linear-gradient(135deg, #6c757d 0%, #5a6268 100%){% endif %}; color: white;">
-                                {{ usuario.rol.name|default:"Usuario" }}
-                            </span>
-                            {% if not usuario.is_active %}
-                                <span class="badge" style="background: linear-gradient(135deg, #343a40 0%, #23272b 100%); color: white;">Inactivo</span>
-                            {% endif %}
-                        </td>
-                        {% if user.rol.name == 'Administrador' %}
+                        <td>{{ usuario.rol.name|default:"Usuario" }}{% if not usuario.is_active %} (Inactivo){% endif %}</td>
                         <td>
                             {% if usuario.id != user.id %}
-                                <button class="btn btn-sm" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white; border: none;" onclick="openManageModal({{ usuario.id }})">
-                                    <i class="fas fa-cog me-1"></i>Gestionar
-                                </button>
+                                {% if user.rol.name == 'Administrador' %}
+                                    <button class="btn btn-sm" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white; border: none;" onclick="openManageModal({{ usuario.id }})">
+                                        <i class="fas fa-cog me-1"></i>Gestionar
+                                    </button>
+                                {% elif user.rol.name == 'Trabajador' %}
+                                    {% if usuario.rol.name == 'Administrador' %}
+                                        <span class="badge bg-secondary">Sin permisos</span>
+                                    {% else %}
+                                        {% if usuario.is_active %}
+                                            <button class="btn btn-sm btn-outline-warning" onclick="toggleUserStatus({{ usuario.id }}, false, '{{ usuario.username }}')">
+                                                <i class="fas fa-ban me-1"></i>Desactivar
+                                            </button>
+                                        {% else %}
+                                            <button class="btn btn-sm btn-outline-success" onclick="toggleUserStatus({{ usuario.id }}, true, '{{ usuario.username }}')">
+                                                <i class="fas fa-check me-1"></i>Activar
+                                            </button>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endif %}
                             {% else %}
                                 <span class="badge" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white;">Tu cuenta</span>
                             {% endif %}
                         </td>
-                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -181,6 +186,34 @@ function getCsrfToken() {
     return document.querySelector('[name=csrfmiddlewaretoken]').value;
 }
 
+function toggleUserStatus(userId, activate, username) {
+    const action = activate ? 'activar' : 'desactivar';
+    
+    if (confirm(`¿Estás seguro de ${action} al usuario "${username}"?`)) {
+        fetch(`/dashboard/toggle_user/${userId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ activate: activate })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Error desconocido'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cambiar el estado del usuario.');
+        });
+    }
+}
+
 function openManageModal(userId) {
     const modal = new bootstrap.Modal(document.getElementById('manageUserModal'));
     const content = document.getElementById('manageUserContent');
@@ -195,7 +228,7 @@ function openManageModal(userId) {
     
     modal.show();
     
-    fetch(`/polls/manage_user/${userId}/`, {
+    fetch(`/dashboard/manage_user/${userId}/`, {
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
         }
@@ -225,7 +258,7 @@ function setupModalHandlers(userId) {
             e.preventDefault();
             const formData = new FormData(this);
             
-            fetch(`/polls/manage_user/${userId}/`, {
+            fetch(`/dashboard/manage_user/${userId}/`, {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -254,7 +287,7 @@ function setupModalHandlers(userId) {
             const action = activate ? 'activar' : 'desactivar';
             
             if (confirm(`¿Estás seguro de ${action} este usuario?`)) {
-                fetch(`/polls/toggle_user/${userId}/`, {
+                fetch(`/dashboard/toggle_user/${userId}/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': getCsrfToken(),
@@ -284,7 +317,7 @@ function setupModalHandlers(userId) {
             const username = this.dataset.username;
             
             if (confirm(`¿Estás seguro de ELIMINAR permanentemente al usuario "${username}"?\n\nEsta acción NO se puede deshacer.`)) {
-                fetch(`/polls/delete_user/${userId}/`, {
+                fetch(`/dashboard/delete_user/${userId}/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': getCsrfToken()

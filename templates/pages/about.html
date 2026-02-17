@@ -4,31 +4,74 @@
 {% block title %}Acerca de AIT Anzoátegui{% endblock %}
 
 {% block content %}
-    <!-- Video Live Section -->
-    {% if live_stream and live_stream.link_url %}
-    <div class="video-live-section mb-5">
-        <div class="video-container">
-            <div class="ratio ratio-16x9">
-                <iframe 
-                    src="{{ live_stream.link_url }}" 
-                    title="{{ live_stream.title }}" 
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    referrerpolicy="strict-origin-when-cross-origin"
-                    allowfullscreen>
-                </iframe>
+    <!-- Carousel Section -->
+    <div id="aboutCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+        {% if carousel_slides %}
+        <div class="carousel-indicators">
+            {% for slide in carousel_slides %}
+            <button type="button" data-bs-target="#aboutCarousel" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="Slide {{ forloop.counter }}"></button>
+            {% endfor %}
+        </div>
+        
+        <div class="carousel-inner">
+            {% for slide in carousel_slides %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                {% if slide.image %}
+                <img src="{{ slide.image.url }}" class="d-block w-100" alt="{{ slide.title }}" style="height: 500px; object-fit: cover;">
+                <div class="carousel-caption d-flex align-items-center justify-content-center h-100">
+                    <div class="text-center">
+                        <h2 class="display-5 fw-bold mb-3 text-white" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.5);">{{ slide.title }}</h2>
+                        {% if slide.description %}
+                        <p class="lead mb-4 text-white" style="opacity: 0.95; font-size: 1rem; text-shadow: 2px 2px 6px rgba(0,0,0,0.5);">{{ slide.description }}</p>
+                        {% endif %}
+                        {% if slide.link_url %}
+                        <a href="{{ slide.link_url }}" class="btn btn-outline-light btn-lg pt-0 pb-0 px-4">Ver más</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="carousel-slide d-flex align-items-center justify-content-center">
+                    <div class="text-center text-white">
+                        <h2 class="display-5 fw-bold mb-3" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.5);">{{ slide.title }}</h2>
+                        {% if slide.description %}
+                        <p class="lead mb-4" style="opacity: 0.95; font-size: 1rem; text-shadow: 2px 2px 6px rgba(0,0,0,0.5);">{{ slide.description }}</p>
+                        {% endif %}
+                        {% if slide.link_url %}
+                        <a href="{{ slide.link_url }}" class="btn btn-primary btn-lg">Ver más</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
-            <div class="video-overlay d-flex align-items-end">
-                <div class="video-info p-4">
-                    <h3 class="text-white fw-bold mb-2">{{ live_stream.title }}</h3>
-                    {% if live_stream.description %}
-                    <p class="text-white-50 mb-0">{{ live_stream.description }}</p>
-                    {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Carousel por defecto si no hay slides dinámicos -->
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#aboutCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        </div>
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <div class="carousel-slide d-flex align-items-center justify-content-center">
+                    <div class="carousel-content text-center text-white">
+                        <h2 class="display-5 fw-bold mb-3" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.5);">AIT Anzoátegui</h2>
+                        <p class="lead mb-4" style="text-shadow: 2px 2px 6px rgba(0,0,0,0.5);">Conoce quiénes somos</p>
+                    </div>
                 </div>
             </div>
         </div>
+        {% endif %}
+        
+        <!-- Controles del carousel -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#aboutCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Anterior</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#aboutCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Siguiente</span>
+        </button>
     </div>
-    {% endif %}
 
     <div class="container container-custom my-5">
         <!-- Hero Section -->

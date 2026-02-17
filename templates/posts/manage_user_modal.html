@@ -98,7 +98,9 @@
             <i class="fas fa-check me-2"></i>Activar Usuario
         </button>
     {% endif %}
+    {% if request.user.rol.name == 'Administrador' %}
     <button type="button" class="btn flex-grow-1 btn-delete-user" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none;" data-username="{{ usuario.username }}">
         <i class="fas fa-trash me-2"></i>Eliminar Usuario
     </button>
+    {% endif %}
 </div>
