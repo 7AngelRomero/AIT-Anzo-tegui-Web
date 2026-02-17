@@ -120,8 +120,8 @@
                             <h6 class="fw-bold mb-3">Opciones:</h6>
                             <ul class="list-unstyled mb-0">
                                 {% for option in question.opciones.all %}
-                                <li class="mb-2">
-                                    <span class="badge" style="background-color: {{ forloop.counter0|divisibleby:6|yesno:'#FF6384,#36A2EB,#FFCE56,#4BC0C0,#9966FF,#FF9F40' }}; width: 15px; height: 15px; display: inline-block; border-radius: 3px;"></span>
+                                <li class="mb-2" id="legend_{{ poll.id }}_{{ question.id }}_{{ forloop.counter0 }}">
+                                    <span class="badge legend-color" style="width: 15px; height: 15px; display: inline-block; border-radius: 3px;"></span>
                                     <strong>{{ option.options_text }}</strong>
                                 </li>
                                 {% endfor %}
@@ -228,6 +228,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
                 
                 new Chart(canvas_{{ poll.id }}_{{ question.id }}, config);
+                
+                // Sincronizar colores de la leyenda con el gráfico
+                if (chartType === 'pie') {
+                    const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+                    data.labels.forEach((label, index) => {
+                        const legendItem = document.getElementById('legend_{{ poll.id }}_{{ question.id }}_' + index);
+                        if (legendItem) {
+                            const colorBadge = legendItem.querySelector('.legend-color');
+                            if (colorBadge) {
+                                colorBadge.style.backgroundColor = colors[index % colors.length];
+                            }
+                        }
+                    });
+                }
             }
             {% endif %}
         {% endfor %}

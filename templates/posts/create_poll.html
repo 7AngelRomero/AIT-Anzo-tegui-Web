@@ -4,9 +4,9 @@
 {% block title %}Crear Encuesta - AIT{% endblock %}
 
 {% block content %}
-<div class="container-fluid my-4">
+<div class="container-fluid">
     <div class="row justify-content-center">
-        <div class="col-lg-10">
+        <div class="col-lg-20">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-4">
@@ -48,14 +48,129 @@
                         
                         <div class="row mb-4">
                             <div class="col-md-6">
-                                <label for="star_date" class="form-label fw-semibold">Fecha de Inicio *</label>
-                                <input type="datetime-local" class="form-control" id="star_date" name="star_date" required>
+                                <label class="form-label fw-semibold">Fecha de Inicio *</label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" id="star_date_date" required>
+                                    <select class="form-select" id="star_date_hour" style="max-width: 90px;" required>
+                                        <option value="">H</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7</option>
+                                        <option value="8">8</option>
+                                        <option value="9">9</option>
+                                        <option value="10">10</option>
+                                        <option value="11">11</option>
+                                        <option value="12">12</option>
+                                    </select>
+                                    <input type="number" class="form-control" id="star_date_minute" placeholder="MM" min="0" max="59" style="max-width: 70px;" required>
+                                    <select class="form-select" id="star_date_ampm" style="max-width: 90px;" required>
+                                        <option value="AM">A.M</option>
+                                        <option value="PM">P.M</option>
+                                    </select>
+                                </div>
+                                <input type="hidden" id="star_date" name="star_date">
+                                <div class="form-text" id="star_date_display">Selecciona fecha y hora</div>
                             </div>
                             <div class="col-md-6">
-                                <label for="end_date" class="form-label fw-semibold">Fecha de Finalización *</label>
-                                <input type="datetime-local" class="form-control" id="end_date" name="end_date" required>
+                                <label class="form-label fw-semibold">Fecha de Finalización *</label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" id="end_date_date" required>
+                                    <select class="form-select" id="end_date_hour" style="max-width: 80px;" required>
+                                        <option value="">H</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7</option>
+                                        <option value="8">8</option>
+                                        <option value="9">9</option>
+                                        <option value="10">10</option>
+                                        <option value="11">11</option>
+                                        <option value="12">12</option>
+                                    </select>
+                                    <input type="number" class="form-control" id="end_date_minute" placeholder="MM" min="0" max="59" style="max-width: 70px;" required>
+                                    <select class="form-select" id="end_date_ampm" style="max-width: 90px;" required>
+                                        <option value="AM">A.M</option>
+                                        <option value="PM">P.M</option>
+                                    </select>
+                                </div>
+                                <input type="hidden" id="end_date" name="end_date">
+                                <div class="form-text" id="end_date_display">Selecciona fecha y hora</div>
                             </div>
                         </div>
+                        
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // Elementos fecha inicio
+                            const starDateDate = document.getElementById('star_date_date');
+                            const starDateHour = document.getElementById('star_date_hour');
+                            const starDateMinute = document.getElementById('star_date_minute');
+                            const starDateAmpm = document.getElementById('star_date_ampm');
+                            const starDateHidden = document.getElementById('star_date');
+                            const starDateDisplay = document.getElementById('star_date_display');
+                            
+                            // Elementos fecha fin
+                            const endDateDate = document.getElementById('end_date_date');
+                            const endDateHour = document.getElementById('end_date_hour');
+                            const endDateMinute = document.getElementById('end_date_minute');
+                            const endDateAmpm = document.getElementById('end_date_ampm');
+                            const endDateHidden = document.getElementById('end_date');
+                            const endDateDisplay = document.getElementById('end_date_display');
+                            
+                            // Establecer fecha mínima (hoy)
+                            const today = new Date().toISOString().split('T')[0];
+                            starDateDate.min = today;
+                            endDateDate.min = today;
+                            
+                            function convertTo24Hour(hour, ampm) {
+                                hour = parseInt(hour);
+                                if (ampm === 'AM') {
+                                    return hour === 12 ? 0 : hour;
+                                } else {
+                                    return hour === 12 ? 12 : hour + 12;
+                                }
+                            }
+                            
+                            function updateDateTime(dateInput, hourInput, minuteInput, ampmInput, hiddenInput, displayDiv) {
+                                const date = dateInput.value;
+                                const hour = hourInput.value;
+                                const minute = minuteInput.value || '00';
+                                const ampm = ampmInput.value;
+                                
+                                if (date && hour && minute) {
+                                    const hour24 = convertTo24Hour(hour, ampm);
+                                    const dateTime = `${date}T${String(hour24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                                    hiddenInput.value = dateTime;
+                                    
+                                    const [y, m, d] = date.split('-');
+                                    displayDiv.textContent = `${d}/${m}/${y} a las ${hour}:${String(minute).padStart(2, '0')} ${ampm === 'AM' ? 'A.M' : 'P.M'}`;
+                                    displayDiv.style.color = '#184da1';
+                                    displayDiv.style.fontWeight = 'bold';
+                                }
+                            }
+                            
+                            // Listeners fecha inicio
+                            [starDateDate, starDateHour, starDateMinute, starDateAmpm].forEach(el => {
+                                el.addEventListener('change', () => {
+                                    updateDateTime(starDateDate, starDateHour, starDateMinute, starDateAmpm, starDateHidden, starDateDisplay);
+                                    if (starDateDate.value) endDateDate.min = starDateDate.value;
+                                });
+                            });
+                            
+                            // Listeners fecha fin
+                            [endDateDate, endDateHour, endDateMinute, endDateAmpm].forEach(el => {
+                                el.addEventListener('change', () => {
+                                    updateDateTime(endDateDate, endDateHour, endDateMinute, endDateAmpm, endDateHidden, endDateDisplay);
+                                });
+                            });
+                        });
+                        </script>
                         
                         <div class="mb-4">
                             <label for="description" class="form-label fw-semibold">Descripción</label>

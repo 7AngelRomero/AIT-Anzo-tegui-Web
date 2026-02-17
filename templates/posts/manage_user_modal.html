@@ -44,33 +44,16 @@
 
     <hr>
 
-    <!-- Rol y permisos -->
-    <h6 class="fw-bold mb-3" style="color: #184da1;"><i class="fas fa-user-tag me-2"></i>Rol y Permisos</h6>
+    <!-- Rol -->
+    <h6 class="fw-bold mb-3" style="color: #184da1;"><i class="fas fa-user-tag me-2"></i>Rol del Usuario</h6>
     
-    <div class="row g-3 mb-4">
-        <div class="col-md-6">
-            <label class="form-label fw-semibold">Rol</label>
-            <select class="form-select" name="role">
-                <option value="Usuario" {% if usuario.rol.name == 'Usuario' or not usuario.rol %}selected{% endif %}>Usuario</option>
-                <option value="Trabajador" {% if usuario.rol.name == 'Trabajador' %}selected{% endif %}>Trabajador</option>
-                <option value="Administrador" {% if usuario.rol.name == 'Administrador' %}selected{% endif %}>Administrador</option>
-            </select>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label fw-semibold">Permisos</label>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="is_staff" id="is_staff" {% if usuario.is_staff %}checked{% endif %}>
-                <label class="form-check-label" for="is_staff">
-                    Acceso al panel de administración Django
-                </label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="is_superuser" id="is_superuser" {% if usuario.is_superuser %}checked{% endif %}>
-                <label class="form-check-label" for="is_superuser">
-                    Superusuario (todos los permisos)
-                </label>
-            </div>
-        </div>
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">Rol</label>
+        <select class="form-select" name="role">
+            <option value="Usuario" {% if usuario.rol.name == 'Usuario' or not usuario.rol %}selected{% endif %}>Usuario</option>
+            <option value="Trabajador" {% if usuario.rol.name == 'Trabajador' %}selected{% endif %}>Trabajador</option>
+            <option value="Administrador" {% if usuario.rol.name == 'Administrador' %}selected{% endif %}>Administrador</option>
+        </select>
     </div>
 
     <hr>

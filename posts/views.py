@@ -20,6 +20,17 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')  # Backend sin GUI
 
+def format_datetime_12h(dt):
+    """Formatea fecha y hora en formato 12 horas: DD/MM/AAAA h:mm A.M/P.M"""
+    if not dt:
+        return 'No definida'
+    hour = dt.hour
+    minute = dt.minute
+    am_pm = 'A.M' if hour < 12 else 'P.M'
+    hour_12 = hour if hour <= 12 else hour - 12
+    hour_12 = 12 if hour_12 == 0 else hour_12
+    return f"{dt.strftime('%d/%m/%Y')} a las {hour_12}:{minute:02d} {am_pm}"
+
 @login_required
 def poll_list(request):
     """Vista para mostrar todas las encuestas"""
@@ -838,10 +849,10 @@ def export_poll_pdf(request, poll_id):
         ['Título:', poll.title],
         ['Descripción:', description],
         ['Estado:', poll.status],
-        ['Fecha de inicio:', poll.star_date.strftime('%d/%m/%Y %H:%M') if poll.star_date else 'No definida'],
-        ['Fecha de fin:', poll.end_date.strftime('%d/%m/%Y %H:%M') if poll.end_date else 'No definida'],
+        ['Fecha de inicio:', format_datetime_12h(poll.star_date)],
+        ['Fecha de fin:', format_datetime_12h(poll.end_date)],
         ['Total participaciones:', str(poll.participaciones.count())],
-        ['Fecha del reporte:', datetime.now().strftime('%d/%m/%Y %H:%M')]
+        ['Fecha del reporte:', format_datetime_12h(datetime.now())]
     ]
     
     info_table = Table(info_data, colWidths=[2*inch, 4*inch])
@@ -875,7 +886,7 @@ def export_poll_pdf(request, poll_id):
             if responses.exists():
                 story.append(Paragraph("Respuestas:", ParagraphStyle('SubHeading', parent=styles['Normal'], fontName='Helvetica-Bold', spaceAfter=5)))
                 for resp in responses:
-                    story.append(Paragraph(f"• {resp.participation.user.username} ({resp.participation.sent_date.strftime('%d/%m/%Y %H:%M')}): {resp.answer_text}", normal_style))
+                    story.append(Paragraph(f"• {resp.participation.user.username} ({format_datetime_12h(resp.participation.sent_date)}): {resp.answer_text}", normal_style))
             else:
                 story.append(Paragraph("No hay respuestas", normal_style))
         
@@ -976,7 +987,7 @@ def export_poll_pdf(request, poll_id):
             if individual_responses.exists():
                 story.append(Paragraph("Respuestas individuales:", ParagraphStyle('SubHeading', parent=styles['Normal'], fontName='Helvetica-Bold', spaceAfter=5, spaceBefore=10)))
                 for resp in individual_responses:
-                    story.append(Paragraph(f"• {resp.participation.user.username} ({resp.participation.sent_date.strftime('%d/%m/%Y %H:%M')}): {resp.selected_options.options_text}", normal_style))
+                    story.append(Paragraph(f"• {resp.participation.user.username} ({format_datetime_12h(resp.participation.sent_date)}): {resp.selected_options.options_text}", normal_style))
         
         story.append(Spacer(1, 20))
     
