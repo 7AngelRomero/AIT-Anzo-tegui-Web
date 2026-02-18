@@ -38,6 +38,20 @@
         </div>
     </div>
     
+    {% if request.user.rol.name == 'Administrador' %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="is_public" id="is_public" {% if poll.is_public %}checked{% endif %}>
+                <label class="form-check-label fw-semibold" for="is_public">
+                    Encuesta Pública
+                </label>
+                <div class="form-text">Marcado: Dirigida a usuarios | Desmarcado: Dirigida a trabajadores</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
     <div class="mb-4">
         <label for="description" class="form-label fw-semibold">Descripción</label>
         <textarea class="form-control" id="description" name="description" rows="3" placeholder="Describe brevemente el propósito de esta encuesta...">{{ poll.description }}</textarea>

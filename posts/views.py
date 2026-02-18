@@ -84,9 +84,9 @@ def poll_manager(request):
         if role_filter:
             users = users.filter(rol__name=role_filter)
             
-    # Trabajador: Ve todas las encuestas pero solo puede editar las suyas
+    # Trabajador: Solo ve encuestas públicas y solo puede editar las suyas
     else:
-        polls = Poll.objects.all().order_by('-star_date')
+        polls = Poll.objects.filter(is_public=True).order_by('-star_date')
         users = User.objects.all().order_by('username')
     
     # Verificar y actualizar encuestas vencidas
@@ -173,6 +173,12 @@ def create_poll(request):
         end_date = request.POST.get('end_date')
         image = request.FILES.get('image')
         
+        # Solo Administrador puede definir is_public, Trabajador siempre crea públicas
+        if request.user.rol.name == 'Administrador':
+            is_public = request.POST.get('is_public') == 'on'
+        else:
+            is_public = True
+        
         # Las fechas son opcionales ahora
         from django.utils import timezone
         if not star_date:
@@ -188,6 +194,7 @@ def create_poll(request):
             image=image,
             created_by=request.user,
             status=status,
+            is_public=is_public,
             star_date=star_date,
             end_date=end_date
         )
@@ -239,18 +246,21 @@ def edit_poll(request, poll_id):
     if not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']:
         return HttpResponseForbidden("No tienes permisos para editar encuestas.")
     
-    # Administrador: Puede editar cualquier encuesta
-    if request.user.rol.name == 'Administrador':
-        poll = get_object_or_404(Poll, id=poll_id)
-    # Trabajador: Solo puede editar sus propias encuestas
-    else:
-        poll = get_object_or_404(Poll, id=poll_id, created_by=request.user)
+    poll = get_object_or_404(Poll, id=poll_id)
+    
+    # Trabajador: Solo puede editar encuestas públicas
+    if request.user.rol.name == 'Trabajador' and not poll.is_public:
+        return HttpResponseForbidden("Solo puedes editar encuestas públicas.")
     
     if request.method == 'POST':
         # Actualizar datos básicos de la encuesta
         poll.title = request.POST.get('title')
         poll.description = request.POST.get('description')
         poll.status = request.POST.get('status')
+        
+        # Solo Administrador puede cambiar is_public
+        if request.user.rol.name == 'Administrador':
+            poll.is_public = request.POST.get('is_public') == 'on'
         
         # Manejar imagen
         if request.POST.get('remove_image'):
@@ -420,6 +430,15 @@ def answer_poll(request, poll_id):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return HttpResponse('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Esta encuesta no está disponible para responder.</div>')
         messages.error(request, 'Esta encuesta no está disponible para responder.')
+        return redirect('posts:poll_list')
+    
+    # Verificar si la encuesta ya inició
+    from django.utils import timezone
+    if poll.star_date and timezone.now() < poll.star_date:
+        fecha_inicio = poll.star_date.strftime('%d/%m/%Y a las %I:%M %p')
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return HttpResponse(f'<div class="alert alert-info"><i class="fas fa-clock me-2"></i>La encuesta no ha comenzado. Inicia el {fecha_inicio}</div>')
+        messages.info(request, f'La encuesta no ha comenzado. Inicia el {fecha_inicio}')
         return redirect('posts:poll_list')
     
     # Verificar si ya participó
@@ -698,7 +717,12 @@ def poll_statistics(request):
     if not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']:
         return HttpResponseForbidden("No tienes permisos para ver estadísticas.")
     
-    all_polls = Poll.objects.all().order_by('-star_date')
+    # Administrador: Ve todas las encuestas
+    # Trabajador: Solo ve encuestas públicas (is_public=True)
+    if request.user.rol.name == 'Administrador':
+        all_polls = Poll.objects.all().order_by('-star_date')
+    else:
+        all_polls = Poll.objects.filter(is_public=True).order_by('-star_date')
     
     # Aplicar filtros
     search_query = request.GET.get('search', '')

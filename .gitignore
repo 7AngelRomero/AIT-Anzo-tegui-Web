@@ -10,7 +10,7 @@ build/
 
 # Django
 *.log
-/media
+media/
 
 # Entorno virtual
 venv/

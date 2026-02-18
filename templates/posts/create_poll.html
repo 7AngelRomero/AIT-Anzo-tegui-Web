@@ -46,6 +46,20 @@
                             </div>
                         </div>
                         
+                        {% if request.user.rol.name == 'Administrador' %}
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="is_public" id="is_public" checked>
+                                    <label class="form-check-label fw-semibold" for="is_public">
+                                        Encuesta Pública
+                                    </label>
+                                    <div class="form-text">Marcado: Dirigida a usuarios | Desmarcado: Dirigida a trabajadores</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Fecha de Inicio *</label>
@@ -124,9 +138,10 @@
                             const endDateDisplay = document.getElementById('end_date_display');
                             
                             // Establecer fecha mínima (hoy)
-                            const today = new Date().toISOString().split('T')[0];
-                            starDateDate.min = today;
-                            endDateDate.min = today;
+                            const today = new Date();
+                            const todayStr = today.toISOString().split('T')[0];
+                            starDateDate.value = todayStr;
+                            endDateDate.min = todayStr;
                             
                             function convertTo24Hour(hour, ampm) {
                                 hour = parseInt(hour);

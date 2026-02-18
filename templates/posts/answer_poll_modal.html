@@ -23,7 +23,7 @@
 <hr class="mb-4">
 
 <!-- Formulario de respuestas -->
-<form onsubmit="submitPollAnswer(event, {{ poll.id }})">
+<form method="post" action="/dashboard/{{ poll.id }}/submit/">
     {% csrf_token %}
     
     {% for question in poll.preguntas.all %}

@@ -284,7 +284,7 @@ function showResults(pollId) {
     
     modal.show();
     
-    fetch(`/polls/${pollId}/results/`, {
+    fetch(`/dashboard/${pollId}/results/`, {
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
         }
@@ -317,7 +317,7 @@ function showAnswerModal(pollId) {
     
     modal.show();
     
-    fetch(`/polls/${pollId}/answer/`, {
+    fetch(`/dashboard/${pollId}/answer/`, {
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
         }
@@ -341,7 +341,7 @@ function submitPollAnswer(event, pollId) {
     const form = event.target;
     const formData = new FormData(form);
     
-    fetch(`/polls/${pollId}/submit/`, {
+    fetch(`/dashboard/${pollId}/submit/`, {
         method: 'POST',
         body: formData,
         headers: {
@@ -349,6 +349,11 @@ function submitPollAnswer(event, pollId) {
         }
     })
     .then(response => {
+        console.log('Response status:', response.status);
+        if (response.redirected) {
+            window.location.href = response.url;
+            return;
+        }
         if (response.ok) {
             bootstrap.Modal.getInstance(document.getElementById('answerModal')).hide();
             alert('¡Gracias por participar en la encuesta!');
@@ -358,6 +363,7 @@ function submitPollAnswer(event, pollId) {
         }
     })
     .catch(error => {
+        console.error('Error:', error);
         alert('Error al enviar las respuestas. Por favor, intenta de nuevo.');
     });
 }

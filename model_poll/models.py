@@ -68,6 +68,7 @@ class Poll(models.Model):
     description = models.TextField(blank=True, null=True, default='')
     image = models.ImageField(upload_to='polls/', blank=True, null=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.BORRADOR)
+    is_public = models.BooleanField(default=True, help_text="True=Pública (usuarios), False=Interna (trabajadores)")
     star_date = models.DateTimeField(null=True, blank=True, help_text="Fecha y hora de inicio de la encuesta")
     end_date = models.DateTimeField(null=True, blank=True, help_text="Fecha y hora de finalización de la encuesta")
 

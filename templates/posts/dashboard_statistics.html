@@ -68,6 +68,7 @@
                     <span><i class="fas fa-calendar-check me-1"></i>Fin: {{ poll.end_date|date:"d/m/Y"|default:"Sin fecha" }}</span>
                     <span><i class="fas fa-users me-1"></i>{{ poll.participaciones.count }} participaciones</span>
                     <span><i class="fas fa-question-circle me-1"></i>{{ poll.preguntas.count }} preguntas</span>
+                    <span class="badge" style="background: {% if poll.is_public %}rgba(23, 162, 184, 0.9){% else %}rgba(255, 193, 7, 0.9){% endif %};">{% if poll.is_public %}Pública{% else %}Interna{% endif %}</span>
                     <span class="badge" style="background: {% if poll.status == 'ACTIVA' %}rgba(40, 167, 69, 0.9){% elif poll.status == 'BORRADOR' %}rgba(255, 193, 7, 0.9){% else %}rgba(108, 117, 125, 0.9){% endif %};">{{ poll.status }}</span>
                 </div>
             </div>
