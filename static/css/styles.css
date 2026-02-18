@@ -99,7 +99,7 @@ body {
     margin: 0;
 }
 
-/* Estilos para encuestas - Diseño de tarjetas mejorado */
+/* Estilos para encuestas */
 .polls-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -279,7 +279,6 @@ body {
     margin: 0 auto;
 }
 
-/* Responsividad mejorada */
 @media (max-width: 768px) {
     .polls-container {
         grid-template-columns: 1fr;
@@ -318,7 +317,7 @@ body {
     }
 }
 
-/* Estilos para formulario de encuesta */
+/* Estilos para encuesta */
 .question-block {
     background: #f8f9fa;
     border: 1px solid #e9ecef;
@@ -452,7 +451,7 @@ textarea {
     background: #2980b9;
 }
 
-/* Estilos para navbar con usuario logueado */
+/* Estilos para navbar */
 .login-section {
     margin-left: auto;
     display: flex;

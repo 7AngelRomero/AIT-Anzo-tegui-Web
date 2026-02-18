@@ -24,7 +24,6 @@ from pages.password_views import CustomPasswordResetConfirmView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('pages.urls')),
-    path('polls/', include('posts.urls')),
     path('dashboard/', include('posts.urls')),
     
     # URLs para reset de contraseña

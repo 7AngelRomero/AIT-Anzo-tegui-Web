@@ -41,6 +41,12 @@
                                 <hr class="mb-4" style="border-top: 2px solid #dee2e6;">
                                 
                                 <div class="row g-3 mb-4">
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-semibold">Foto de Perfil</label>
+                                        <input type="file" class="form-control" id="profile_image" name="profile_image" accept="image/*">
+                                        <small class="text-muted" style="font-size: 0.8rem;">Formatos: JPG, PNG. Máximo 5MB</small>
+                                    </div>
+                                    
                                     <div class="col-md-6">
                                         <div class="floating-input">
                                             <input type="text" class="floating-field" id="first_name" name="first_name" value="{{ user.first_name }}" placeholder="" required>
@@ -101,9 +107,9 @@
                                     <button type="submit" class="login-submit-btn flex-grow-1">
                                         <i class="fas fa-save me-2"></i>Guardar Cambios
                                     </button>
-                                    <button type="button" onclick="window.history.go(-2)" class="btn btn-outline-secondary mb-3">
+                                    <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="btn btn-outline-secondary mb-3">
                                         <i class="fas fa-times me-2"></i>Cancelar
-                                    </button>
+                                    </a>
                                 </div>
                             </form>
                         </div>
