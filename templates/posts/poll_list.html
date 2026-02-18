@@ -138,9 +138,9 @@
                         {% else %}
                         <div class="row g-2">
                             <div class="col-6">
-                                <a href="{% url 'posts:edit_poll' poll.id %}" class="btn btn-outline-primary w-100 py-2" style="font-weight: 600;">
+                                <button class="btn btn-outline-primary w-100 py-2" onclick="openEditModal({{ poll.id }})" style="font-weight: 600;">
                                     <i class="fas fa-edit me-2"></i>Editar
-                                </a>
+                                </button>
                             </div>
                             <div class="col-6">
                                 <button class="btn btn-outline-info w-100 py-2" onclick="showResults({{ poll.id }})" style="font-weight: 600;">
@@ -204,6 +204,25 @@
     </div>
 </div>
 
+<!-- Modal de Edición -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white;">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Editar Encuesta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="editContent" style="max-height: 70vh; overflow-y: auto;">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 /* Prevenir problemas de layout con el modal */
 body.modal-open {
@@ -244,30 +263,37 @@ body.modal-open {
 </style>
 
 <script>
-function confirmDelete(pollId, pollTitle) {
-    if (confirm(`¿Estás seguro de eliminar la encuesta "${pollTitle}"?\n\nEsta acción no se puede deshacer.`)) {
-        fetch(`/polls/${pollId}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                const pollCard = document.querySelector(`[onclick*="${pollId}"]`).closest('.col-md-6');
-                if (pollCard) {
-                    pollCard.remove();
-                }
-                alert('Encuesta eliminada exitosamente.');
-            } else {
-                alert('Error al eliminar la encuesta.');
-            }
+function openEditModal(pollId) {
+    const modal = new bootstrap.Modal(document.getElementById('editModal'));
+    const content = document.getElementById('editContent');
+    
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+    
+    fetch(`/dashboard/${pollId}/edit/`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => response.text())
+        .then(html => {
+            content.innerHTML = html;
         })
         .catch(error => {
-            alert('Error al eliminar la encuesta.');
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error al cargar la encuesta. Inténtalo de nuevo.
+                </div>
+            `;
         });
-    }
 }
 
 function showResults(pollId) {
@@ -365,6 +391,14 @@ function submitPollAnswer(event, pollId) {
     .catch(error => {
         console.error('Error:', error);
         alert('Error al enviar las respuestas. Por favor, intenta de nuevo.');
+    });
+}
+
+function updateStars(questionId, value) {
+    const stars = document.querySelectorAll('i[data-question="' + questionId + '"]');
+    stars.forEach(function(star) {
+        const starValue = parseInt(star.getAttribute('data-value'));
+        star.style.color = starValue <= value ? '#ffc107' : '#ddd';
     });
 }
 </script>

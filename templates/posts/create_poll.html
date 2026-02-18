@@ -80,7 +80,7 @@
                                         <option value="11">11</option>
                                         <option value="12">12</option>
                                     </select>
-                                    <input type="number" class="form-control" id="star_date_minute" placeholder="MM" min="0" max="59" style="max-width: 70px;" required>
+                                    <input type="number" class="form-control" id="star_date_minute" placeholder="MM" min="0" max="59" style="max-width: 70px;" required oninput="if(this.value>59)this.value=59;if(this.value<0)this.value=0;">
                                     <select class="form-select" id="star_date_ampm" style="max-width: 90px;" required>
                                         <option value="AM">A.M</option>
                                         <option value="PM">P.M</option>
@@ -108,7 +108,7 @@
                                         <option value="11">11</option>
                                         <option value="12">12</option>
                                     </select>
-                                    <input type="number" class="form-control" id="end_date_minute" placeholder="MM" min="0" max="59" style="max-width: 70px;" required>
+                                    <input type="number" class="form-control" id="end_date_minute" placeholder="MM" min="0" max="59" style="max-width: 70px;" required oninput="if(this.value>59)this.value=59;if(this.value<0)this.value=0;">
                                     <select class="form-select" id="end_date_ampm" style="max-width: 90px;" required>
                                         <option value="AM">A.M</option>
                                         <option value="PM">P.M</option>
@@ -211,7 +211,7 @@
                         
                         <div class="alert alert-warning d-none" id="questionsAlert">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            Debes agregar al menos una pregunta para crear la encuesta.
+                            <span>Estos campos son obligatorios.</span>
                         </div>
                         
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
@@ -254,9 +254,9 @@ function addQuestion() {
                         <label class="form-label fw-semibold">Tipo de Pregunta *</label>
                         <select class="form-select" name="question_type_${questionCount}" onchange="handleQuestionType(${questionCount})" required>
                             <option value="">Seleccionar...</option>
-                            <option value="TEXTO_LIBRE">Texto Libre</option>
                             <option value="SELECCION_MULTIPLE">Selección Múltiple</option>
-                            <option value="ESCALA_NUMERICA">Escala Numérica (1-5)</option>
+                            <option value="ESCALA_LINEAL">Escala Lineal</option>
+                            <option value="CALIFICACION">Calificación (Estrellas)</option>
                         </select>
                     </div>
                 </div>
@@ -273,6 +273,57 @@ function addQuestion() {
                         <i class="fas fa-plus me-1"></i>Agregar Opción
                     </button>
                 </div>
+                
+                <div id="scale_${questionCount}" class="scale-container d-none">
+                    <label class="form-label fw-semibold">Configuración de Escala</label>
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Mínimo</label>
+                            <select class="form-select" name="scale_min_${questionCount}">
+                                <option value="0">0</option>
+                                <option value="1" selected>1</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Máximo</label>
+                            <select class="form-select" name="scale_max_${questionCount}">
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5" selected>5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Etiqueta mínimo (opcional)</label>
+                            <input type="text" class="form-control" name="scale_min_label_${questionCount}" placeholder="Ej: Muy malo">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Etiqueta máximo (opcional)</label>
+                            <input type="text" class="form-control" name="scale_max_label_${questionCount}" placeholder="Ej: Excelente">
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="rating_${questionCount}" class="rating-container d-none">
+                    <label class="form-label fw-semibold">Número de Estrellas</label>
+                    <select class="form-select" name="rating_stars_${questionCount}">
+                        <option value="3">3 estrellas</option>
+                        <option value="4">4 estrellas</option>
+                        <option value="5" selected>5 estrellas</option>
+                        <option value="6">6 estrellas</option>
+                        <option value="7">7 estrellas</option>
+                        <option value="8">8 estrellas</option>
+                        <option value="9">9 estrellas</option>
+                        <option value="10">10 estrellas</option>
+                    </select>
+                </div>
             </div>
         </div>
     `;
@@ -286,14 +337,21 @@ function removeQuestion(questionId) {
 function handleQuestionType(questionId) {
     const select = document.querySelector(`select[name="question_type_${questionId}"]`);
     const optionsContainer = document.getElementById(`options_${questionId}`);
+    const scaleContainer = document.getElementById(`scale_${questionId}`);
+    const ratingContainer = document.getElementById(`rating_${questionId}`);
+    
+    optionsContainer.classList.add('d-none');
+    scaleContainer.classList.add('d-none');
+    ratingContainer.classList.add('d-none');
     
     if (select.value === 'SELECCION_MULTIPLE') {
         optionsContainer.classList.remove('d-none');
         addOption(questionId);
         addOption(questionId);
-    } else {
-        optionsContainer.classList.add('d-none');
-        document.getElementById(`optionsList_${questionId}`).innerHTML = '';
+    } else if (select.value === 'ESCALA_LINEAL') {
+        scaleContainer.classList.remove('d-none');
+    } else if (select.value === 'CALIFICACION') {
+        ratingContainer.classList.remove('d-none');
     }
 }
 
@@ -323,10 +381,62 @@ function validateForm() {
     const questionsContainer = document.getElementById('questionsContainer');
     const alert = document.getElementById('questionsAlert');
     
+    // Validar título
+    const title = document.getElementById('title').value.trim();
+    if (!title) {
+        alert.textContent = 'El título es obligatorio.';
+        alert.classList.remove('d-none');
+        document.getElementById('title').focus();
+        return false;
+    }
+    
+    // Validar fechas
+    const starDate = document.getElementById('star_date').value;
+    const endDate = document.getElementById('end_date').value;
+    if (!starDate || !endDate) {
+        alert.textContent = 'Las fechas de inicio y fin son obligatorias.';
+        alert.classList.remove('d-none');
+        window.scrollTo(0, 0);
+        return false;
+    }
+    
+    // Validar que haya al menos una pregunta
     if (questionsContainer.children.length === 0) {
+        alert.textContent = 'Debes agregar al menos una pregunta para crear la encuesta.';
         alert.classList.remove('d-none');
         questionsContainer.scrollIntoView({ behavior: 'smooth' });
         return false;
+    }
+    
+    // Validar primera pregunta
+    const firstQuestion = questionsContainer.children[0];
+    const firstQuestionText = firstQuestion.querySelector('textarea[name^="question_text_"]').value.trim();
+    const firstQuestionType = firstQuestion.querySelector('select[name^="question_type_"]').value;
+    
+    if (!firstQuestionText || !firstQuestionType) {
+        alert.textContent = 'La primera pregunta debe tener texto y tipo seleccionado.';
+        alert.classList.remove('d-none');
+        questionsContainer.scrollIntoView({ behavior: 'smooth' });
+        return false;
+    }
+    
+    // Validar opciones de la primera pregunta si es selección múltiple
+    if (firstQuestionType === 'SELECCION_MULTIPLE') {
+        const questionId = firstQuestion.querySelector('textarea[name^="question_text_"]').name.split('_')[2];
+        const optionsList = document.getElementById(`optionsList_${questionId}`);
+        const options = optionsList.querySelectorAll('input[type="text"]');
+        let validOptions = 0;
+        
+        options.forEach(opt => {
+            if (opt.value.trim()) validOptions++;
+        });
+        
+        if (validOptions < 2) {
+            alert.textContent = 'La primera pregunta de selección múltiple debe tener al menos 2 opciones.';
+            alert.classList.remove('d-none');
+            questionsContainer.scrollIntoView({ behavior: 'smooth' });
+            return false;
+        }
     }
     
     alert.classList.add('d-none');
@@ -349,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
     box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
 }
 
-.options-container {
+.options-container, .scale-container, .rating-container {
     background-color: #f8f9fa;
     padding: 15px;
     border-radius: 8px;

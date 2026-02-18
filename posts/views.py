@@ -181,10 +181,11 @@ def create_poll(request):
         
         # Las fechas son opcionales ahora
         from django.utils import timezone
+        from datetime import datetime as dt
         if not star_date:
             star_date = timezone.now()
         if not end_date:
-            star_date_obj = timezone.datetime.fromisoformat(star_date.replace('T', ' '))
+            star_date_obj = dt.fromisoformat(star_date)
             end_date = star_date_obj + timezone.timedelta(days=30)
         
         # Crear encuesta
@@ -226,12 +227,32 @@ def create_poll(request):
                                     question=question,
                                     options_text=option_value
                                 )
-                    elif question_type == 'ESCALA_NUMERICA':
-                        # Crear opciones automáticamente para escala 1-5
-                        for i in range(1, 6):
+                    elif question_type == 'ESCALA_LINEAL':
+                        scale_min = int(request.POST.get(f'scale_min_{question_id}', 1))
+                        scale_max = int(request.POST.get(f'scale_max_{question_id}', 5))
+                        scale_min_label = request.POST.get(f'scale_min_label_{question_id}', '')
+                        scale_max_label = request.POST.get(f'scale_max_label_{question_id}', '')
+                        question.scale_min = scale_min
+                        question.scale_max = scale_max
+                        question.scale_min_label = scale_min_label if scale_min_label else None
+                        question.scale_max_label = scale_max_label if scale_max_label else None
+                        question.save()
+                        # Crear opciones automáticamente
+                        for i in range(scale_min, scale_max + 1):
                             Options.objects.create(
                                 question=question,
                                 options_text=str(i),
+                                value=i
+                            )
+                    elif question_type == 'CALIFICACION':
+                        rating_stars = int(request.POST.get(f'rating_stars_{question_id}', 5))
+                        question.rating_stars = rating_stars
+                        question.save()
+                        # Crear opciones automáticamente (1 a N estrellas)
+                        for i in range(1, rating_stars + 1):
+                            Options.objects.create(
+                                question=question,
+                                options_text=f'{i} estrella{"s" if i > 1 else ""}',
                                 value=i
                             )
         
@@ -485,7 +506,7 @@ def submit_poll(request, poll_id):
             question_key = f'question_{question.id}'
             
             if question_key in request.POST:
-                if question.question_type in ['SELECCION_MULTIPLE', 'ESCALA_NUMERICA']:
+                if question.question_type in ['SELECCION_MULTIPLE', 'ESCALA_LINEAL', 'CALIFICACION']:
                     option_id = request.POST[question_key]
                     if option_id:
                         option = question.opciones.get(id=option_id)
@@ -493,15 +514,6 @@ def submit_poll(request, poll_id):
                             participation=participation,
                             question=question,
                             selected_options=option
-                        )
-                
-                elif question.question_type == 'TEXTO_LIBRE':
-                    text_answer = request.POST[question_key]
-                    if text_answer.strip():
-                        QuestionDetails.objects.create(
-                            participation=participation,
-                            question=question,
-                            answer_text=text_answer
                         )
         
         messages.success(request, '¡Gracias por participar en la encuesta!')
@@ -780,24 +792,16 @@ def poll_statistics(request):
                     'type': 'pie'
                 }
             
-            elif question.question_type == 'ESCALA_NUMERICA':
-                labels = ['1', '2', '3', '4', '5']
+            elif question.question_type == 'ESCALA_LINEAL':
+                labels = []
                 data = []
                 
-                for i in range(1, 6):
-                    # Buscar por valor numérico primero
+                for i in range(question.scale_min or 1, (question.scale_max or 5) + 1):
                     count = QuestionDetails.objects.filter(
                         question=question,
                         selected_options__value=i
                     ).count()
-                    
-                    # Si no hay resultados, buscar por texto (encuestas antiguas)
-                    if count == 0:
-                        count = QuestionDetails.objects.filter(
-                            question=question,
-                            selected_options__options_text=str(i)
-                        ).count()
-                    
+                    labels.append(str(i))
                     data.append(count)
                 
                 chart_data[poll.id][question.id] = {
@@ -805,6 +809,21 @@ def poll_statistics(request):
                     'data': data,
                     'type': 'bar'
                 }
+            
+            elif question.question_type == 'CALIFICACION':
+                # No generar chart_data, pero agregar conteos para el template
+                if poll.id not in chart_data:
+                    chart_data[poll.id] = {}
+                chart_data[poll.id][question.id] = {
+                    'type': 'stars',
+                    'counts': {}
+                }
+                for i in range(1, (question.rating_stars or 5) + 1):
+                    count = QuestionDetails.objects.filter(
+                        question=question,
+                        selected_options__value=i
+                    ).count()
+                    chart_data[poll.id][question.id]['counts'][i] = count
     
     context = {
         'all_polls': all_polls,

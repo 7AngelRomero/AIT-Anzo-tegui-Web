@@ -88,9 +88,9 @@
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Tipo de Pregunta *</label>
                         <select class="form-select" name="existing_question_type_{{ question.id }}" required>
-                            <option value="TEXTO_LIBRE" {% if question.question_type == 'TEXTO_LIBRE' %}selected{% endif %}>📝 Texto Libre</option>
                             <option value="SELECCION_MULTIPLE" {% if question.question_type == 'SELECCION_MULTIPLE' %}selected{% endif %}>🔘 Selección Múltiple</option>
-                            <option value="ESCALA_NUMERICA" {% if question.question_type == 'ESCALA_NUMERICA' %}selected{% endif %}>📊 Escala Numérica (1-5)</option>
+                            <option value="ESCALA_LINEAL" {% if question.question_type == 'ESCALA_LINEAL' %}selected{% endif %}>📊 Escala Lineal</option>
+                            <option value="CALIFICACION" {% if question.question_type == 'CALIFICACION' %}selected{% endif %}>⭐ Calificación</option>
                         </select>
                     </div>
                     <div class="col-md-6">

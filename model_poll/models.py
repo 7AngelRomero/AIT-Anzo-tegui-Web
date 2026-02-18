@@ -91,16 +91,21 @@ class Poll(models.Model):
 class Question(models.Model):
 
     class QuestionType(models.TextChoices):
-        TEXTO_LIBRE = 'TEXTO_LIBRE', 'Texto Libre'
         SELECCION_MULTIPLE = 'SELECCION_MULTIPLE', 'Selección Múltiple (Radio)'
         CASILLA_VERIFICACION = 'CASILLA_VERIFICACION', 'Casilla de Verificación (Checkbox)'
-        ESCALA_NUMERICA = 'ESCALA_NUMERICA', 'Escala Numérica (1-5)'
+        ESCALA_LINEAL = 'ESCALA_LINEAL', 'Escala Lineal'
+        CALIFICACION = 'CALIFICACION', 'Calificación (Estrellas)'
 
     poll = models.ForeignKey(Poll, on_delete=models.CASCADE, related_name="preguntas")
     question_text = models.TextField()
     question_type = models.CharField(max_length=50, choices=QuestionType.choices)
     is_obligatory = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=0, help_text="Orden de las preguntas (0, 1, 2 ...)")
+    scale_min = models.IntegerField(null=True, blank=True, help_text="Mínimo para escala lineal (0 o 1)")
+    scale_max = models.IntegerField(null=True, blank=True, help_text="Máximo para escala lineal (2-10)")
+    scale_min_label = models.CharField(max_length=100, null=True, blank=True, help_text="Etiqueta opcional para mínimo")
+    scale_max_label = models.CharField(max_length=100, null=True, blank=True, help_text="Etiqueta opcional para máximo")
+    rating_stars = models.IntegerField(null=True, blank=True, help_text="Número de estrellas para calificación (3-10)")
 
     class Meta:
         ordering = ['order'] # Ordena las preguntas por defecto según el campo 'order'

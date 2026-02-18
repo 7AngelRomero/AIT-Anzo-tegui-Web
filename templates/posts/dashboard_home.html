@@ -48,9 +48,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            <span class="badge bg-{% if poll.is_public %}info{% else %}warning{% endif %}">
-                                {% if poll.is_public %}Pública{% else %}Interna{% endif %}
-                            </span>
+                            {% if poll.is_public %}Pública{% else %}Interna{% endif %}
                         </td>
                         <td>
                             <span class="badge" style="background: {% if poll.status == 'ACTIVA' %}linear-gradient(135deg, #28a745 0%, #20c997 100%){% elif poll.status == 'BORRADOR' %}linear-gradient(135deg, #ffc107 0%, #e0a800 100%){% else %}linear-gradient(135deg, #6c757d 0%, #5a6268 100%){% endif %}; color: white;">
