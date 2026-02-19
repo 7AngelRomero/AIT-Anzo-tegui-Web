@@ -10,7 +10,7 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
             <li class="breadcrumb-item"><a href="{% url 'posts:poll_list' %}">Encuestas</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'posts:poll_manager' %}">Gestión</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Gestión</a></li>
             <li class="breadcrumb-item active" aria-current="page">Resultados: {{ poll.title }}</li>
         </ol>
     </nav>
@@ -176,7 +176,7 @@
                     {% endfor %}
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                        <a href="{% url 'posts:poll_manager' %}" class="btn btn-outline-secondary me-md-2">
+                        <a href="{% url 'dashboard:home' %}" class="btn btn-outline-secondary me-md-2">
                             <i class="fas fa-arrow-left me-2"></i>Volver a Gestión
                         </a>
                         <a href="#" class="btn btn-success">

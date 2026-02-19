@@ -257,7 +257,7 @@ def create_poll(request):
                             )
         
         messages.success(request, 'Encuesta creada exitosamente con todas sus preguntas.')
-        return redirect('posts:poll_manager')
+        return redirect('dashboard:home')
     
     return render(request, 'posts/create_poll.html')
 
@@ -387,7 +387,7 @@ def edit_poll(request, poll_id):
                             )
         
         messages.success(request, 'Encuesta actualizada exitosamente con todas sus preguntas.')
-        return redirect('posts:poll_manager')
+        return redirect('dashboard:home')
     
     # Si es petición AJAX GET, devolver el template parcial para el modal
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -432,7 +432,7 @@ def change_user_role(request, user_id, new_role):
         })
     
     messages.success(request, f'Rol de {user.username} cambiado a {new_role} exitosamente.')
-    return redirect('posts:user_list')
+    return redirect('dashboard:users')
 
 @login_required
 def answer_poll(request, poll_id):
@@ -444,14 +444,14 @@ def answer_poll(request, poll_id):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return HttpResponse('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Esta encuesta ha finalizado y ya no acepta respuestas.</div>')
         messages.error(request, 'Esta encuesta ha finalizado y ya no acepta respuestas.')
-        return redirect('posts:poll_list')
+        return redirect('posts:list')
     
     # Verificar que esté activa
     if poll.status != 'ACTIVA':
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return HttpResponse('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Esta encuesta no está disponible para responder.</div>')
         messages.error(request, 'Esta encuesta no está disponible para responder.')
-        return redirect('posts:poll_list')
+        return redirect('posts:list')
     
     # Verificar si la encuesta ya inició
     from django.utils import timezone
@@ -460,14 +460,14 @@ def answer_poll(request, poll_id):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return HttpResponse(f'<div class="alert alert-info"><i class="fas fa-clock me-2"></i>La encuesta no ha comenzado. Inicia el {fecha_inicio}</div>')
         messages.info(request, f'La encuesta no ha comenzado. Inicia el {fecha_inicio}')
-        return redirect('posts:poll_list')
+        return redirect('posts:list')
     
     # Verificar si ya participó
     if Participation.objects.filter(poll=poll, user=request.user).exists():
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return HttpResponse('<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Ya has participado en esta encuesta.</div>')
         messages.error(request, 'Ya has participado en esta encuesta.')
-        return redirect('posts:poll_list')
+        return redirect('posts:list')
     
     context = {
         'poll': poll,
@@ -517,9 +517,9 @@ def submit_poll(request, poll_id):
                         )
         
         messages.success(request, '¡Gracias por participar en la encuesta!')
-        return redirect('posts:poll_list')
+        return redirect('posts:list')
     
-    return redirect('posts:poll_detail', poll_id=poll_id)
+    return redirect('posts:detail', poll_id=poll_id)
 
 @login_required
 def poll_results(request, poll_id):
@@ -579,7 +579,7 @@ def poll_results(request, poll_id):
                 answer_text__isnull=False
             ).select_related('participation__user')
         
-        elif question.question_type == 'ESCALA_NUMERICA':
+        elif question.question_type in ['ESCALA_LINEAL', 'CALIFICACION']:
             # Calcular promedio y distribución
             responses = QuestionDetails.objects.filter(
                 question=question,
@@ -590,14 +590,18 @@ def poll_results(request, poll_id):
                 ratings = []
                 for response in responses:
                     try:
-                        rating = int(response.selected_options.options_text)
-                        ratings.append(rating)
+                        rating = response.selected_options.value
+                        if rating:
+                            ratings.append(rating)
                     except (ValueError, AttributeError):
                         pass
                 
-                question_data['average_rating'] = sum(ratings) / len(ratings) if ratings else 0
-                question_data['rating_counts'] = [ratings.count(i) for i in range(1, 6)]
-                question_data['max_rating_count'] = max(question_data['rating_counts']) if question_data['rating_counts'] else 1
+                if ratings:
+                    question_data['average_rating'] = sum(ratings) / len(ratings)
+                    min_val = question.scale_min or 1
+                    max_val = question.scale_max or (question.rating_stars or 5)
+                    question_data['rating_counts'] = [ratings.count(i) for i in range(min_val, max_val + 1)]
+                    question_data['max_rating_count'] = max(question_data['rating_counts']) if question_data['rating_counts'] else 1
         
         questions_with_results.append(question_data)
     
@@ -630,7 +634,7 @@ def delete_poll(request, poll_id):
             return JsonResponse({'success': True, 'message': f'Encuesta "{poll_title}" eliminada exitosamente.'})
         
         messages.success(request, f'Encuesta "{poll_title}" eliminada exitosamente.')
-        return redirect('posts:poll_manager')
+        return redirect('dashboard:home')
     
     return HttpResponseForbidden("Método no permitido.")
 
@@ -652,23 +656,23 @@ def content_manager(request):
             existing_count = SiteContent.objects.filter(content_type=content_type, is_active=True).count()
             if existing_count >= 3:
                 messages.error(request, f'Solo se permiten máximo 3 imágenes para {"Inicio" if content_type == "HOME_IMAGE" else "Acerca de"}.')
-                return redirect('posts:content_manager')
+                return redirect('dashboard:content')
         
         # Validar límite de slides del carousel
         if content_type == 'CAROUSEL_SLIDE':
             existing_count = SiteContent.objects.filter(content_type=content_type, is_active=True).count()
             if existing_count >= 5:
                 messages.error(request, 'Solo se permiten máximo 5 slides en el carousel.')
-                return redirect('posts:content_manager')
+                return redirect('dashboard:content')
             
             # Validar longitud de título y descripción para carousel
             if len(title) > 15:
                 messages.error(request, 'El título del slide no puede exceder 15 caracteres.')
-                return redirect('posts:content_manager')
+                return redirect('dashboard:content')
             
             if description and len(description) > 50:
                 messages.error(request, 'La descripción del slide no puede exceder 50 caracteres.')
-                return redirect('posts:content_manager')
+                return redirect('dashboard:content')
         
         # Procesar URL de YouTube si es transmisión en vivo
         if content_type == 'LIVE_STREAM' and link_url:
@@ -690,7 +694,7 @@ def content_manager(request):
         )
         
         messages.success(request, 'Contenido agregado exitosamente.')
-        return redirect('posts:content_manager')
+        return redirect('dashboard:content')
     
     # Obtener contenido por tipo
     home_images = SiteContent.objects.filter(content_type='HOME_IMAGE', is_active=True)
@@ -721,7 +725,7 @@ def delete_content(request, content_id):
     except SiteContent.DoesNotExist:
         messages.error(request, 'El contenido que intentas eliminar no existe.')
     
-    return redirect('posts:content_manager')
+    return redirect('dashboard:content')
 
 @login_required
 def poll_statistics(request):

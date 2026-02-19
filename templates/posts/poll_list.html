@@ -310,7 +310,7 @@ function showResults(pollId) {
     
     modal.show();
     
-    fetch(`/dashboard/${pollId}/results/`, {
+    fetch(`/polls/${pollId}/results/`, {
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
         }
@@ -343,7 +343,7 @@ function showAnswerModal(pollId) {
     
     modal.show();
     
-    fetch(`/dashboard/${pollId}/answer/`, {
+    fetch(`/polls/${pollId}/answer/`, {
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
         }
@@ -367,7 +367,7 @@ function submitPollAnswer(event, pollId) {
     const form = event.target;
     const formData = new FormData(form);
     
-    fetch(`/dashboard/${pollId}/submit/`, {
+    fetch(`/polls/${pollId}/submit/`, {
         method: 'POST',
         body: formData,
         headers: {

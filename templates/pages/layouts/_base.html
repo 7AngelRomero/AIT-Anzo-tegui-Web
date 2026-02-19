@@ -49,11 +49,11 @@
                         <a class="nav-link" href="https://anzoategui.gob.ve/">La Gobernación</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if 'poll' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'posts:poll_list' %}">Encuestas</a>
+                        <a class="nav-link {% if 'poll' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'posts:list' %}">Encuestas</a>
                     </li>
                     {% if user.is_authenticated and user.rol.name in 'Administrador,Trabajador' %}
                         <li class="nav-item">
-                            <a class="nav-link {% if 'manager' in request.resolver_match.url_name %}active{% endif %}" href="/dashboard/home/">Dashboard</a>
+                            <a class="nav-link {% if 'manager' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'dashboard:home' %}">Dashboard</a>
                         </li>
                     {% endif %}
                     <li class="nav-item">
