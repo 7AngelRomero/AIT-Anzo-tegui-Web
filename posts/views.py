@@ -853,48 +853,51 @@ def export_poll_pdf(request, poll_id):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
     
-    # Estilos
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=18, spaceAfter=30, alignment=TA_CENTER)
-    heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontSize=14, spaceAfter=12, textColor=colors.HexColor('#184da1'))
-    normal_style = styles['Normal']
+    # Estilos con Helvetica
+    title_style = ParagraphStyle('CustomTitle', fontSize=14, fontName='Helvetica-Bold', spaceAfter=20, alignment=TA_CENTER)
+    heading_style = ParagraphStyle('CustomHeading', fontSize=14, fontName='Helvetica-Bold', spaceAfter=12, textColor=colors.HexColor('#184da1'))
+    normal_style = ParagraphStyle('Normal', fontSize=12, fontName='Helvetica')
     
     # Contenido del PDF
     story = []
     
-    # Encabezado institucional mejorado
-    header_style = ParagraphStyle('Header', parent=styles['Normal'], fontSize=16, fontName='Helvetica-Bold', alignment=TA_CENTER, textColor=colors.HexColor('#184da1'))
-    subheader_style = ParagraphStyle('SubHeader', parent=styles['Normal'], fontSize=12, alignment=TA_CENTER, textColor=colors.HexColor('#666666'))
+    # Encabezado con logo
+    logo_path = os.path.join(settings.BASE_DIR, 'static', 'SVG', 'GOB AIT Color_3.png')
+    subheader_style = ParagraphStyle('SubHeader', fontSize=12, fontName='Helvetica', alignment=TA_LEFT, textColor=colors.HexColor('#666666'), leading=16)
     
-    story.append(Paragraph("REPÚBLICA BOLIVARIANA DE VENEZUELA", subheader_style))
-    story.append(Paragraph("GOBERNACIÓN DEL ESTADO ANZOÁTEGUI", subheader_style))
-    story.append(Spacer(1, 10))
-    story.append(Paragraph("DIRECCIÓN DE AUTOMATIZACIÓN, INFORMÁTICA Y TELECOMUNICACIONES", header_style))
-    story.append(Paragraph("(AIT ANZOÁTEGUI)", header_style))
+    # Crear tabla para encabezado con logo
+    if os.path.exists(logo_path):
+        logo = Image(logo_path, width=2*inch, height=0.7*inch)
+        header_text = [[Paragraph("REPÚBLICA BOLIVARIANA DE VENEZUELA<br/>GOBERNACIÓN DEL ESTADO ANZOÁTEGUI<br/>DIRECCIÓN DE AUTOMATIZACIÓN, INFORMÁTICA Y TELECOMUNICACIONES (AIT ANZOÁTEGUI)<br/>RIF: G-200001224", subheader_style), logo]]
+        header_table = Table(header_text, colWidths=[4*inch, 2*inch])
+        header_table.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP'), ('ALIGN', (0, 0), (0, 0), 'LEFT'), ('ALIGN', (1, 0), (1, 0), 'RIGHT')]))
+        story.append(header_table)
+    else:
+        story.append(Paragraph("REPÚBLICA BOLIVARIANA DE VENEZUELA", subheader_style))
+        story.append(Paragraph("GOBERNACIÓN DEL ESTADO ANZOÁTEGUI", subheader_style))
+        story.append(Paragraph("DIRECCIÓN DE AUTOMATIZACIÓN, INFORMÁTICA Y TELECOMUNICACIONES (AIT ANZOÁTEGUI)", subheader_style))
+        story.append(Paragraph("RIF: G-200001224", subheader_style))
+    
     story.append(Spacer(1, 20))
     
-    # Línea separadora
-    line_data = [['', '']]
-    line_table = Table(line_data, colWidths=[6*inch])
-    line_table.setStyle(TableStyle([('LINEBELOW', (0, 0), (-1, -1), 2, colors.HexColor('#184da1'))]))
-    story.append(line_table)
-    story.append(Spacer(1, 30))
-    
-    # Título del reporte
+    # Título del reporte centrado
     story.append(Paragraph(f"REPORTE DE ENCUESTA: {poll.title.upper()}", title_style))
-    story.append(Spacer(1, 20))
     
     # Información básica
     story.append(Paragraph("INFORMACIÓN GENERAL", heading_style))
     
-    # Truncar descripción si es muy larga
+    # Título y descripción arriba de la tabla
+    story.append(Paragraph(f"<b>Título:</b> {poll.title}", normal_style))
+    story.append(Spacer(1, 6))
     description = poll.description or 'Sin descripción'
-    if len(description) > 100:
-        description = description[:100] + '...'
+    story.append(Paragraph(f"<b>Descripción:</b> {description}", normal_style))
+    story.append(Spacer(1, 12))
+    
+    # Obtener nombre del autor
+    autor = f"{poll.created_by.first_name} {poll.created_by.last_name}" if poll.created_by.first_name else poll.created_by.username
     
     info_data = [
-        ['Título:', poll.title],
-        ['Descripción:', description],
+        ['Autor:', autor],
         ['Estado:', poll.status],
         ['Fecha de inicio:', format_datetime_12h(poll.star_date)],
         ['Fecha de fin:', format_datetime_12h(poll.end_date)],
@@ -909,9 +912,9 @@ def export_poll_pdf(request, poll_id):
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('WORDWRAP', (1, 0), (1, -1), True)
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
     ]))
     story.append(info_table)
     story.append(Spacer(1, 30))
@@ -920,7 +923,8 @@ def export_poll_pdf(request, poll_id):
     story.append(Paragraph("PREGUNTAS Y RESPUESTAS", heading_style))
     
     for i, question in enumerate(poll.preguntas.all(), 1):
-        story.append(Paragraph(f"Pregunta {i}: {question.question_text}", ParagraphStyle('QuestionStyle', parent=styles['Normal'], fontSize=12, fontName='Helvetica-Bold', spaceAfter=10)))
+        question_style = ParagraphStyle('QuestionStyle', fontSize=12, fontName='Helvetica-Bold', spaceAfter=10)
+        story.append(Paragraph(f"Pregunta {i}: {question.question_text}", question_style))
         story.append(Paragraph(f"Tipo: {question.get_question_type_display()}", normal_style))
         
         if question.question_type == 'TEXTO_LIBRE':
@@ -931,16 +935,17 @@ def export_poll_pdf(request, poll_id):
             ).select_related('participation__user')
             
             if responses.exists():
-                story.append(Paragraph("Respuestas:", ParagraphStyle('SubHeading', parent=styles['Normal'], fontName='Helvetica-Bold', spaceAfter=5)))
+                subheading_style = ParagraphStyle('SubHeading', fontSize=12, fontName='Helvetica-Bold', spaceAfter=5)
+                story.append(Paragraph("Respuestas:", subheading_style))
                 for resp in responses:
                     story.append(Paragraph(f"• {resp.participation.user.username} ({format_datetime_12h(resp.participation.sent_date)}): {resp.answer_text}", normal_style))
             else:
                 story.append(Paragraph("No hay respuestas", normal_style))
         
-        elif question.question_type in ['SELECCION_MULTIPLE', 'ESCALA_NUMERICA']:
+        elif question.question_type in ['SELECCION_MULTIPLE', 'ESCALA_LINEAL', 'CALIFICACION']:
             # Generar gráfica
             chart_buffer = BytesIO()
-            fig, ax = plt.subplots(figsize=(8, 6))
+            fig, ax = plt.subplots(figsize=(6, 4))
             
             if question.question_type == 'SELECCION_MULTIPLE':
                 labels = []
@@ -955,25 +960,35 @@ def export_poll_pdf(request, poll_id):
                 
                 if sizes:
                     ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors_list[:len(sizes)])
-                    ax.set_title(f'Resultados: {question.question_text[:50]}...', fontsize=12, fontweight='bold')
                 else:
-                    ax.text(0.5, 0.5, 'Sin respuestas', ha='center', va='center', transform=ax.transAxes, fontsize=14)
-                    ax.set_title(f'Resultados: {question.question_text[:50]}...', fontsize=12, fontweight='bold')
+                    ax.text(0.5, 0.5, 'Sin respuestas', ha='center', va='center', transform=ax.transAxes, fontsize=12)
             
-            elif question.question_type == 'ESCALA_NUMERICA':
-                labels = ['1', '2', '3', '4', '5']
+            elif question.question_type == 'ESCALA_LINEAL':
+                labels = []
                 values = []
                 
-                for i in range(1, 6):
+                for i in range(question.scale_min or 1, (question.scale_max or 5) + 1):
                     count = QuestionDetails.objects.filter(question=question, selected_options__value=i).count()
-                    if count == 0:
-                        count = QuestionDetails.objects.filter(question=question, selected_options__options_text=str(i)).count()
+                    labels.append(str(i))
                     values.append(count)
                 
                 ax.bar(labels, values, color='#36A2EB')
-                ax.set_xlabel('Calificación')
-                ax.set_ylabel('Número de respuestas')
-                ax.set_title(f'Resultados: {question.question_text[:50]}...', fontsize=12, fontweight='bold')
+                ax.set_xlabel('Escala', fontsize=10)
+                ax.set_ylabel('Número de respuestas', fontsize=10)
+                ax.set_ylim(0, max(values) + 1 if max(values) > 0 else 1)
+            
+            elif question.question_type == 'CALIFICACION':
+                labels = []
+                values = []
+                
+                for i in range(1, (question.rating_stars or 5) + 1):
+                    count = QuestionDetails.objects.filter(question=question, selected_options__value=i).count()
+                    labels.append(f'{i}★')
+                    values.append(count)
+                
+                ax.bar(labels, values, color='#FFD700')
+                ax.set_xlabel('Calificación', fontsize=10)
+                ax.set_ylabel('Número de respuestas', fontsize=10)
                 ax.set_ylim(0, max(values) + 1 if max(values) > 0 else 1)
             
             plt.tight_layout()
@@ -982,10 +997,11 @@ def export_poll_pdf(request, poll_id):
             
             # Añadir gráfica al PDF
             chart_buffer.seek(0)
-            chart_img = Image(chart_buffer, width=5*inch, height=3.75*inch)
+            chart_img = Image(chart_buffer, width=4.5*inch, height=3*inch)
             chart_img.hAlign = 'CENTER'
+            story.append(Spacer(1, 10))
             story.append(chart_img)
-            story.append(Spacer(1, 20))
+            story.append(Spacer(1, 15))
             
             # Estadísticas de opciones
             stats_data = [['Opción', 'Respuestas', 'Porcentaje']]
@@ -997,19 +1013,15 @@ def export_poll_pdf(request, poll_id):
                     percentage = (count / total_responses * 100) if total_responses > 0 else 0
                     stats_data.append([option.options_text, str(count), f"{percentage:.1f}%"])
             
-            elif question.question_type == 'ESCALA_NUMERICA':
-                for i in range(1, 6):
+            elif question.question_type in ['ESCALA_LINEAL', 'CALIFICACION']:
+                for i in range(question.scale_min or 1, (question.scale_max or question.rating_stars or 5) + 1):
                     count = QuestionDetails.objects.filter(
                         question=question,
                         selected_options__value=i
                     ).count()
-                    if count == 0:
-                        count = QuestionDetails.objects.filter(
-                            question=question,
-                            selected_options__options_text=str(i)
-                        ).count()
                     percentage = (count / total_responses * 100) if total_responses > 0 else 0
-                    stats_data.append([f"Calificación {i}", str(count), f"{percentage:.1f}%"])
+                    label = f'{i}★' if question.question_type == 'CALIFICACION' else str(i)
+                    stats_data.append([label, str(count), f"{percentage:.1f}%"])
             
             if len(stats_data) > 1:
                 stats_table = Table(stats_data, colWidths=[2*inch, 1*inch, 1*inch])
@@ -1018,23 +1030,13 @@ def export_poll_pdf(request, poll_id):
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                     ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 10),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 12),
                     ('GRID', (0, 0), (-1, -1), 1, colors.black)
                 ]))
                 story.append(stats_table)
             else:
                 story.append(Paragraph("No hay respuestas", normal_style))
-            
-            # Respuestas individuales
-            individual_responses = QuestionDetails.objects.filter(
-                question=question,
-                selected_options__isnull=False
-            ).select_related('participation__user', 'selected_options')
-            
-            if individual_responses.exists():
-                story.append(Paragraph("Respuestas individuales:", ParagraphStyle('SubHeading', parent=styles['Normal'], fontName='Helvetica-Bold', spaceAfter=5, spaceBefore=10)))
-                for resp in individual_responses:
-                    story.append(Paragraph(f"• {resp.participation.user.username} ({format_datetime_12h(resp.participation.sent_date)}): {resp.selected_options.options_text}", normal_style))
         
         story.append(Spacer(1, 20))
     

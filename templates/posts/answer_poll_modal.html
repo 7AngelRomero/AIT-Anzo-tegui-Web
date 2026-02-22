@@ -23,7 +23,7 @@
 <hr class="mb-4">
 
 <!-- Formulario de respuestas -->
-<form method="post" action="/dashboard/{{ poll.id }}/submit/">
+<form method="post" action="/polls/{{ poll.id }}/submit/">
     {% csrf_token %}
     
     {% for question in poll.preguntas.all %}
