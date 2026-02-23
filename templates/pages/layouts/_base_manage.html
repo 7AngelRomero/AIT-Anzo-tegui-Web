@@ -84,6 +84,13 @@
                             <i class="fas fa-paperclip me-3" style="width: 20px;"></i>Contenido
                         </a>
                     </li>
+                    {% if user.rol.name == 'Administrador' %}
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white d-flex align-items-center" href="{% url 'dashboard:backup' %}" style="transition: all 0.2s;">
+                            <i class="fas fa-database me-3" style="width: 20px;"></i>Respaldos
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
             

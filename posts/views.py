@@ -18,6 +18,7 @@ from io import BytesIO
 from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib
+from django.core.management import call_command
 matplotlib.use('Agg')  # Backend sin GUI
 
 def format_datetime_12h(dt):
@@ -1153,3 +1154,179 @@ def delete_user(request, user_id):
         })
     
     return JsonResponse({'success': False, 'error': 'Método no permitido.'})
+
+
+@login_required
+def backup_manager(request):
+    """Vista para gestionar respaldos de base de datos - Solo Administradores"""
+    if not request.user.rol or request.user.rol.name != 'Administrador':
+        return HttpResponseForbidden("Solo los administradores pueden gestionar respaldos.")
+    
+    # Obtener información de respaldos existentes
+    backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+    backups = []
+    
+    if os.path.exists(backup_dir):
+        for filename in os.listdir(backup_dir):
+            if filename.endswith('.json'):
+                filepath = os.path.join(backup_dir, filename)
+                file_stats = os.stat(filepath)
+                backups.append({
+                    'filename': filename,
+                    'size': round(file_stats.st_size / 1024, 2),  # KB
+                    'date': datetime.fromtimestamp(file_stats.st_mtime)
+                })
+        backups.sort(key=lambda x: x['date'], reverse=True)
+    
+    context = {
+        'backups': backups,
+        'total_polls': Poll.objects.count(),
+        'total_users': User.objects.count(),
+        'total_participations': Participation.objects.count(),
+    }
+    
+    return render(request, 'posts/dashboard_backup.html', context)
+
+@login_required
+def download_backup(request):
+    """Vista para descargar respaldo de base de datos - Solo Administradores"""
+    if not request.user.rol or request.user.rol.name != 'Administrador':
+        return HttpResponseForbidden("Solo los administradores pueden descargar respaldos.")
+    
+    # Crear directorio de respaldos si no existe
+    backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+    os.makedirs(backup_dir, exist_ok=True)
+    
+    # Generar nombre de archivo con fecha y hora
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'backup_ait_{timestamp}.json'
+    filepath = os.path.join(backup_dir, filename)
+    
+    # Crear respaldo usando dumpdata
+    with open(filepath, 'w', encoding='utf-8') as f:
+        call_command(
+            'dumpdata',
+            '--exclude', 'contenttypes',
+            '--exclude', 'auth.permission',
+            '--exclude', 'sessions',
+            '--indent', 2,
+            stdout=f
+        )
+    
+    # Leer archivo y enviarlo como descarga
+    with open(filepath, 'rb') as f:
+        response = HttpResponse(f.read(), content_type='application/json')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    messages.success(request, f'Respaldo creado exitosamente: {filename}')
+    return response
+
+@login_required
+def restore_backup(request, filename):
+    """Vista para restaurar respaldo de base de datos - Solo Administradores"""
+    if not request.user.rol or request.user.rol.name != 'Administrador':
+        return HttpResponseForbidden("Solo los administradores pueden restaurar respaldos.")
+    
+    if request.method == 'POST':
+        backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+        filepath = os.path.join(backup_dir, filename)
+        
+        if not os.path.exists(filepath):
+            messages.error(request, 'El archivo de respaldo no existe.')
+            return redirect('dashboard:backup')
+        
+        try:
+            # Restaurar usando loaddata
+            call_command('loaddata', filepath)
+            messages.success(request, f'Base de datos restaurada exitosamente desde: {filename}')
+        except Exception as e:
+            messages.error(request, f'Error al restaurar: {str(e)}')
+        
+        return redirect('dashboard:backup')
+    
+    return HttpResponseForbidden("Método no permitido.")
+
+@login_required
+def create_backup(request):
+    """Vista para crear y guardar respaldo en el servidor - Solo Administradores"""
+    if not request.user.rol or request.user.rol.name != 'Administrador':
+        return HttpResponseForbidden("Solo los administradores pueden crear respaldos.")
+    
+    # Crear directorio de respaldos si no existe
+    backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+    os.makedirs(backup_dir, exist_ok=True)
+    
+    # Generar nombre de archivo con fecha y hora
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'backup_ait_{timestamp}.json'
+    filepath = os.path.join(backup_dir, filename)
+    
+    try:
+        # Crear respaldo usando dumpdata
+        with open(filepath, 'w', encoding='utf-8') as f:
+            call_command(
+                'dumpdata',
+                '--exclude', 'contenttypes',
+                '--exclude', 'auth.permission',
+                '--exclude', 'sessions',
+                '--indent', 2,
+                stdout=f
+            )
+        messages.success(request, f'Respaldo creado y guardado exitosamente: {filename}')
+    except Exception as e:
+        messages.error(request, f'Error al crear respaldo: {str(e)}')
+    
+    return redirect('dashboard:backup')
+
+@login_required
+def upload_backup(request):
+    """Vista para subir respaldo externo - Solo Administradores"""
+    if not request.user.rol or request.user.rol.name != 'Administrador':
+        return HttpResponseForbidden("Solo los administradores pueden subir respaldos.")
+    
+    if request.method == 'POST' and request.FILES.get('backup_file'):
+        backup_file = request.FILES['backup_file']
+        
+        # Validar extensión
+        if not backup_file.name.endswith('.json'):
+            messages.error(request, 'Solo se permiten archivos JSON.')
+            return redirect('dashboard:backup')
+        
+        # Crear directorio de respaldos si no existe
+        backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+        os.makedirs(backup_dir, exist_ok=True)
+        
+        # Guardar archivo
+        filepath = os.path.join(backup_dir, backup_file.name)
+        with open(filepath, 'wb+') as destination:
+            for chunk in backup_file.chunks():
+                destination.write(chunk)
+        
+        messages.success(request, f'Respaldo subido exitosamente: {backup_file.name}')
+        return redirect('dashboard:backup')
+    
+    messages.error(request, 'No se proporcionó ningún archivo.')
+    return redirect('dashboard:backup')
+
+@login_required
+def delete_backup(request, filename):
+    """Vista para eliminar respaldo del servidor - Solo Administradores"""
+    if not request.user.rol or request.user.rol.name != 'Administrador':
+        return HttpResponseForbidden("Solo los administradores pueden eliminar respaldos.")
+    
+    if request.method == 'POST':
+        backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+        filepath = os.path.join(backup_dir, filename)
+        
+        if os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+                messages.success(request, f'Respaldo eliminado exitosamente: {filename}')
+            except Exception as e:
+                messages.error(request, f'Error al eliminar respaldo: {str(e)}')
+        else:
+            messages.error(request, 'El archivo de respaldo no existe.')
+        
+        return redirect('dashboard:backup')
+    
+    return HttpResponseForbidden("Método no permitido.")
