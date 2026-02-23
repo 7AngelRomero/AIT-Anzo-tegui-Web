@@ -576,6 +576,11 @@ textarea {
     padding: 0;
 }
 
+.carousel-slide h2,
+.carousel-slide p {
+    color: white !important;
+}
+
 /* Estilos para video live section */
 .video-live-section {
     height: 500px;

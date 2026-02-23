@@ -30,7 +30,8 @@
         <div class="d-flex flex-column" style="width: 280px; min-width: 280px; background: linear-gradient(180deg, #184da1 0%, #2D64BB 100%); box-shadow: 2px 0 10px rgba(0,0,0,0.1); position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;">
             <!-- Logo -->
             <div class="p-3 text-center border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
-                <img src="{% static 'SVG/AIT White lateral.svg' %}" alt="Logo AIT" style="max-width: 200px; width: 100%;">
+                <img src="{% static 'SVG/AIT White lateral.svg' %}" alt="Logo AIT" style="max-width: 230px; width: 100%;">
+                <div class="text-white mt-1 ps-5 ms-3" style="font-size: 0.65rem; opacity: 0.8;">RIF: G-200001224</div>
             </div>
             
             <!-- Perfil de usuario -->
@@ -55,22 +56,22 @@
                 <ul class="nav nav-pills flex-column">
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white d-flex align-items-center" href="{% url 'home' %}" style="transition: all 0.2s;">
-                            <i class="fas fa-home me-3" style="width: 20px;"></i>Volver al Inicio
+                            <i class="fas fa-home me-3" style="width: 20px;"></i>Regresar al Sitio
                         </a>
                     </li>
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white d-flex align-items-center" href="{% url 'dashboard:home' %}" style="transition: all 0.2s;">
-                            <i class="fas fa-tachometer-alt me-3" style="width: 20px;"></i>Dashboard Principal
+                            <i class="fas fa-tachometer-alt me-3" style="width: 20px;"></i>Resumen
                         </a>
                     </li>
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white d-flex align-items-center" href="{% url 'dashboard:create' %}" style="transition: all 0.2s;">
-                            <i class="fas fa-plus me-3" style="width: 20px;"></i>Crear Encuesta
+                            <i class="fas fa-plus me-3" style="width: 20px;"></i>Nueva Encuesta
                         </a>
                     </li>
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white d-flex align-items-center" href="{% url 'dashboard:users' %}" style="transition: all 0.2s;">
-                            <i class="fas fa-users me-3" style="width: 20px;"></i>Gestión de Usuarios
+                            <i class="fas fa-users me-3" style="width: 20px;"></i>Usuarios
                         </a>
                     </li>
                     <li class="nav-item mb-2">
