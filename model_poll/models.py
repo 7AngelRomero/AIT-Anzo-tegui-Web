@@ -158,6 +158,17 @@ class QuestionDetails(models.Model):
 
 ### Tabla de Contenido Dinámico
 
+def content_upload_path(instance, filename):
+    """Función para organizar archivos por tipo de contenido"""
+    content_folders = {
+        'HOME_IMAGE': 'content/home/',
+        'ABOUT_IMAGE': 'content/about/',
+        'CAROUSEL_SLIDE': 'content/carousel/',
+        'LIVE_STREAM': 'content/live/',
+    }
+    folder = content_folders.get(instance.content_type, 'content/other/')
+    return f'{folder}{filename}'
+
 class SiteContent(models.Model):
     
     class ContentType(models.TextChoices):
@@ -168,7 +179,7 @@ class SiteContent(models.Model):
     
     content_type = models.CharField(max_length=20, choices=ContentType.choices)
     title = models.CharField(max_length=200, help_text="Título o descripción del contenido")
-    image = models.ImageField(upload_to='content/', blank=True, null=True)
+    image = models.ImageField(upload_to=content_upload_path, blank=True, null=True)
     link_url = models.URLField(blank=True, null=True, help_text="URL de redirección (opcional)")
     description = models.TextField(blank=True, null=True, help_text="Descripción adicional")
     is_active = models.BooleanField(default=True)
