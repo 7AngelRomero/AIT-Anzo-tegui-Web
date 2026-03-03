@@ -17,11 +17,6 @@
 
     <!-- Custom CSS (debe ir DESPUÉS de Bootstrap) -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    
-    <!-- React CDN (disponible para uso futuro) -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
     <header>
@@ -115,7 +110,7 @@
         </div>
     </nav>
     
-    <!-- Mensajes de Django (ocultos, procesados por React) -->
+    <!-- Mensajes de Django -->
     {% if messages %}
         <div style="display: none;">
             {% for message in messages %}
@@ -124,7 +119,7 @@
         </div>
     {% endif %}
     
-    <!-- Contenedor para notificaciones React -->
+    <!-- Contenedor para notificaciones -->
     <div id="notification-root"></div>
     
     {% block content %}
@@ -137,14 +132,6 @@
     
     <!-- Funciones de notificaciones -->
     <script src="{% static 'js/notifications.js' %}"></script>
-    
-    <!-- Sistema de Notificaciones React -->
-    <script type="text/babel" src="{% static 'js/react/NotificationSystem.js' %}"></script>
-    <script type="text/babel">
-        // Renderizar sistema de notificaciones
-        const notificationRoot = ReactDOM.createRoot(document.getElementById('notification-root'));
-        notificationRoot.render(<NotificationSystem />);
-    </script>
 
     <footer class="custom-footer">
         <div class="container">
