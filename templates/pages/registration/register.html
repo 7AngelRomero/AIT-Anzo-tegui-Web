@@ -13,19 +13,10 @@
                     <div class="col-md-4" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%);">
                         <div class="p-3 text-white h-100 d-flex flex-column justify-content-center">
                             <div class="text-center mb-3">
-                                <img src="{% static 'SVG/GOB AIT White_2.svg' %}" alt="Logo AIT" style="max-width: 140px; width: 100%;">
+                                <img src="{% static 'SVG/GOB AIT White_2.svg' %}" alt="Logo AIT" style="max-width: 350px; width: 100%;">
                             </div>
                             
-                            <h4 class="fw-bold mb-2 text-center">Únete a AIT</h4>
-                            <p class="mb-3 text-center" style="opacity: 0.9; font-size: 0.9rem;">Participa en encuestas y contribuye al desarrollo tecnológico del estado</p>
-                            
-                            <div class="mb-3">
-                                <ul class="list-unstyled" style="font-size: 0.9rem;">
-                                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Encuestas exclusivas</li>
-                                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Decisiones importantes</li>
-                                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Desarrollo tecnológico</li>
-                                </ul>
-                            </div>
+                            <p class="mb-3 text-center" style="opacity: 0.9; font-size: 0.9rem;">Regístrate para contribuir al desarrollo tecnológico del estado Anzoátegui</p>
                             
                             <div class="mt-auto text-center" style="font-size: 0.85rem;">
                                 <p class="mb-1"><i class="fas fa-shield-alt me-2"></i> Datos protegidos</p>
@@ -37,45 +28,71 @@
                     <div class="col-md-8">
                         <div class="p-4">
                             <div class="mb-3">
-                                <h2 class="fw-bold mb-1" style="color: #184da1; font-size: 1.75rem;">Crear Cuenta</h2>
-                                <p class="text-muted mb-0" style="font-size: 0.9rem;">Completa el formulario para registrarte</p>
+                                <h2 class="fw-bold mb-1" style="color: #184da1; font-size: 1.75rem;">Registrate para seguir</h2>
                             </div>
                             
                             <form method="post" class="login-form">
                                 {% csrf_token %}
                                 
-                                <div class="row g-2">
+                                <h6 class="text-muted mb-3" style="font-size: 0.9rem; font-weight: 600;">Información Personal</h6>
+                                <hr class="mb-4" style="border-top: 2px solid #dee2e6;">
+                                
+                                <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label for="username" class="form-label fw-semibold" style="font-size: 0.9rem;">Usuario *</label>
-                                        <input type="text" class="form-control form-input" id="username" name="username" required>
+                                        <div class="floating-input">
+                                            <input type="text" class="floating-field" id="cedula" name="cedula" placeholder="" maxlength="9" required>
+                                            <label for="cedula" class="floating-label">Cédula</label>
+                                        </div>
                                     </div>
                                     
                                     <div class="col-md-6">
-                                        <label for="email" class="form-label fw-semibold" style="font-size: 0.9rem;">Email *</label>
-                                        <input type="email" class="form-control form-input" id="email" name="email" required>
+                                        <div class="floating-input">
+                                            <input type="text" class="floating-field" id="username" name="username" placeholder="" maxlength="150" required>
+                                            <label for="username" class="floating-label">Usuario</label>
+                                        </div>
                                     </div>
                                     
                                     <div class="col-md-6">
-                                        <label for="first_name" class="form-label fw-semibold" style="font-size: 0.9rem;">Nombre *</label>
-                                        <input type="text" class="form-control form-input" id="first_name" name="first_name" required>
+                                        <div class="floating-input">
+                                            <input type="email" class="floating-field" id="email" name="email" placeholder="" maxlength="254" required>
+                                            <label for="email" class="floating-label">Email</label>
+                                        </div>
                                     </div>
                                     
                                     <div class="col-md-6">
-                                        <label for="last_name" class="form-label fw-semibold" style="font-size: 0.9rem;">Apellido *</label>
-                                        <input type="text" class="form-control form-input" id="last_name" name="last_name" required>
+                                        <div class="floating-input">
+                                            <input type="text" class="floating-field" id="first_name" name="first_name" placeholder="" maxlength="150" required>
+                                            <label for="first_name" class="floating-label">Nombre</label>
+                                        </div>
                                     </div>
                                     
                                     <div class="col-md-6">
-                                        <label for="password1" class="form-label fw-semibold" style="font-size: 0.9rem;">Contraseña *</label>
-                                        <input type="password" class="form-control form-input" id="password1" name="password1" required>
-                                    </div>
-                                    
-                                    <div class="col-md-6">
-                                        <label for="password2" class="form-label fw-semibold" style="font-size: 0.9rem;">Confirmar Contraseña *</label>
-                                        <input type="password" class="form-control form-input" id="password2" name="password2" required>
+                                        <div class="floating-input">
+                                            <input type="text" class="floating-field" id="last_name" name="last_name" placeholder="" maxlength="150" required>
+                                            <label for="last_name" class="floating-label">Apellido</label>
+                                        </div>
                                     </div>
                                 </div>
                                 
+                                <h6 class="text-muted mb-3 mt-4" style="font-size: 0.9rem; font-weight: 600;">Seguridad</h6>
+                                <hr class="mb-4" style="border-top: 2px solid #dee2e6;">
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="floating-input">
+                                            <input type="password" class="floating-field" id="password1" name="password1" placeholder="" required>
+                                            <label for="password1" class="floating-label">Clave</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="floating-input">
+                                            <input type="password" class="floating-field" id="password2" name="password2" placeholder="" required>
+                                            <label for="password2" class="floating-label">Confirmar Clave</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                    
                                 <!-- Términos y condiciones -->
                                 <div class="form-check mt-3">
                                     <input class="form-check-input" type="checkbox" id="terms" name="terms" required>

@@ -17,11 +17,6 @@
 
     <!-- Custom CSS (debe ir DESPUÉS de Bootstrap) -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    
-    <!-- React CDN (disponible para uso futuro) -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
     <header>
@@ -49,11 +44,11 @@
                         <a class="nav-link" href="https://anzoategui.gob.ve/">La Gobernación</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if 'poll' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'posts:poll_list' %}">Encuestas</a>
+                        <a class="nav-link {% if 'poll' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'posts:list' %}">Encuestas</a>
                     </li>
                     {% if user.is_authenticated and user.rol.name in 'Administrador,Trabajador' %}
                         <li class="nav-item">
-                            <a class="nav-link {% if 'manager' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'posts:poll_manager' %}">Dashboard</a>
+                            <a class="nav-link {% if 'manager' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'dashboard:home' %}">Dashboard</a>
                         </li>
                     {% endif %}
                     <li class="nav-item">
@@ -75,7 +70,7 @@
                                 {% endif %}
                                 <span class="d-none d-md-inline">{{ user.first_name|default:user.username }}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="min-width: 250px; border-radius: 8px; margin-top: 8px;">
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 pt-0" style="min-width: 250px; border-radius: 12px;">
                                 <li class="px-3 py-2" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); border-radius: 8px 8px 0 0;">
                                     <div class="d-flex align-items-center text-white">
                                         {% if user.profile_image %}
@@ -91,13 +86,13 @@
                                         </div>
                                     </div>
                                 </li>
-                                <li><hr class="dropdown-divider my-0"></li>
+                                <li><hr class="dropdown-divider m-0"></li>
                                 <li>
                                     <a class="dropdown-item py-2" href="{% url 'profile' %}" style="transition: all 0.2s;">
                                         <i class="fas fa-user-edit me-2" style="color: #184da1; width: 20px;"></i>Mi Perfil
                                     </a>
                                 </li>
-                                <li><hr class="dropdown-divider my-0"></li>
+                                <li><hr class="dropdown-divider m-0"></li>
                                 <li>
                                     <a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}" style="transition: all 0.2s;">
                                         <i class="fas fa-sign-out-alt me-2" style="width: 20px;"></i>Cerrar Sesión
@@ -115,7 +110,7 @@
         </div>
     </nav>
     
-    <!-- Mensajes de Django (ocultos, procesados por React) -->
+    <!-- Mensajes de Django -->
     {% if messages %}
         <div style="display: none;">
             {% for message in messages %}
@@ -124,7 +119,7 @@
         </div>
     {% endif %}
     
-    <!-- Contenedor para notificaciones React -->
+    <!-- Contenedor para notificaciones -->
     <div id="notification-root"></div>
     
     {% block content %}
@@ -137,14 +132,6 @@
     
     <!-- Funciones de notificaciones -->
     <script src="{% static 'js/notifications.js' %}"></script>
-    
-    <!-- Sistema de Notificaciones React -->
-    <script type="text/babel" src="{% static 'js/react/NotificationSystem.js' %}"></script>
-    <script type="text/babel">
-        // Renderizar sistema de notificaciones
-        const notificationRoot = ReactDOM.createRoot(document.getElementById('notification-root'));
-        notificationRoot.render(<NotificationSystem />);
-    </script>
 
     <footer class="custom-footer">
         <div class="container">
@@ -152,6 +139,7 @@
                 <!-- Logo -->
                 <div class="col-lg-4 col-md-12 text-center text-lg-start mb-3 mb-lg-0">
                     <img src="{% static 'SVG/AIT White lateral.svg' %}" class="svg_footer img-fluid" alt="Logo AIT">
+                    <div class="text-white mt-2" style="font-size: 0.9rem; opacity: 0.9;">RIF: G-200001224</div>
                 </div>
                 
                 <!-- Información de contacto y redes sociales -->

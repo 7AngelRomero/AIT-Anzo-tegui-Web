@@ -24,6 +24,9 @@
                     {% if slide.description %}
                     <p class="lead mb-4 text-white" style="opacity: 0.95; font-size: 1rem; text-shadow: 2px 2px 6px rgba(0,0,0,0.5);">{{ slide.description }}</p>
                     {% endif %}
+                    {% if slide.link_url %}
+                    <a href="{{ slide.link_url }}" class="btn btn-outline-light btn-lg pt-0 pb-0 px-4">Ver más</a>
+                    {% endif %}
                 </div>
             </div>
             {% else %}
@@ -135,9 +138,9 @@
                         {% else %}
                         <div class="row g-2">
                             <div class="col-6">
-                                <a href="{% url 'posts:edit_poll' poll.id %}" class="btn btn-outline-primary w-100 py-2" style="font-weight: 600;">
+                                <button class="btn btn-outline-primary w-100 py-2" onclick="openEditModal({{ poll.id }})" style="font-weight: 600;">
                                     <i class="fas fa-edit me-2"></i>Editar
-                                </a>
+                                </button>
                             </div>
                             <div class="col-6">
                                 <button class="btn btn-outline-info w-100 py-2" onclick="showResults({{ poll.id }})" style="font-weight: 600;">
@@ -165,13 +168,13 @@
 
 <!-- Modal de Resultados -->
 <div class="modal fade" id="resultsModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white;">
                 <h5 class="modal-title"><i class="fas fa-chart-bar me-2"></i>Resultados de la Encuesta</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="resultsContent">
+            <div class="modal-body" id="resultsContent" style="max-height: 70vh; overflow-y: auto;">
                 <div class="text-center">
                     <div class="spinner-border" role="status">
                         <span class="visually-hidden">Cargando...</span>
@@ -184,13 +187,32 @@
 
 <!-- Modal para Responder Encuesta -->
 <div class="modal fade" id="answerModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white;">
-                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Responder Encuesta</h5>
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Formulario para la Encuesta</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="answerContent">
+            <div class="modal-body" id="answerContent" style="max-height: 70vh; overflow-y: auto;">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Edición -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white;">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Editar Encuesta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="editContent" style="max-height: 70vh; overflow-y: auto;">
                 <div class="text-center">
                     <div class="spinner-border" role="status">
                         <span class="visually-hidden">Cargando...</span>
@@ -241,30 +263,37 @@ body.modal-open {
 </style>
 
 <script>
-function confirmDelete(pollId, pollTitle) {
-    if (confirm(`¿Estás seguro de eliminar la encuesta "${pollTitle}"?\n\nEsta acción no se puede deshacer.`)) {
-        fetch(`/polls/${pollId}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                const pollCard = document.querySelector(`[onclick*="${pollId}"]`).closest('.col-md-6');
-                if (pollCard) {
-                    pollCard.remove();
-                }
-                alert('Encuesta eliminada exitosamente.');
-            } else {
-                alert('Error al eliminar la encuesta.');
-            }
+function openEditModal(pollId) {
+    const modal = new bootstrap.Modal(document.getElementById('editModal'));
+    const content = document.getElementById('editContent');
+    
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+    
+    fetch(`/dashboard/${pollId}/edit/`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => response.text())
+        .then(html => {
+            content.innerHTML = html;
         })
         .catch(error => {
-            alert('Error al eliminar la encuesta.');
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error al cargar la encuesta. Inténtalo de nuevo.
+                </div>
+            `;
         });
-    }
 }
 
 function showResults(pollId) {
@@ -346,6 +375,11 @@ function submitPollAnswer(event, pollId) {
         }
     })
     .then(response => {
+        console.log('Response status:', response.status);
+        if (response.redirected) {
+            window.location.href = response.url;
+            return;
+        }
         if (response.ok) {
             bootstrap.Modal.getInstance(document.getElementById('answerModal')).hide();
             alert('¡Gracias por participar en la encuesta!');
@@ -355,7 +389,16 @@ function submitPollAnswer(event, pollId) {
         }
     })
     .catch(error => {
+        console.error('Error:', error);
         alert('Error al enviar las respuestas. Por favor, intenta de nuevo.');
+    });
+}
+
+function updateStars(questionId, value) {
+    const stars = document.querySelectorAll('i[data-question="' + questionId + '"]');
+    stars.forEach(function(star) {
+        const starValue = parseInt(star.getAttribute('data-value'));
+        star.style.color = starValue <= value ? '#ffc107' : '#ddd';
     });
 }
 </script>

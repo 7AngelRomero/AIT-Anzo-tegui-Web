@@ -23,6 +23,7 @@ class Rol(models.Model):
 
 class User(AbstractUser):
 
+    cedula = models.CharField(max_length=9, unique=True, help_text="Cédula de identidad", null=True, blank=True)
     full_name = models.CharField(max_length=255, blank=True, default='')
     profile_image = models.ImageField(upload_to='profiles/', blank=True, null=True)
         
@@ -67,6 +68,7 @@ class Poll(models.Model):
     description = models.TextField(blank=True, null=True, default='')
     image = models.ImageField(upload_to='polls/', blank=True, null=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.BORRADOR)
+    is_public = models.BooleanField(default=True, help_text="True=Pública (usuarios), False=Interna (trabajadores)")
     star_date = models.DateTimeField(null=True, blank=True, help_text="Fecha y hora de inicio de la encuesta")
     end_date = models.DateTimeField(null=True, blank=True, help_text="Fecha y hora de finalización de la encuesta")
 
@@ -89,16 +91,21 @@ class Poll(models.Model):
 class Question(models.Model):
 
     class QuestionType(models.TextChoices):
-        TEXTO_LIBRE = 'TEXTO_LIBRE', 'Texto Libre'
         SELECCION_MULTIPLE = 'SELECCION_MULTIPLE', 'Selección Múltiple (Radio)'
         CASILLA_VERIFICACION = 'CASILLA_VERIFICACION', 'Casilla de Verificación (Checkbox)'
-        ESCALA_NUMERICA = 'ESCALA_NUMERICA', 'Escala Numérica (1-5)'
+        ESCALA_LINEAL = 'ESCALA_LINEAL', 'Escala Lineal'
+        CALIFICACION = 'CALIFICACION', 'Calificación (Estrellas)'
 
     poll = models.ForeignKey(Poll, on_delete=models.CASCADE, related_name="preguntas")
     question_text = models.TextField()
     question_type = models.CharField(max_length=50, choices=QuestionType.choices)
     is_obligatory = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=0, help_text="Orden de las preguntas (0, 1, 2 ...)")
+    scale_min = models.IntegerField(null=True, blank=True, help_text="Mínimo para escala lineal (0 o 1)")
+    scale_max = models.IntegerField(null=True, blank=True, help_text="Máximo para escala lineal (2-10)")
+    scale_min_label = models.CharField(max_length=100, null=True, blank=True, help_text="Etiqueta opcional para mínimo")
+    scale_max_label = models.CharField(max_length=100, null=True, blank=True, help_text="Etiqueta opcional para máximo")
+    rating_stars = models.IntegerField(null=True, blank=True, help_text="Número de estrellas para calificación (3-10)")
 
     class Meta:
         ordering = ['order'] # Ordena las preguntas por defecto según el campo 'order'
@@ -151,6 +158,17 @@ class QuestionDetails(models.Model):
 
 ### Tabla de Contenido Dinámico
 
+def content_upload_path(instance, filename):
+    """Función para organizar archivos por tipo de contenido"""
+    content_folders = {
+        'HOME_IMAGE': 'content/home/',
+        'ABOUT_IMAGE': 'content/about/',
+        'CAROUSEL_SLIDE': 'content/carousel/',
+        'LIVE_STREAM': 'content/live/',
+    }
+    folder = content_folders.get(instance.content_type, 'content/other/')
+    return f'{folder}{filename}'
+
 class SiteContent(models.Model):
     
     class ContentType(models.TextChoices):
@@ -161,7 +179,7 @@ class SiteContent(models.Model):
     
     content_type = models.CharField(max_length=20, choices=ContentType.choices)
     title = models.CharField(max_length=200, help_text="Título o descripción del contenido")
-    image = models.ImageField(upload_to='content/', blank=True, null=True)
+    image = models.ImageField(upload_to=content_upload_path, blank=True, null=True)
     link_url = models.URLField(blank=True, null=True, help_text="URL de redirección (opcional)")
     description = models.TextField(blank=True, null=True, help_text="Descripción adicional")
     is_active = models.BooleanField(default=True)

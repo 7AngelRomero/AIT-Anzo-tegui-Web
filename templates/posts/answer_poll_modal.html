@@ -23,7 +23,7 @@
 <hr class="mb-4">
 
 <!-- Formulario de respuestas -->
-<form onsubmit="submitPollAnswer(event, {{ poll.id }})">
+<form method="post" action="/polls/{{ poll.id }}/submit/">
     {% csrf_token %}
     
     {% for question in poll.preguntas.all %}
@@ -38,13 +38,7 @@
             </div>
         </div>
         
-        {% if question.question_type == 'TEXTO_LIBRE' %}
-        <textarea class="form-control" name="question_{{ question.id }}" rows="4" 
-            placeholder="Escribe tu respuesta aquí..." 
-            {% if question.is_obligatory %}required{% endif %}
-            style="border: 2px solid #e9ecef; border-radius: 8px;"></textarea>
-        
-        {% elif question.question_type == 'SELECCION_MULTIPLE' %}
+        {% if question.question_type == 'SELECCION_MULTIPLE' %}
         <div class="row g-3">
             {% for option in question.opciones.all %}
             <div class="col-md-6">
@@ -63,9 +57,9 @@
             {% endfor %}
         </div>
         
-        {% elif question.question_type == 'ESCALA_NUMERICA' %}
+        {% elif question.question_type == 'ESCALA_LINEAL' %}
         <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
-            <small class="text-muted fw-semibold">Muy malo</small>
+            <small class="text-muted fw-semibold">{{ question.scale_min_label|default:question.scale_min }}</small>
             <div class="d-flex gap-3">
                 {% for option in question.opciones.all %}
                 <div class="form-check">
@@ -79,7 +73,20 @@
                 </div>
                 {% endfor %}
             </div>
-            <small class="text-muted fw-semibold">Excelente</small>
+            <small class="text-muted fw-semibold">{{ question.scale_max_label|default:question.scale_max }}</small>
+        </div>
+        
+        {% elif question.question_type == 'CALIFICACION' %}
+        <div class="d-flex justify-content-center gap-2 p-3">
+            {% for option in question.opciones.all %}
+            <label class="star-rating" for="rating_q{{ question.id }}_v{{ option.value }}" style="cursor: pointer; font-size: 2rem;">
+                <input type="radio" name="question_{{ question.id }}" value="{{ option.id }}" 
+                       id="rating_q{{ question.id }}_v{{ option.value }}" style="display: none;" 
+                       {% if question.is_obligatory %}required{% endif %}
+                       onchange="updateStars({{ question.id }}, {{ option.value }})">
+                <i class="fas fa-star" data-question="{{ question.id }}" data-value="{{ option.value }}" style="color: #ddd;"></i>
+            </label>
+            {% endfor %}
         </div>
         {% endif %}
     </div>

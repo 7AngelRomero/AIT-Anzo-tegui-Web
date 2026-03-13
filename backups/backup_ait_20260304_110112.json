@@ -1,0 +1,1027 @@
+[
+{
+  "model": "model_poll.rol",
+  "pk": 1,
+  "fields": {
+    "name": "Administrador",
+    "descripcion": ""
+  }
+},
+{
+  "model": "model_poll.rol",
+  "pk": 2,
+  "fields": {
+    "name": "Usuario",
+    "descripcion": ""
+  }
+},
+{
+  "model": "model_poll.rol",
+  "pk": 3,
+  "fields": {
+    "name": "Trabajador",
+    "descripcion": "Rol Trabajador"
+  }
+},
+{
+  "model": "model_poll.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$2dOzh6wMI3Q4CPnuHVC9W1$KfaOoSvAvoNHNOmq3RstigQIiG0Q6EqHZUicWoKcHug=",
+    "last_login": "2026-03-04T14:53:54.632Z",
+    "is_superuser": true,
+    "username": "Sebastián0",
+    "first_name": "User",
+    "last_name": "0",
+    "email": "Admin0@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-02-18T01:42:28.698Z",
+    "cedula": null,
+    "full_name": "User 0",
+    "profile_image": "profiles/1000_F_724597608_pmo5BsVumFcFyHJKlASG2Y2KpkkfiYUU.jpg",
+    "rol": 1,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "model_poll.user",
+  "pk": 2,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$1P9D6ZII1U8GEjildV1oXE$J2HvsYg7YPRKSrPp4A5y3Wx9qxv0bTUITXKfwsAGciY=",
+    "last_login": "2026-02-23T02:18:00.669Z",
+    "is_superuser": false,
+    "username": "Angel1",
+    "first_name": "User",
+    "last_name": "1",
+    "email": "user1@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-02-18T01:43:40.824Z",
+    "cedula": "111111111",
+    "full_name": "User 1",
+    "profile_image": "",
+    "rol": 3,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "model_poll.user",
+  "pk": 3,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$QX43d1dZ0b8Ntd9ZMtBzMl$0+Q390dG8BDQVT0PM1dg6Uz07aTd86z6KIaF0YuXjO4=",
+    "last_login": "2026-03-03T20:42:45.919Z",
+    "is_superuser": false,
+    "username": "Osmer2",
+    "first_name": "User",
+    "last_name": "2",
+    "email": "user2@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-02-18T01:44:19.861Z",
+    "cedula": "222222222",
+    "full_name": "User 2",
+    "profile_image": "",
+    "rol": 2,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "model_poll.user",
+  "pk": 4,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$yHmegfvjqQGWavgG0aAY3F$1cZpsFE6CJ885d8cETTq06uUPU0t/zFbhfYHDPrVrBY=",
+    "last_login": "2026-02-23T03:10:45.344Z",
+    "is_superuser": false,
+    "username": "Nomar3",
+    "first_name": "User",
+    "last_name": "3",
+    "email": "user3@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-02-18T01:45:03.603Z",
+    "cedula": "333333333",
+    "full_name": "User 3",
+    "profile_image": "",
+    "rol": 2,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "model_poll.user",
+  "pk": 5,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$p8u5hJKHgwFWtKOcJICea1$F6YdB0tIOE0MUFWmF8CWgXwBlz+6FbY+8EdsETFqmlQ=",
+    "last_login": "2026-02-18T03:06:57.145Z",
+    "is_superuser": false,
+    "username": "Jonathan4",
+    "first_name": "User",
+    "last_name": "4",
+    "email": "user4@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-02-18T01:46:05.552Z",
+    "cedula": "444444444",
+    "full_name": "User 4",
+    "profile_image": "",
+    "rol": 2,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "model_poll.user",
+  "pk": 7,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$3LJgX4PrOcOxIYdkNBYnj8$86tFh2XovpUbO2hBzZ7WJfcE+pBleCBFNG0jdKFBQg0=",
+    "last_login": "2026-03-03T20:38:16.545Z",
+    "is_superuser": false,
+    "username": "Mario6",
+    "first_name": "User",
+    "last_name": "6",
+    "email": "user6@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-02-18T01:47:33.934Z",
+    "cedula": "666666666",
+    "full_name": "User 6",
+    "profile_image": "",
+    "rol": 2,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "model_poll.user",
+  "pk": 8,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$A628gDxlRQhlrk2Svsecjf$rq40gMRj8dMBh/Wey7Vn3moMKvGgqMCaMqrOwDlOspo=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "Paul7",
+    "first_name": "User",
+    "last_name": "7",
+    "email": "user7@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-02-18T01:48:12.736Z",
+    "cedula": "777777777",
+    "full_name": "User 7",
+    "profile_image": "",
+    "rol": 2,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "model_poll.poll",
+  "pk": 2,
+  "fields": {
+    "created_by": 1,
+    "title": "Preferencias Bases de Datos",
+    "description": "Por lo general se debe elegir un gestor dinámico de base de dato para trabajos específicos, esto genera la siguiente interrogante.",
+    "image": "",
+    "status": "BORRADOR",
+    "is_public": true,
+    "star_date": "2026-02-19T22:11:00Z",
+    "end_date": "2026-02-26T12:22:00Z"
+  }
+},
+{
+  "model": "model_poll.poll",
+  "pk": 9,
+  "fields": {
+    "created_by": 1,
+    "title": "Python",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ac eros et mauris rhoncus congue. In ultricies orci ut convallis aliquet. Sed pellentesque tortor sed mollis ornare. Ut eros odio, rhoncus quis tortor eget, convallis molestie turpis. Vestibulum id quam mi. Suspendisse potenti. Nulla facilisi. Aenean accumsan, orci sed semper finibus, sem justo pharetra mauris, ut vehicula erat ipsum non neque. Curabitur porta, arcu nec bibendum tempus, sem neque consectetur diam, venenatis hendrerit arcu nibh quis velit. Donec mauris enim, lacinia et odio vitae, ultricies tempus felis.",
+    "image": "",
+    "status": "CERRADA",
+    "is_public": true,
+    "star_date": "2026-02-18T01:10:00Z",
+    "end_date": "2026-02-25T22:55:00Z"
+  }
+},
+{
+  "model": "model_poll.poll",
+  "pk": 10,
+  "fields": {
+    "created_by": 1,
+    "title": "Administración",
+    "description": "Descripción",
+    "image": "",
+    "status": "CERRADA",
+    "is_public": true,
+    "star_date": "2026-02-18T16:30:00Z",
+    "end_date": "2026-02-26T19:53:00Z"
+  }
+},
+{
+  "model": "model_poll.poll",
+  "pk": 11,
+  "fields": {
+    "created_by": 1,
+    "title": "Título ",
+    "description": "Descripción",
+    "image": "polls/alexandre-debieve-FO7JIlwjOtU-unsplash.jpg",
+    "status": "CERRADA",
+    "is_public": true,
+    "star_date": "2026-02-18T19:33:00Z",
+    "end_date": "2026-02-26T23:33:00Z"
+  }
+},
+{
+  "model": "model_poll.poll",
+  "pk": 12,
+  "fields": {
+    "created_by": 1,
+    "title": "Encuesta 5",
+    "description": "Descripción 5",
+    "image": "polls/images_7VbOsFh.jpeg",
+    "status": "CERRADA",
+    "is_public": true,
+    "star_date": "2026-02-19T05:00:00Z",
+    "end_date": "2026-02-28T20:33:00Z"
+  }
+},
+{
+  "model": "model_poll.poll",
+  "pk": 13,
+  "fields": {
+    "created_by": 1,
+    "title": "Conocimiento sobre metodologías agiles",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque nec mollis ex, quis eleifend nunc. Sed ac nunc et odio facilisis elementum. Ut rutrum suscipit rutrum. Donec a dui quis eros convallis eleifend. Fusce imperdiet vehicula nunc, a dapibus urna porttitor non. Nunc id urna laoreet, gravida massa et, mollis dui. Phasellus pulvinar volutpat aliquam. Proin sed dolor enim. Aenean dictum, sapien non feugiat consectetur, urna ex sollicitudin neque, quis commodo ligula est eu nunc. Maecenas blandit at odio a eleifend. Aliquam congue mattis sem, non iaculis nisl finibus ac.",
+    "image": "polls/images_euz6Wwa.jpeg",
+    "status": "CERRADA",
+    "is_public": true,
+    "star_date": "2026-02-24T03:12:00Z",
+    "end_date": "2026-02-28T22:12:00Z"
+  }
+},
+{
+  "model": "model_poll.poll",
+  "pk": 14,
+  "fields": {
+    "created_by": 1,
+    "title": "Conocimiento sobre Bases de Datos",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus sagittis tortor ut porttitor. In pretium augue ante, a malesuada est vestibulum sit amet. Praesent nunc justo, placerat vel enim semper, placerat gravida mauris. Nullam nec scelerisque lorem. Duis in magna eget dolor maximus euismod eu nec orci. Cras porta lectus vitae orci dignissim, eu iaculis nunc ultrices. Fusce quis magna quis dui eleifend porttitor eget sed velit.",
+    "image": "polls/SQL_d85cfc66f1.jpg",
+    "status": "ACTIVA",
+    "is_public": true,
+    "star_date": "2026-03-03T16:33:00Z",
+    "end_date": "2026-03-20T06:33:00Z"
+  }
+},
+{
+  "model": "model_poll.question",
+  "pk": 1,
+  "fields": {
+    "poll": 2,
+    "question_text": "Cuál es su Base de datos Preferida",
+    "question_type": "SELECCION_MULTIPLE",
+    "is_obligatory": false,
+    "order": 0,
+    "scale_min": null,
+    "scale_max": null,
+    "scale_min_label": null,
+    "scale_max_label": null,
+    "rating_stars": null
+  }
+},
+{
+  "model": "model_poll.question",
+  "pk": 8,
+  "fields": {
+    "poll": 9,
+    "question_text": "Cuánto conoce sobre Python?",
+    "question_type": "ESCALA_LINEAL",
+    "is_obligatory": false,
+    "order": 0,
+    "scale_min": 0,
+    "scale_max": 8,
+    "scale_min_label": "Nada",
+    "scale_max_label": "Mucho",
+    "rating_stars": null
+  }
+},
+{
+  "model": "model_poll.question",
+  "pk": 9,
+  "fields": {
+    "poll": 10,
+    "question_text": "Cómo calificaría la administración?",
+    "question_type": "CALIFICACION",
+    "is_obligatory": true,
+    "order": 0,
+    "scale_min": null,
+    "scale_max": null,
+    "scale_min_label": null,
+    "scale_max_label": null,
+    "rating_stars": 7
+  }
+},
+{
+  "model": "model_poll.question",
+  "pk": 10,
+  "fields": {
+    "poll": 11,
+    "question_text": "Eliga una opción",
+    "question_type": "SELECCION_MULTIPLE",
+    "is_obligatory": true,
+    "order": 0,
+    "scale_min": null,
+    "scale_max": null,
+    "scale_min_label": null,
+    "scale_max_label": null,
+    "rating_stars": null
+  }
+},
+{
+  "model": "model_poll.question",
+  "pk": 11,
+  "fields": {
+    "poll": 12,
+    "question_text": "Responda una encuesta:",
+    "question_type": "SELECCION_MULTIPLE",
+    "is_obligatory": true,
+    "order": 0,
+    "scale_min": null,
+    "scale_max": null,
+    "scale_min_label": null,
+    "scale_max_label": null,
+    "rating_stars": null
+  }
+},
+{
+  "model": "model_poll.question",
+  "pk": 12,
+  "fields": {
+    "poll": 13,
+    "question_text": "Del 1 al 6 cuanto conoces sobre la metodología IWEB",
+    "question_type": "ESCALA_LINEAL",
+    "is_obligatory": true,
+    "order": 0,
+    "scale_min": 1,
+    "scale_max": 6,
+    "scale_min_label": "Poco",
+    "scale_max_label": "Mucho",
+    "rating_stars": null
+  }
+},
+{
+  "model": "model_poll.question",
+  "pk": 13,
+  "fields": {
+    "poll": 14,
+    "question_text": "Cual es la mejor base de datos?",
+    "question_type": "SELECCION_MULTIPLE",
+    "is_obligatory": true,
+    "order": 0,
+    "scale_min": null,
+    "scale_max": null,
+    "scale_min_label": null,
+    "scale_max_label": null,
+    "rating_stars": null
+  }
+},
+{
+  "model": "model_poll.question",
+  "pk": 14,
+  "fields": {
+    "poll": 14,
+    "question_text": "Se ve la necesidad de migrar la base de datos?",
+    "question_type": "SELECCION_MULTIPLE",
+    "is_obligatory": true,
+    "order": 1,
+    "scale_min": null,
+    "scale_max": null,
+    "scale_min_label": null,
+    "scale_max_label": null,
+    "rating_stars": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 1,
+  "fields": {
+    "question": 1,
+    "options_text": "MySql",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 2,
+  "fields": {
+    "question": 1,
+    "options_text": "MangoDB",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 3,
+  "fields": {
+    "question": 1,
+    "options_text": "MC SQL: Server",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 4,
+  "fields": {
+    "question": 1,
+    "options_text": "Oracle",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 5,
+  "fields": {
+    "question": 1,
+    "options_text": "Microsoft Acces",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 6,
+  "fields": {
+    "question": 1,
+    "options_text": "PostgreeSQL",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 36,
+  "fields": {
+    "question": 8,
+    "options_text": "0",
+    "value": 0
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 37,
+  "fields": {
+    "question": 8,
+    "options_text": "1",
+    "value": 1
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 38,
+  "fields": {
+    "question": 8,
+    "options_text": "2",
+    "value": 2
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 39,
+  "fields": {
+    "question": 8,
+    "options_text": "3",
+    "value": 3
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 40,
+  "fields": {
+    "question": 8,
+    "options_text": "4",
+    "value": 4
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 41,
+  "fields": {
+    "question": 8,
+    "options_text": "5",
+    "value": 5
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 42,
+  "fields": {
+    "question": 8,
+    "options_text": "6",
+    "value": 6
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 43,
+  "fields": {
+    "question": 8,
+    "options_text": "7",
+    "value": 7
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 44,
+  "fields": {
+    "question": 8,
+    "options_text": "8",
+    "value": 8
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 45,
+  "fields": {
+    "question": 9,
+    "options_text": "1 estrella",
+    "value": 1
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 46,
+  "fields": {
+    "question": 9,
+    "options_text": "2 estrellas",
+    "value": 2
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 47,
+  "fields": {
+    "question": 9,
+    "options_text": "3 estrellas",
+    "value": 3
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 48,
+  "fields": {
+    "question": 9,
+    "options_text": "4 estrellas",
+    "value": 4
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 49,
+  "fields": {
+    "question": 9,
+    "options_text": "5 estrellas",
+    "value": 5
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 50,
+  "fields": {
+    "question": 9,
+    "options_text": "6 estrellas",
+    "value": 6
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 51,
+  "fields": {
+    "question": 9,
+    "options_text": "7 estrellas",
+    "value": 7
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 52,
+  "fields": {
+    "question": 10,
+    "options_text": "A",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 53,
+  "fields": {
+    "question": 10,
+    "options_text": "B",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 54,
+  "fields": {
+    "question": 11,
+    "options_text": "Python",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 55,
+  "fields": {
+    "question": 11,
+    "options_text": "Javascript",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 56,
+  "fields": {
+    "question": 12,
+    "options_text": "1",
+    "value": 1
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 57,
+  "fields": {
+    "question": 12,
+    "options_text": "2",
+    "value": 2
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 58,
+  "fields": {
+    "question": 12,
+    "options_text": "3",
+    "value": 3
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 59,
+  "fields": {
+    "question": 12,
+    "options_text": "4",
+    "value": 4
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 60,
+  "fields": {
+    "question": 12,
+    "options_text": "5",
+    "value": 5
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 61,
+  "fields": {
+    "question": 12,
+    "options_text": "6",
+    "value": 6
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 62,
+  "fields": {
+    "question": 13,
+    "options_text": "SQL",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 63,
+  "fields": {
+    "question": 13,
+    "options_text": "MangoDB",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 64,
+  "fields": {
+    "question": 13,
+    "options_text": "MC SQL: Server",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 65,
+  "fields": {
+    "question": 13,
+    "options_text": "Oracle",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 66,
+  "fields": {
+    "question": 13,
+    "options_text": "Microsoft Acces",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 67,
+  "fields": {
+    "question": 13,
+    "options_text": "PostgreeSQL",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 68,
+  "fields": {
+    "question": 14,
+    "options_text": "Si",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.options",
+  "pk": 69,
+  "fields": {
+    "question": 14,
+    "options_text": "No",
+    "value": null
+  }
+},
+{
+  "model": "model_poll.participation",
+  "pk": 15,
+  "fields": {
+    "poll": 9,
+    "user": 2,
+    "sent_date": "2026-02-18T22:14:41.112Z"
+  }
+},
+{
+  "model": "model_poll.participation",
+  "pk": 16,
+  "fields": {
+    "poll": 10,
+    "user": 2,
+    "sent_date": "2026-02-18T22:14:47.403Z"
+  }
+},
+{
+  "model": "model_poll.participation",
+  "pk": 17,
+  "fields": {
+    "poll": 10,
+    "user": 4,
+    "sent_date": "2026-02-18T22:15:10.242Z"
+  }
+},
+{
+  "model": "model_poll.participation",
+  "pk": 18,
+  "fields": {
+    "poll": 9,
+    "user": 4,
+    "sent_date": "2026-02-18T22:15:16.947Z"
+  }
+},
+{
+  "model": "model_poll.participation",
+  "pk": 19,
+  "fields": {
+    "poll": 9,
+    "user": 7,
+    "sent_date": "2026-02-18T22:15:39.017Z"
+  }
+},
+{
+  "model": "model_poll.participation",
+  "pk": 20,
+  "fields": {
+    "poll": 10,
+    "user": 7,
+    "sent_date": "2026-02-18T22:15:44.839Z"
+  }
+},
+{
+  "model": "model_poll.participation",
+  "pk": 21,
+  "fields": {
+    "poll": 9,
+    "user": 3,
+    "sent_date": "2026-02-18T22:29:11.958Z"
+  }
+},
+{
+  "model": "model_poll.participation",
+  "pk": 23,
+  "fields": {
+    "poll": 13,
+    "user": 3,
+    "sent_date": "2026-02-24T19:24:03.628Z"
+  }
+},
+{
+  "model": "model_poll.participation",
+  "pk": 24,
+  "fields": {
+    "poll": 13,
+    "user": 7,
+    "sent_date": "2026-02-24T19:29:20.122Z"
+  }
+},
+{
+  "model": "model_poll.participation",
+  "pk": 25,
+  "fields": {
+    "poll": 14,
+    "user": 7,
+    "sent_date": "2026-03-03T20:38:37.660Z"
+  }
+},
+{
+  "model": "model_poll.participation",
+  "pk": 26,
+  "fields": {
+    "poll": 14,
+    "user": 3,
+    "sent_date": "2026-03-03T20:43:02.653Z"
+  }
+},
+{
+  "model": "model_poll.questiondetails",
+  "pk": 15,
+  "fields": {
+    "participation": 15,
+    "question": 8,
+    "selected_options": 42,
+    "answer_text": ""
+  }
+},
+{
+  "model": "model_poll.questiondetails",
+  "pk": 16,
+  "fields": {
+    "participation": 16,
+    "question": 9,
+    "selected_options": 51,
+    "answer_text": ""
+  }
+},
+{
+  "model": "model_poll.questiondetails",
+  "pk": 17,
+  "fields": {
+    "participation": 17,
+    "question": 9,
+    "selected_options": 51,
+    "answer_text": ""
+  }
+},
+{
+  "model": "model_poll.questiondetails",
+  "pk": 18,
+  "fields": {
+    "participation": 18,
+    "question": 8,
+    "selected_options": 44,
+    "answer_text": ""
+  }
+},
+{
+  "model": "model_poll.questiondetails",
+  "pk": 19,
+  "fields": {
+    "participation": 19,
+    "question": 8,
+    "selected_options": 38,
+    "answer_text": ""
+  }
+},
+{
+  "model": "model_poll.questiondetails",
+  "pk": 20,
+  "fields": {
+    "participation": 20,
+    "question": 9,
+    "selected_options": 46,
+    "answer_text": ""
+  }
+},
+{
+  "model": "model_poll.questiondetails",
+  "pk": 21,
+  "fields": {
+    "participation": 21,
+    "question": 8,
+    "selected_options": 44,
+    "answer_text": ""
+  }
+},
+{
+  "model": "model_poll.questiondetails",
+  "pk": 23,
+  "fields": {
+    "participation": 23,
+    "question": 12,
+    "selected_options": 60,
+    "answer_text": ""
+  }
+},
+{
+  "model": "model_poll.questiondetails",
+  "pk": 24,
+  "fields": {
+    "participation": 24,
+    "question": 12,
+    "selected_options": 61,
+    "answer_text": ""
+  }
+},
+{
+  "model": "model_poll.questiondetails",
+  "pk": 25,
+  "fields": {
+    "participation": 25,
+    "question": 13,
+    "selected_options": 63,
+    "answer_text": ""
+  }
+},
+{
+  "model": "model_poll.questiondetails",
+  "pk": 26,
+  "fields": {
+    "participation": 25,
+    "question": 14,
+    "selected_options": 68,
+    "answer_text": ""
+  }
+},
+{
+  "model": "model_poll.questiondetails",
+  "pk": 27,
+  "fields": {
+    "participation": 26,
+    "question": 13,
+    "selected_options": 62,
+    "answer_text": ""
+  }
+},
+{
+  "model": "model_poll.questiondetails",
+  "pk": 28,
+  "fields": {
+    "participation": 26,
+    "question": 14,
+    "selected_options": 68,
+    "answer_text": ""
+  }
+},
+{
+  "model": "model_poll.sitecontent",
+  "pk": 2,
+  "fields": {
+    "content_type": "CAROUSEL_SLIDE",
+    "title": "Innovación",
+    "image": "content/carousel/alexandre-debieve-FO7JIlwjOtU-unsplash.jpg",
+    "link_url": "",
+    "description": "Formando la innovación tecnológica de la  Nación",
+    "is_active": true,
+    "order": 0,
+    "created_by": 1,
+    "created_at": "2026-03-03T20:09:50.969Z",
+    "updated_at": "2026-03-03T20:09:50.969Z"
+  }
+},
+{
+  "model": "model_poll.sitecontent",
+  "pk": 4,
+  "fields": {
+    "content_type": "ABOUT_IMAGE",
+    "title": "Ttitulo",
+    "image": "content/about/alexandre-debieve-FO7JIlwjOtU-unsplash.jpg",
+    "link_url": "",
+    "description": "Descripcion",
+    "is_active": true,
+    "order": 0,
+    "created_by": 1,
+    "created_at": "2026-03-04T15:00:32.627Z",
+    "updated_at": "2026-03-04T15:00:32.627Z"
+  }
+}
+]

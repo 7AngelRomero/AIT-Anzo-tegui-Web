@@ -18,19 +18,7 @@ from io import BytesIO
 from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib
-from django.core.management import call_command
 matplotlib.use('Agg')  # Backend sin GUI
-
-def format_datetime_12h(dt):
-    """Formatea fecha y hora en formato 12 horas: DD/MM/AAAA h:mm A.M/P.M"""
-    if not dt:
-        return 'No definida'
-    hour = dt.hour
-    minute = dt.minute
-    am_pm = 'A.M' if hour < 12 else 'P.M'
-    hour_12 = hour if hour <= 12 else hour - 12
-    hour_12 = 12 if hour_12 == 0 else hour_12
-    return f"{dt.strftime('%d/%m/%Y')} a las {hour_12}:{minute:02d} {am_pm}"
 
 @login_required
 def poll_list(request):
@@ -85,9 +73,9 @@ def poll_manager(request):
         if role_filter:
             users = users.filter(rol__name=role_filter)
             
-    # Trabajador: Solo ve encuestas públicas y solo puede editar las suyas
+    # Trabajador: Ve todas las encuestas pero solo puede editar las suyas
     else:
-        polls = Poll.objects.filter(is_public=True).order_by('-star_date')
+        polls = Poll.objects.all().order_by('-star_date')
         users = User.objects.all().order_by('username')
     
     # Verificar y actualizar encuestas vencidas
@@ -107,7 +95,7 @@ def poll_manager(request):
         'total_users': total_users
     }
     
-    return render(request, 'posts/dashboard_home.html', context)
+    return render(request, 'posts/poll_manager.html', context)
 
 @login_required
 def user_list(request):
@@ -158,7 +146,7 @@ def user_list(request):
         'user_count': user_count,
     }
     
-    return render(request, 'posts/dashboard_users.html', context)
+    return render(request, 'posts/user_list.html', context)
 
 @login_required
 def create_poll(request):
@@ -174,19 +162,12 @@ def create_poll(request):
         end_date = request.POST.get('end_date')
         image = request.FILES.get('image')
         
-        # Solo Administrador puede definir is_public, Trabajador siempre crea públicas
-        if request.user.rol.name == 'Administrador':
-            is_public = request.POST.get('is_public') == 'on'
-        else:
-            is_public = True
-        
         # Las fechas son opcionales ahora
         from django.utils import timezone
-        from datetime import datetime as dt
         if not star_date:
             star_date = timezone.now()
         if not end_date:
-            star_date_obj = dt.fromisoformat(star_date)
+            star_date_obj = timezone.datetime.fromisoformat(star_date.replace('T', ' '))
             end_date = star_date_obj + timezone.timedelta(days=30)
         
         # Crear encuesta
@@ -196,7 +177,6 @@ def create_poll(request):
             image=image,
             created_by=request.user,
             status=status,
-            is_public=is_public,
             star_date=star_date,
             end_date=end_date
         )
@@ -228,37 +208,17 @@ def create_poll(request):
                                     question=question,
                                     options_text=option_value
                                 )
-                    elif question_type == 'ESCALA_LINEAL':
-                        scale_min = int(request.POST.get(f'scale_min_{question_id}', 1))
-                        scale_max = int(request.POST.get(f'scale_max_{question_id}', 5))
-                        scale_min_label = request.POST.get(f'scale_min_label_{question_id}', '')
-                        scale_max_label = request.POST.get(f'scale_max_label_{question_id}', '')
-                        question.scale_min = scale_min
-                        question.scale_max = scale_max
-                        question.scale_min_label = scale_min_label if scale_min_label else None
-                        question.scale_max_label = scale_max_label if scale_max_label else None
-                        question.save()
-                        # Crear opciones automáticamente
-                        for i in range(scale_min, scale_max + 1):
+                    elif question_type == 'ESCALA_NUMERICA':
+                        # Crear opciones automáticamente para escala 1-5
+                        for i in range(1, 6):
                             Options.objects.create(
                                 question=question,
                                 options_text=str(i),
                                 value=i
                             )
-                    elif question_type == 'CALIFICACION':
-                        rating_stars = int(request.POST.get(f'rating_stars_{question_id}', 5))
-                        question.rating_stars = rating_stars
-                        question.save()
-                        # Crear opciones automáticamente (1 a N estrellas)
-                        for i in range(1, rating_stars + 1):
-                            Options.objects.create(
-                                question=question,
-                                options_text=f'{i} estrella{"s" if i > 1 else ""}',
-                                value=i
-                            )
         
         messages.success(request, 'Encuesta creada exitosamente con todas sus preguntas.')
-        return redirect('dashboard:home')
+        return redirect('posts:poll_manager')
     
     return render(request, 'posts/create_poll.html')
 
@@ -268,21 +228,18 @@ def edit_poll(request, poll_id):
     if not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']:
         return HttpResponseForbidden("No tienes permisos para editar encuestas.")
     
-    poll = get_object_or_404(Poll, id=poll_id)
-    
-    # Trabajador: Solo puede editar encuestas públicas
-    if request.user.rol.name == 'Trabajador' and not poll.is_public:
-        return HttpResponseForbidden("Solo puedes editar encuestas públicas.")
+    # Administrador: Puede editar cualquier encuesta
+    if request.user.rol.name == 'Administrador':
+        poll = get_object_or_404(Poll, id=poll_id)
+    # Trabajador: Solo puede editar sus propias encuestas
+    else:
+        poll = get_object_or_404(Poll, id=poll_id, created_by=request.user)
     
     if request.method == 'POST':
         # Actualizar datos básicos de la encuesta
         poll.title = request.POST.get('title')
         poll.description = request.POST.get('description')
         poll.status = request.POST.get('status')
-        
-        # Solo Administrador puede cambiar is_public
-        if request.user.rol.name == 'Administrador':
-            poll.is_public = request.POST.get('is_public') == 'on'
         
         # Manejar imagen
         if request.POST.get('remove_image'):
@@ -388,11 +345,7 @@ def edit_poll(request, poll_id):
                             )
         
         messages.success(request, 'Encuesta actualizada exitosamente con todas sus preguntas.')
-        return redirect('dashboard:home')
-    
-    # Si es petición AJAX GET, devolver el template parcial para el modal
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return render(request, 'posts/dashboard_edit_modal.html', {'poll': poll})
+        return redirect('posts:poll_manager')
     
     return render(request, 'posts/edit_poll.html', {'poll': poll})
 
@@ -433,7 +386,7 @@ def change_user_role(request, user_id, new_role):
         })
     
     messages.success(request, f'Rol de {user.username} cambiado a {new_role} exitosamente.')
-    return redirect('dashboard:users')
+    return redirect('posts:user_list')
 
 @login_required
 def answer_poll(request, poll_id):
@@ -445,30 +398,21 @@ def answer_poll(request, poll_id):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return HttpResponse('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Esta encuesta ha finalizado y ya no acepta respuestas.</div>')
         messages.error(request, 'Esta encuesta ha finalizado y ya no acepta respuestas.')
-        return redirect('posts:list')
+        return redirect('posts:poll_list')
     
     # Verificar que esté activa
     if poll.status != 'ACTIVA':
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return HttpResponse('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Esta encuesta no está disponible para responder.</div>')
         messages.error(request, 'Esta encuesta no está disponible para responder.')
-        return redirect('posts:list')
-    
-    # Verificar si la encuesta ya inició
-    from django.utils import timezone
-    if poll.star_date and timezone.now() < poll.star_date:
-        fecha_inicio = poll.star_date.strftime('%d/%m/%Y a las %I:%M %p')
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return HttpResponse(f'<div class="alert alert-info"><i class="fas fa-clock me-2"></i>La encuesta no ha comenzado. Inicia el {fecha_inicio}</div>')
-        messages.info(request, f'La encuesta no ha comenzado. Inicia el {fecha_inicio}')
-        return redirect('posts:list')
+        return redirect('posts:poll_list')
     
     # Verificar si ya participó
     if Participation.objects.filter(poll=poll, user=request.user).exists():
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return HttpResponse('<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Ya has participado en esta encuesta.</div>')
         messages.error(request, 'Ya has participado en esta encuesta.')
-        return redirect('posts:list')
+        return redirect('posts:poll_list')
     
     context = {
         'poll': poll,
@@ -507,7 +451,7 @@ def submit_poll(request, poll_id):
             question_key = f'question_{question.id}'
             
             if question_key in request.POST:
-                if question.question_type in ['SELECCION_MULTIPLE', 'ESCALA_LINEAL', 'CALIFICACION']:
+                if question.question_type in ['SELECCION_MULTIPLE', 'ESCALA_NUMERICA']:
                     option_id = request.POST[question_key]
                     if option_id:
                         option = question.opciones.get(id=option_id)
@@ -516,11 +460,20 @@ def submit_poll(request, poll_id):
                             question=question,
                             selected_options=option
                         )
+                
+                elif question.question_type == 'TEXTO_LIBRE':
+                    text_answer = request.POST[question_key]
+                    if text_answer.strip():
+                        QuestionDetails.objects.create(
+                            participation=participation,
+                            question=question,
+                            answer_text=text_answer
+                        )
         
         messages.success(request, '¡Gracias por participar en la encuesta!')
-        return redirect('posts:list')
+        return redirect('posts:poll_list')
     
-    return redirect('posts:detail', poll_id=poll_id)
+    return redirect('posts:poll_detail', poll_id=poll_id)
 
 @login_required
 def poll_results(request, poll_id):
@@ -580,7 +533,7 @@ def poll_results(request, poll_id):
                 answer_text__isnull=False
             ).select_related('participation__user')
         
-        elif question.question_type in ['ESCALA_LINEAL', 'CALIFICACION']:
+        elif question.question_type == 'ESCALA_NUMERICA':
             # Calcular promedio y distribución
             responses = QuestionDetails.objects.filter(
                 question=question,
@@ -591,18 +544,14 @@ def poll_results(request, poll_id):
                 ratings = []
                 for response in responses:
                     try:
-                        rating = response.selected_options.value
-                        if rating:
-                            ratings.append(rating)
+                        rating = int(response.selected_options.options_text)
+                        ratings.append(rating)
                     except (ValueError, AttributeError):
                         pass
                 
-                if ratings:
-                    question_data['average_rating'] = sum(ratings) / len(ratings)
-                    min_val = question.scale_min or 1
-                    max_val = question.scale_max or (question.rating_stars or 5)
-                    question_data['rating_counts'] = [ratings.count(i) for i in range(min_val, max_val + 1)]
-                    question_data['max_rating_count'] = max(question_data['rating_counts']) if question_data['rating_counts'] else 1
+                question_data['average_rating'] = sum(ratings) / len(ratings) if ratings else 0
+                question_data['rating_counts'] = [ratings.count(i) for i in range(1, 6)]
+                question_data['max_rating_count'] = max(question_data['rating_counts']) if question_data['rating_counts'] else 1
         
         questions_with_results.append(question_data)
     
@@ -635,7 +584,7 @@ def delete_poll(request, poll_id):
             return JsonResponse({'success': True, 'message': f'Encuesta "{poll_title}" eliminada exitosamente.'})
         
         messages.success(request, f'Encuesta "{poll_title}" eliminada exitosamente.')
-        return redirect('dashboard:home')
+        return redirect('posts:poll_manager')
     
     return HttpResponseForbidden("Método no permitido.")
 
@@ -657,23 +606,23 @@ def content_manager(request):
             existing_count = SiteContent.objects.filter(content_type=content_type, is_active=True).count()
             if existing_count >= 3:
                 messages.error(request, f'Solo se permiten máximo 3 imágenes para {"Inicio" if content_type == "HOME_IMAGE" else "Acerca de"}.')
-                return redirect('dashboard:content')
+                return redirect('posts:content_manager')
         
         # Validar límite de slides del carousel
         if content_type == 'CAROUSEL_SLIDE':
             existing_count = SiteContent.objects.filter(content_type=content_type, is_active=True).count()
             if existing_count >= 5:
                 messages.error(request, 'Solo se permiten máximo 5 slides en el carousel.')
-                return redirect('dashboard:content')
+                return redirect('posts:content_manager')
             
             # Validar longitud de título y descripción para carousel
             if len(title) > 15:
                 messages.error(request, 'El título del slide no puede exceder 15 caracteres.')
-                return redirect('dashboard:content')
+                return redirect('posts:content_manager')
             
             if description and len(description) > 50:
                 messages.error(request, 'La descripción del slide no puede exceder 50 caracteres.')
-                return redirect('dashboard:content')
+                return redirect('posts:content_manager')
         
         # Procesar URL de YouTube si es transmisión en vivo
         if content_type == 'LIVE_STREAM' and link_url:
@@ -695,7 +644,7 @@ def content_manager(request):
         )
         
         messages.success(request, 'Contenido agregado exitosamente.')
-        return redirect('dashboard:content')
+        return redirect('posts:content_manager')
     
     # Obtener contenido por tipo
     home_images = SiteContent.objects.filter(content_type='HOME_IMAGE', is_active=True)
@@ -726,7 +675,7 @@ def delete_content(request, content_id):
     except SiteContent.DoesNotExist:
         messages.error(request, 'El contenido que intentas eliminar no existe.')
     
-    return redirect('dashboard:content')
+    return redirect('posts:content_manager')
 
 @login_required
 def poll_statistics(request):
@@ -734,36 +683,7 @@ def poll_statistics(request):
     if not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']:
         return HttpResponseForbidden("No tienes permisos para ver estadísticas.")
     
-    # Administrador: Ve todas las encuestas
-    # Trabajador: Solo ve encuestas públicas (is_public=True)
-    if request.user.rol.name == 'Administrador':
-        all_polls = Poll.objects.all().order_by('-star_date')
-    else:
-        all_polls = Poll.objects.filter(is_public=True).order_by('-star_date')
-    
-    # Aplicar filtros
-    search_query = request.GET.get('search', '')
-    status_filter = request.GET.get('status', '')
-    date_from = request.GET.get('date_from', '')
-    date_to = request.GET.get('date_to', '')
-    
-    if search_query:
-        all_polls = all_polls.filter(
-            Q(title__icontains=search_query) |
-            Q(description__icontains=search_query) |
-            Q(created_by__username__icontains=search_query) |
-            Q(created_by__first_name__icontains=search_query) |
-            Q(created_by__last_name__icontains=search_query)
-        )
-    
-    if status_filter:
-        all_polls = all_polls.filter(status=status_filter)
-    
-    if date_from:
-        all_polls = all_polls.filter(star_date__gte=date_from)
-    
-    if date_to:
-        all_polls = all_polls.filter(star_date__lte=date_to)
+    all_polls = Poll.objects.all().order_by('-star_date')
     
     # Crear diccionario con respuestas de texto libre y datos de gráficas
     text_responses = {}
@@ -797,16 +717,24 @@ def poll_statistics(request):
                     'type': 'pie'
                 }
             
-            elif question.question_type == 'ESCALA_LINEAL':
-                labels = []
+            elif question.question_type == 'ESCALA_NUMERICA':
+                labels = ['1', '2', '3', '4', '5']
                 data = []
                 
-                for i in range(question.scale_min or 1, (question.scale_max or 5) + 1):
+                for i in range(1, 6):
+                    # Buscar por valor numérico primero
                     count = QuestionDetails.objects.filter(
                         question=question,
                         selected_options__value=i
                     ).count()
-                    labels.append(str(i))
+                    
+                    # Si no hay resultados, buscar por texto (encuestas antiguas)
+                    if count == 0:
+                        count = QuestionDetails.objects.filter(
+                            question=question,
+                            selected_options__options_text=str(i)
+                        ).count()
+                    
                     data.append(count)
                 
                 chart_data[poll.id][question.id] = {
@@ -814,21 +742,6 @@ def poll_statistics(request):
                     'data': data,
                     'type': 'bar'
                 }
-            
-            elif question.question_type == 'CALIFICACION':
-                # No generar chart_data, pero agregar conteos para el template
-                if poll.id not in chart_data:
-                    chart_data[poll.id] = {}
-                chart_data[poll.id][question.id] = {
-                    'type': 'stars',
-                    'counts': {}
-                }
-                for i in range(1, (question.rating_stars or 5) + 1):
-                    count = QuestionDetails.objects.filter(
-                        question=question,
-                        selected_options__value=i
-                    ).count()
-                    chart_data[poll.id][question.id]['counts'][i] = count
     
     context = {
         'all_polls': all_polls,
@@ -836,7 +749,7 @@ def poll_statistics(request):
         'chart_data': json.dumps(chart_data),
     }
     
-    return render(request, 'posts/dashboard_statistics.html', context)
+    return render(request, 'posts/poll_statistics.html', context)
 
 @login_required
 def export_poll_pdf(request, poll_id):
@@ -854,56 +767,53 @@ def export_poll_pdf(request, poll_id):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
     
-    # Estilos con Helvetica
-    title_style = ParagraphStyle('CustomTitle', fontSize=14, fontName='Helvetica-Bold', spaceAfter=20, alignment=TA_CENTER)
-    heading_style = ParagraphStyle('CustomHeading', fontSize=14, fontName='Helvetica-Bold', spaceAfter=12, textColor=colors.HexColor('#184da1'))
-    normal_style = ParagraphStyle('Normal', fontSize=12, fontName='Helvetica')
+    # Estilos
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=18, spaceAfter=30, alignment=TA_CENTER)
+    heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontSize=14, spaceAfter=12, textColor=colors.HexColor('#184da1'))
+    normal_style = styles['Normal']
     
     # Contenido del PDF
     story = []
     
-    # Encabezado con logo
-    logo_path = os.path.join(settings.BASE_DIR, 'static', 'SVG', 'GOB AIT Color_3.png')
-    subheader_style = ParagraphStyle('SubHeader', fontSize=12, fontName='Helvetica', alignment=TA_LEFT, textColor=colors.HexColor('#666666'), leading=16)
+    # Encabezado institucional mejorado
+    header_style = ParagraphStyle('Header', parent=styles['Normal'], fontSize=16, fontName='Helvetica-Bold', alignment=TA_CENTER, textColor=colors.HexColor('#184da1'))
+    subheader_style = ParagraphStyle('SubHeader', parent=styles['Normal'], fontSize=12, alignment=TA_CENTER, textColor=colors.HexColor('#666666'))
     
-    # Crear tabla para encabezado con logo
-    if os.path.exists(logo_path):
-        logo = Image(logo_path, width=2*inch, height=0.7*inch)
-        header_text = [[Paragraph("REPÚBLICA BOLIVARIANA DE VENEZUELA<br/>GOBERNACIÓN DEL ESTADO ANZOÁTEGUI<br/>DIRECCIÓN DE AUTOMATIZACIÓN, INFORMÁTICA Y TELECOMUNICACIONES (AIT ANZOÁTEGUI)<br/>RIF: G-200001224", subheader_style), logo]]
-        header_table = Table(header_text, colWidths=[4*inch, 2*inch])
-        header_table.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP'), ('ALIGN', (0, 0), (0, 0), 'LEFT'), ('ALIGN', (1, 0), (1, 0), 'RIGHT')]))
-        story.append(header_table)
-    else:
-        story.append(Paragraph("REPÚBLICA BOLIVARIANA DE VENEZUELA", subheader_style))
-        story.append(Paragraph("GOBERNACIÓN DEL ESTADO ANZOÁTEGUI", subheader_style))
-        story.append(Paragraph("DIRECCIÓN DE AUTOMATIZACIÓN, INFORMÁTICA Y TELECOMUNICACIONES (AIT ANZOÁTEGUI)", subheader_style))
-        story.append(Paragraph("RIF: G-200001224", subheader_style))
-    
+    story.append(Paragraph("REPÚBLICA BOLIVARIANA DE VENEZUELA", subheader_style))
+    story.append(Paragraph("GOBERNACIÓN DEL ESTADO ANZOÁTEGUI", subheader_style))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("DIRECCIÓN DE AUTOMATIZACIÓN, INFORMÁTICA Y TELECOMUNICACIONES", header_style))
+    story.append(Paragraph("(AIT ANZOÁTEGUI)", header_style))
     story.append(Spacer(1, 20))
     
-    # Título del reporte centrado
+    # Línea separadora
+    line_data = [['', '']]
+    line_table = Table(line_data, colWidths=[6*inch])
+    line_table.setStyle(TableStyle([('LINEBELOW', (0, 0), (-1, -1), 2, colors.HexColor('#184da1'))]))
+    story.append(line_table)
+    story.append(Spacer(1, 30))
+    
+    # Título del reporte
     story.append(Paragraph(f"REPORTE DE ENCUESTA: {poll.title.upper()}", title_style))
+    story.append(Spacer(1, 20))
     
     # Información básica
     story.append(Paragraph("INFORMACIÓN GENERAL", heading_style))
     
-    # Título y descripción arriba de la tabla
-    story.append(Paragraph(f"<b>Título:</b> {poll.title}", normal_style))
-    story.append(Spacer(1, 6))
+    # Truncar descripción si es muy larga
     description = poll.description or 'Sin descripción'
-    story.append(Paragraph(f"<b>Descripción:</b> {description}", normal_style))
-    story.append(Spacer(1, 12))
-    
-    # Obtener nombre del autor
-    autor = f"{poll.created_by.first_name} {poll.created_by.last_name}" if poll.created_by.first_name else poll.created_by.username
+    if len(description) > 100:
+        description = description[:100] + '...'
     
     info_data = [
-        ['Autor:', autor],
+        ['Título:', poll.title],
+        ['Descripción:', description],
         ['Estado:', poll.status],
-        ['Fecha de inicio:', format_datetime_12h(poll.star_date)],
-        ['Fecha de fin:', format_datetime_12h(poll.end_date)],
+        ['Fecha de inicio:', poll.star_date.strftime('%d/%m/%Y %H:%M') if poll.star_date else 'No definida'],
+        ['Fecha de fin:', poll.end_date.strftime('%d/%m/%Y %H:%M') if poll.end_date else 'No definida'],
         ['Total participaciones:', str(poll.participaciones.count())],
-        ['Fecha del reporte:', format_datetime_12h(datetime.now())]
+        ['Fecha del reporte:', datetime.now().strftime('%d/%m/%Y %H:%M')]
     ]
     
     info_table = Table(info_data, colWidths=[2*inch, 4*inch])
@@ -913,9 +823,9 @@ def export_poll_pdf(request, poll_id):
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 12),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('WORDWRAP', (1, 0), (1, -1), True)
     ]))
     story.append(info_table)
     story.append(Spacer(1, 30))
@@ -924,8 +834,7 @@ def export_poll_pdf(request, poll_id):
     story.append(Paragraph("PREGUNTAS Y RESPUESTAS", heading_style))
     
     for i, question in enumerate(poll.preguntas.all(), 1):
-        question_style = ParagraphStyle('QuestionStyle', fontSize=12, fontName='Helvetica-Bold', spaceAfter=10)
-        story.append(Paragraph(f"Pregunta {i}: {question.question_text}", question_style))
+        story.append(Paragraph(f"Pregunta {i}: {question.question_text}", ParagraphStyle('QuestionStyle', parent=styles['Normal'], fontSize=12, fontName='Helvetica-Bold', spaceAfter=10)))
         story.append(Paragraph(f"Tipo: {question.get_question_type_display()}", normal_style))
         
         if question.question_type == 'TEXTO_LIBRE':
@@ -936,17 +845,16 @@ def export_poll_pdf(request, poll_id):
             ).select_related('participation__user')
             
             if responses.exists():
-                subheading_style = ParagraphStyle('SubHeading', fontSize=12, fontName='Helvetica-Bold', spaceAfter=5)
-                story.append(Paragraph("Respuestas:", subheading_style))
+                story.append(Paragraph("Respuestas:", ParagraphStyle('SubHeading', parent=styles['Normal'], fontName='Helvetica-Bold', spaceAfter=5)))
                 for resp in responses:
-                    story.append(Paragraph(f"• {resp.participation.user.username} ({format_datetime_12h(resp.participation.sent_date)}): {resp.answer_text}", normal_style))
+                    story.append(Paragraph(f"• {resp.participation.user.username} ({resp.participation.sent_date.strftime('%d/%m/%Y %H:%M')}): {resp.answer_text}", normal_style))
             else:
                 story.append(Paragraph("No hay respuestas", normal_style))
         
-        elif question.question_type in ['SELECCION_MULTIPLE', 'ESCALA_LINEAL', 'CALIFICACION']:
+        elif question.question_type in ['SELECCION_MULTIPLE', 'ESCALA_NUMERICA']:
             # Generar gráfica
             chart_buffer = BytesIO()
-            fig, ax = plt.subplots(figsize=(6, 4))
+            fig, ax = plt.subplots(figsize=(8, 6))
             
             if question.question_type == 'SELECCION_MULTIPLE':
                 labels = []
@@ -961,35 +869,25 @@ def export_poll_pdf(request, poll_id):
                 
                 if sizes:
                     ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors_list[:len(sizes)])
+                    ax.set_title(f'Resultados: {question.question_text[:50]}...', fontsize=12, fontweight='bold')
                 else:
-                    ax.text(0.5, 0.5, 'Sin respuestas', ha='center', va='center', transform=ax.transAxes, fontsize=12)
+                    ax.text(0.5, 0.5, 'Sin respuestas', ha='center', va='center', transform=ax.transAxes, fontsize=14)
+                    ax.set_title(f'Resultados: {question.question_text[:50]}...', fontsize=12, fontweight='bold')
             
-            elif question.question_type == 'ESCALA_LINEAL':
-                labels = []
+            elif question.question_type == 'ESCALA_NUMERICA':
+                labels = ['1', '2', '3', '4', '5']
                 values = []
                 
-                for i in range(question.scale_min or 1, (question.scale_max or 5) + 1):
+                for i in range(1, 6):
                     count = QuestionDetails.objects.filter(question=question, selected_options__value=i).count()
-                    labels.append(str(i))
+                    if count == 0:
+                        count = QuestionDetails.objects.filter(question=question, selected_options__options_text=str(i)).count()
                     values.append(count)
                 
                 ax.bar(labels, values, color='#36A2EB')
-                ax.set_xlabel('Escala', fontsize=10)
-                ax.set_ylabel('Número de respuestas', fontsize=10)
-                ax.set_ylim(0, max(values) + 1 if max(values) > 0 else 1)
-            
-            elif question.question_type == 'CALIFICACION':
-                labels = []
-                values = []
-                
-                for i in range(1, (question.rating_stars or 5) + 1):
-                    count = QuestionDetails.objects.filter(question=question, selected_options__value=i).count()
-                    labels.append(f'{i}★')
-                    values.append(count)
-                
-                ax.bar(labels, values, color='#FFD700')
-                ax.set_xlabel('Calificación', fontsize=10)
-                ax.set_ylabel('Número de respuestas', fontsize=10)
+                ax.set_xlabel('Calificación')
+                ax.set_ylabel('Número de respuestas')
+                ax.set_title(f'Resultados: {question.question_text[:50]}...', fontsize=12, fontweight='bold')
                 ax.set_ylim(0, max(values) + 1 if max(values) > 0 else 1)
             
             plt.tight_layout()
@@ -998,11 +896,10 @@ def export_poll_pdf(request, poll_id):
             
             # Añadir gráfica al PDF
             chart_buffer.seek(0)
-            chart_img = Image(chart_buffer, width=4.5*inch, height=3*inch)
+            chart_img = Image(chart_buffer, width=5*inch, height=3.75*inch)
             chart_img.hAlign = 'CENTER'
-            story.append(Spacer(1, 10))
             story.append(chart_img)
-            story.append(Spacer(1, 15))
+            story.append(Spacer(1, 20))
             
             # Estadísticas de opciones
             stats_data = [['Opción', 'Respuestas', 'Porcentaje']]
@@ -1014,15 +911,19 @@ def export_poll_pdf(request, poll_id):
                     percentage = (count / total_responses * 100) if total_responses > 0 else 0
                     stats_data.append([option.options_text, str(count), f"{percentage:.1f}%"])
             
-            elif question.question_type in ['ESCALA_LINEAL', 'CALIFICACION']:
-                for i in range(question.scale_min or 1, (question.scale_max or question.rating_stars or 5) + 1):
+            elif question.question_type == 'ESCALA_NUMERICA':
+                for i in range(1, 6):
                     count = QuestionDetails.objects.filter(
                         question=question,
                         selected_options__value=i
                     ).count()
+                    if count == 0:
+                        count = QuestionDetails.objects.filter(
+                            question=question,
+                            selected_options__options_text=str(i)
+                        ).count()
                     percentage = (count / total_responses * 100) if total_responses > 0 else 0
-                    label = f'{i}★' if question.question_type == 'CALIFICACION' else str(i)
-                    stats_data.append([label, str(count), f"{percentage:.1f}%"])
+                    stats_data.append([f"Calificación {i}", str(count), f"{percentage:.1f}%"])
             
             if len(stats_data) > 1:
                 stats_table = Table(stats_data, colWidths=[2*inch, 1*inch, 1*inch])
@@ -1031,13 +932,23 @@ def export_poll_pdf(request, poll_id):
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                     ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 12),
+                    ('FONTSIZE', (0, 0), (-1, -1), 10),
                     ('GRID', (0, 0), (-1, -1), 1, colors.black)
                 ]))
                 story.append(stats_table)
             else:
                 story.append(Paragraph("No hay respuestas", normal_style))
+            
+            # Respuestas individuales
+            individual_responses = QuestionDetails.objects.filter(
+                question=question,
+                selected_options__isnull=False
+            ).select_related('participation__user', 'selected_options')
+            
+            if individual_responses.exists():
+                story.append(Paragraph("Respuestas individuales:", ParagraphStyle('SubHeading', parent=styles['Normal'], fontName='Helvetica-Bold', spaceAfter=5, spaceBefore=10)))
+                for resp in individual_responses:
+                    story.append(Paragraph(f"• {resp.participation.user.username} ({resp.participation.sent_date.strftime('%d/%m/%Y %H:%M')}): {resp.selected_options.options_text}", normal_style))
         
         story.append(Spacer(1, 20))
     
@@ -1067,35 +978,32 @@ def manage_user(request, user_id):
         return HttpResponseForbidden("No puedes gestionar tu propia cuenta.")
     
     if request.method == 'POST':
-        # Actualizar datos del usuario
-        usuario.cedula = request.POST.get('cedula', '')
-        usuario.username = request.POST.get('username')
-        usuario.email = request.POST.get('email')
-        usuario.first_name = request.POST.get('first_name', '')
-        usuario.last_name = request.POST.get('last_name', '')
+        action = request.POST.get('action')
         
-        # Actualizar rol
-        role_name = request.POST.get('role')
-        try:
-            role = Rol.objects.get(name=role_name)
-        except Rol.DoesNotExist:
-            role = Rol.objects.create(name=role_name, descripcion=f'Rol {role_name}')
-        usuario.rol = role
-        
-        # Actualizar permisos
-        usuario.is_staff = request.POST.get('is_staff') == 'on'
-        usuario.is_superuser = request.POST.get('is_superuser') == 'on'
-        
-        try:
+        if action == 'update':
+            # Actualizar datos del usuario
+            usuario.username = request.POST.get('username')
+            usuario.email = request.POST.get('email')
+            usuario.first_name = request.POST.get('first_name', '')
+            usuario.last_name = request.POST.get('last_name', '')
+            
+            # Actualizar rol
+            role_name = request.POST.get('role')
+            try:
+                role = Rol.objects.get(name=role_name)
+            except Rol.DoesNotExist:
+                role = Rol.objects.create(name=role_name, descripcion=f'Rol {role_name}')
+            usuario.rol = role
+            
+            # Actualizar permisos
+            usuario.is_staff = request.POST.get('is_staff') == 'on'
+            usuario.is_superuser = request.POST.get('is_superuser') == 'on'
+            
             usuario.save()
+            
             return JsonResponse({
                 'success': True,
                 'message': f'Usuario {usuario.username} actualizado exitosamente.'
-            })
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
             })
     
     # Si es petición AJAX, devolver el modal
@@ -1106,13 +1014,13 @@ def manage_user(request, user_id):
 
 @login_required
 def toggle_user(request, user_id):
-    """Vista para activar/desactivar usuario - Administradores y Trabajadores"""
-    if not request.user.rol or request.user.rol.name not in ['Administrador', 'Trabajador']:
+    """Vista para activar/desactivar usuario - Solo Administradores"""
+    if not request.user.rol or request.user.rol.name != 'Administrador':
         return JsonResponse({'success': False, 'error': 'No tienes permisos.'})
     
     usuario = get_object_or_404(User, id=user_id)
     
-    # Evitar que el usuario se desactive a sí mismo
+    # Evitar que el administrador se desactive a sí mismo
     if usuario.id == request.user.id:
         return JsonResponse({'success': False, 'error': 'No puedes desactivar tu propia cuenta.'})
     
@@ -1136,7 +1044,7 @@ def toggle_user(request, user_id):
 def delete_user(request, user_id):
     """Vista para eliminar usuario - Solo Administradores"""
     if not request.user.rol or request.user.rol.name != 'Administrador':
-        return JsonResponse({'success': False, 'error': 'Solo los administradores pueden eliminar usuarios.'})
+        return JsonResponse({'success': False, 'error': 'No tienes permisos.'})
     
     usuario = get_object_or_404(User, id=user_id)
     
@@ -1154,179 +1062,3 @@ def delete_user(request, user_id):
         })
     
     return JsonResponse({'success': False, 'error': 'Método no permitido.'})
-
-
-@login_required
-def backup_manager(request):
-    """Vista para gestionar respaldos de base de datos - Solo Administradores"""
-    if not request.user.rol or request.user.rol.name != 'Administrador':
-        return HttpResponseForbidden("Solo los administradores pueden gestionar respaldos.")
-    
-    # Obtener información de respaldos existentes
-    backup_dir = os.path.join(settings.BASE_DIR, 'backups')
-    backups = []
-    
-    if os.path.exists(backup_dir):
-        for filename in os.listdir(backup_dir):
-            if filename.endswith('.json'):
-                filepath = os.path.join(backup_dir, filename)
-                file_stats = os.stat(filepath)
-                backups.append({
-                    'filename': filename,
-                    'size': round(file_stats.st_size / 1024, 2),  # KB
-                    'date': datetime.fromtimestamp(file_stats.st_mtime)
-                })
-        backups.sort(key=lambda x: x['date'], reverse=True)
-    
-    context = {
-        'backups': backups,
-        'total_polls': Poll.objects.count(),
-        'total_users': User.objects.count(),
-        'total_participations': Participation.objects.count(),
-    }
-    
-    return render(request, 'posts/dashboard_backup.html', context)
-
-@login_required
-def download_backup(request):
-    """Vista para descargar respaldo de base de datos - Solo Administradores"""
-    if not request.user.rol or request.user.rol.name != 'Administrador':
-        return HttpResponseForbidden("Solo los administradores pueden descargar respaldos.")
-    
-    # Crear directorio de respaldos si no existe
-    backup_dir = os.path.join(settings.BASE_DIR, 'backups')
-    os.makedirs(backup_dir, exist_ok=True)
-    
-    # Generar nombre de archivo con fecha y hora
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f'backup_ait_{timestamp}.json'
-    filepath = os.path.join(backup_dir, filename)
-    
-    # Crear respaldo usando dumpdata
-    with open(filepath, 'w', encoding='utf-8') as f:
-        call_command(
-            'dumpdata',
-            '--exclude', 'contenttypes',
-            '--exclude', 'auth.permission',
-            '--exclude', 'sessions',
-            '--indent', 2,
-            stdout=f
-        )
-    
-    # Leer archivo y enviarlo como descarga
-    with open(filepath, 'rb') as f:
-        response = HttpResponse(f.read(), content_type='application/json')
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    
-    messages.success(request, f'Respaldo creado exitosamente: {filename}')
-    return response
-
-@login_required
-def restore_backup(request, filename):
-    """Vista para restaurar respaldo de base de datos - Solo Administradores"""
-    if not request.user.rol or request.user.rol.name != 'Administrador':
-        return HttpResponseForbidden("Solo los administradores pueden restaurar respaldos.")
-    
-    if request.method == 'POST':
-        backup_dir = os.path.join(settings.BASE_DIR, 'backups')
-        filepath = os.path.join(backup_dir, filename)
-        
-        if not os.path.exists(filepath):
-            messages.error(request, 'El archivo de respaldo no existe.')
-            return redirect('dashboard:backup')
-        
-        try:
-            # Restaurar usando loaddata
-            call_command('loaddata', filepath)
-            messages.success(request, f'Base de datos restaurada exitosamente desde: {filename}')
-        except Exception as e:
-            messages.error(request, f'Error al restaurar: {str(e)}')
-        
-        return redirect('dashboard:backup')
-    
-    return HttpResponseForbidden("Método no permitido.")
-
-@login_required
-def create_backup(request):
-    """Vista para crear y guardar respaldo en el servidor - Solo Administradores"""
-    if not request.user.rol or request.user.rol.name != 'Administrador':
-        return HttpResponseForbidden("Solo los administradores pueden crear respaldos.")
-    
-    # Crear directorio de respaldos si no existe
-    backup_dir = os.path.join(settings.BASE_DIR, 'backups')
-    os.makedirs(backup_dir, exist_ok=True)
-    
-    # Generar nombre de archivo con fecha y hora
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f'backup_ait_{timestamp}.json'
-    filepath = os.path.join(backup_dir, filename)
-    
-    try:
-        # Crear respaldo usando dumpdata
-        with open(filepath, 'w', encoding='utf-8') as f:
-            call_command(
-                'dumpdata',
-                '--exclude', 'contenttypes',
-                '--exclude', 'auth.permission',
-                '--exclude', 'sessions',
-                '--indent', 2,
-                stdout=f
-            )
-        messages.success(request, f'Respaldo creado y guardado exitosamente: {filename}')
-    except Exception as e:
-        messages.error(request, f'Error al crear respaldo: {str(e)}')
-    
-    return redirect('dashboard:backup')
-
-@login_required
-def upload_backup(request):
-    """Vista para subir respaldo externo - Solo Administradores"""
-    if not request.user.rol or request.user.rol.name != 'Administrador':
-        return HttpResponseForbidden("Solo los administradores pueden subir respaldos.")
-    
-    if request.method == 'POST' and request.FILES.get('backup_file'):
-        backup_file = request.FILES['backup_file']
-        
-        # Validar extensión
-        if not backup_file.name.endswith('.json'):
-            messages.error(request, 'Solo se permiten archivos JSON.')
-            return redirect('dashboard:backup')
-        
-        # Crear directorio de respaldos si no existe
-        backup_dir = os.path.join(settings.BASE_DIR, 'backups')
-        os.makedirs(backup_dir, exist_ok=True)
-        
-        # Guardar archivo
-        filepath = os.path.join(backup_dir, backup_file.name)
-        with open(filepath, 'wb+') as destination:
-            for chunk in backup_file.chunks():
-                destination.write(chunk)
-        
-        messages.success(request, f'Respaldo subido exitosamente: {backup_file.name}')
-        return redirect('dashboard:backup')
-    
-    messages.error(request, 'No se proporcionó ningún archivo.')
-    return redirect('dashboard:backup')
-
-@login_required
-def delete_backup(request, filename):
-    """Vista para eliminar respaldo del servidor - Solo Administradores"""
-    if not request.user.rol or request.user.rol.name != 'Administrador':
-        return HttpResponseForbidden("Solo los administradores pueden eliminar respaldos.")
-    
-    if request.method == 'POST':
-        backup_dir = os.path.join(settings.BASE_DIR, 'backups')
-        filepath = os.path.join(backup_dir, filename)
-        
-        if os.path.exists(filepath):
-            try:
-                os.remove(filepath)
-                messages.success(request, f'Respaldo eliminado exitosamente: {filename}')
-            except Exception as e:
-                messages.error(request, f'Error al eliminar respaldo: {str(e)}')
-        else:
-            messages.error(request, 'El archivo de respaldo no existe.')
-        
-        return redirect('dashboard:backup')
-    
-    return HttpResponseForbidden("Método no permitido.")

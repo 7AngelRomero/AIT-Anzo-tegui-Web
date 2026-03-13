@@ -1,0 +1,345 @@
+{% extends "pages/layouts/_base_manage.html" %}
+{% load static %}
+
+{% block title %}Listado de Usuarios - AIT{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold" style="color: #184da1;">
+            <i class="fas fa-users me-2"></i>Listado de Usuarios
+        </h2>
+        <p class="text-muted">Total: <strong>{{ users.count }}</strong> usuarios | Administradores: <strong>{{ admin_count }}</strong> | Trabajadores: <strong>{{ worker_count }}</strong> | Usuarios: <strong>{{ user_count }}</strong></p>
+    </div>
+</div>
+
+<!-- Filtro de búsqueda -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold"><i class="fas fa-search me-2"></i>Buscar</label>
+                        <input type="text" class="form-control" name="search" placeholder="cédula, usuario, nombre..." value="{{ request.GET.search }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold"><i class="fas fa-user-tag me-2"></i>Rol</label>
+                        <select class="form-select" name="role">
+                            <option value="">Todos los roles</option>
+                            <option value="Administrador" {% if request.GET.role == 'Administrador' %}selected{% endif %}>Administrador</option>
+                            <option value="Trabajador" {% if request.GET.role == 'Trabajador' %}selected{% endif %}>Trabajador</option>
+                            <option value="Usuario" {% if request.GET.role == 'Usuario' %}selected{% endif %}>Usuario</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold"><i class="fas fa-toggle-on me-2"></i>Estado</label>
+                        <select class="form-select" name="status">
+                            <option value="">Todos</option>
+                            <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Activos</option>
+                            <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactivos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1" style="background-color: #184da1; border: none;">
+                            <i class="fas fa-filter me-2"></i>Filtrar
+                        </button>
+                        <a href="/dashboard/users/" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de usuarios -->
+<div class="row">
+    <div class="col-12">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white;">
+                    <tr>
+                        <th>#</th>
+                        <th>Foto</th>
+                        <th>Nombre y Apellido</th>
+                        <th>Cédula</th>
+                        <th>Fecha Creación</th>
+                        <th>Rol</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in page_obj %}
+                    <tr>
+                        <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                        <td>
+                            {% if usuario.profile_image %}
+                                <img src="{{ usuario.profile_image.url }}" class="rounded-circle" width="40" height="40" style="object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white;">
+                                    <span class="fw-bold">{{ usuario.username|first|upper }}</span>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>
+                                <strong>{{ usuario.get_full_name|default:"-" }}</strong>
+                                <br><small class="text-muted">@{{ usuario.username }}</small>
+                            </div>
+                        </td>
+                        <td><code>{{ usuario.cedula|default:"-" }}</code></td>
+                        <td>{{ usuario.date_joined|date:"d/m/Y" }}</td>
+                        <td>{{ usuario.rol.name|default:"Usuario" }}{% if not usuario.is_active %} (Inactivo){% endif %}</td>
+                        <td>
+                            {% if usuario.id != user.id %}
+                                {% if user.rol.name == 'Administrador' %}
+                                    <button class="btn btn-sm" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white; border: none;" onclick="openManageModal({{ usuario.id }})">
+                                        <i class="fas fa-cog me-1"></i>Gestionar
+                                    </button>
+                                {% elif user.rol.name == 'Trabajador' %}
+                                    {% if usuario.rol.name == 'Administrador' %}
+                                        <span class="badge bg-secondary">Sin permisos</span>
+                                    {% else %}
+                                        {% if usuario.is_active %}
+                                            <button class="btn btn-sm btn-outline-warning" onclick="toggleUserStatus({{ usuario.id }}, false, '{{ usuario.username }}')">
+                                                <i class="fas fa-ban me-1"></i>Desactivar
+                                            </button>
+                                        {% else %}
+                                            <button class="btn btn-sm btn-outline-success" onclick="toggleUserStatus({{ usuario.id }}, true, '{{ usuario.username }}')">
+                                                <i class="fas fa-check me-1"></i>Activar
+                                            </button>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endif %}
+                            {% else %}
+                                <span class="badge" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white;">Tu cuenta</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Paginación de usuarios">
+            <ul class="pagination justify-content-center mt-4">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Primera</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Anterior</a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Siguiente</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Última</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de Gestión de Usuario -->
+<div class="modal fade" id="manageUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white;">
+                <h5 class="modal-title"><i class="fas fa-user-cog me-2"></i>Gestionar Usuario</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="manageUserContent" style="max-height: 70vh; overflow-y: auto;">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function getCsrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+function toggleUserStatus(userId, activate, username) {
+    const action = activate ? 'activar' : 'desactivar';
+    
+    if (confirm(`¿Estás seguro de ${action} al usuario "${username}"?`)) {
+        fetch(`/dashboard/toggle_user/${userId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ activate: activate })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Error desconocido'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cambiar el estado del usuario.');
+        });
+    }
+}
+
+function openManageModal(userId) {
+    const modal = new bootstrap.Modal(document.getElementById('manageUserModal'));
+    const content = document.getElementById('manageUserContent');
+    
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+    
+    fetch(`/dashboard/manage_user/${userId}/`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => response.text())
+        .then(html => {
+            content.innerHTML = html;
+            setupModalHandlers(userId);
+        })
+        .catch(error => {
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error al cargar los datos del usuario.
+                </div>
+            `;
+        });
+}
+
+function setupModalHandlers(userId) {
+    const form = document.getElementById('manageUserForm');
+    const toggleBtn = document.querySelector('.btn-toggle-user');
+    const deleteBtn = document.querySelector('.btn-delete-user');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch(`/dashboard/manage_user/${userId}/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Error desconocido'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al actualizar el usuario.');
+            });
+        });
+    }
+    
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            const activate = this.dataset.activate === 'true';
+            const action = activate ? 'activar' : 'desactivar';
+            
+            if (confirm(`¿Estás seguro de ${action} este usuario?`)) {
+                fetch(`/dashboard/toggle_user/${userId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ activate: activate })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (data.error || 'Error desconocido'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cambiar el estado del usuario.');
+                });
+            }
+        });
+    }
+    
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function() {
+            const username = this.dataset.username;
+            
+            if (confirm(`¿Estás seguro de ELIMINAR permanentemente al usuario "${username}"?\n\nEsta acción NO se puede deshacer.`)) {
+                fetch(`/dashboard/delete_user/${userId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (data.error || 'Error desconocido'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al eliminar el usuario.');
+                });
+            }
+        });
+    }
+}
+</script>
+{% csrf_token %}
+{% endblock %}

@@ -7,7 +7,7 @@
 <div class="row">
     <div class="col-12">
         <h2 class="fw-bold mb-4" style="color: #184da1;">
-            <i class="fas fa-paperclip me-2"></i>Gestión de Contenido del Sitio
+            <i class="fas fa-paperclip me-2"></i>Gestión de Contenido
         </h2>
     </div>
 </div>
@@ -18,7 +18,7 @@
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="fas fa-plus me-2"></i>Agregar Nuevo Contenido
+                    <i class="fas fa-plus me-2"></i>Agregar Contenido
                 </h5>
             </div>
             <div class="card-body">
@@ -32,7 +32,6 @@
                                 <option value="HOME_IMAGE">Imagen de Inicio (Máx. 3)</option>
                                 <option value="ABOUT_IMAGE">Imagen de Acerca de (Máx. 3)</option>
                                 <option value="CAROUSEL_SLIDE">Slide del Carousel</option>
-                                <option value="LIVE_STREAM">Enlace de Transmisión en Vivo</option>
                             </select>
                             <div id="imageSpecs" class="form-text d-none">
                                 <strong>Medidas recomendadas:</strong><br>
@@ -55,12 +54,9 @@
                             <div class="form-text">Formatos: JPG, PNG, WebP. Tamaño máximo: 5MB</div>
                         </div>
                         <div class="col-md-6">
-                            <label for="link_url" class="form-label fw-semibold">URL de Redirección</label>
+                            <label for="link_url" class="form-label fw-semibold">Enlace (Opcional)</label>
                             <input type="url" class="form-control" id="link_url" name="link_url" placeholder="https://...">
-                            <div class="form-text">
-                                <strong>Para YouTube:</strong> Cambiar <code>watch?v=</code> por <code>embed/</code><br>
-                                <small class="text-muted">Ej: youtube.com/embed/VIDEO_ID</small>
-                            </div>
+                            <div class="form-text">URL para redireccionar al hacer clic en el slide</div>
                         </div>
                     </div>
                     
@@ -103,7 +99,7 @@
                         <br><small class="text-muted">{{ content.description|truncatechars:50 }}</small>
                         {% endif %}
                     </div>
-                    <a href="{% url 'posts:delete_content' content.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este contenido?')">
+                    <a href="/dashboard/content/{{ content.id }}/delete/" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este contenido?')">
                         <i class="fas fa-trash"></i>
                     </a>
                 </div>
@@ -134,7 +130,7 @@
                         <br><small class="text-muted">{{ content.description|truncatechars:50 }}</small>
                         {% endif %}
                     </div>
-                    <a href="{% url 'posts:delete_content' content.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este contenido?')">
+                    <a href="/dashboard/content/{{ content.id }}/delete/" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este contenido?')">
                         <i class="fas fa-trash"></i>
                     </a>
                 </div>
@@ -146,7 +142,7 @@
     </div>
 
     <!-- Slides del Carousel -->
-    <div class="col-md-6 mb-4">
+    <div class="col-md-12 mb-4">
         <div class="card">
             <div class="card-header">
                 <h6 class="mb-0">
@@ -165,46 +161,13 @@
                         <br><small class="text-primary">🔗 {{ content.link_url|truncatechars:30 }}</small>
                         {% endif %}
                     </div>
-                    <a href="{% url 'posts:delete_content' content.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este contenido?')">
+                    <a href="/dashboard/content/{{ content.id }}/delete/" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este contenido?')">
                         <i class="fas fa-trash"></i>
                     </a>
                 </div>
                 {% empty %}
                 <p class="text-muted">No hay slides del carousel</p>
                 {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Transmisión en Vivo -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="fas fa-video me-2"></i>Transmisión en Vivo
-                </h6>
-            </div>
-            <div class="card-body">
-                {% if live_stream %}
-                <div class="p-3 border rounded bg-light">
-                    <strong>{{ live_stream.title }}</strong>
-                    {% if live_stream.link_url %}
-                    <br><a href="{{ live_stream.link_url }}" target="_blank" class="text-primary">
-                        <i class="fas fa-external-link-alt me-1"></i>{{ live_stream.link_url }}
-                    </a>
-                    {% endif %}
-                    {% if live_stream.description %}
-                    <br><small class="text-muted">{{ live_stream.description }}</small>
-                    {% endif %}
-                    <div class="mt-2">
-                        <a href="{% url 'posts:delete_content' live_stream.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este enlace?')">
-                            <i class="fas fa-trash me-1"></i>Eliminar
-                        </a>
-                    </div>
-                </div>
-                {% else %}
-                <p class="text-muted">No hay enlace de transmisión configurado</p>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -237,13 +200,6 @@ function showImageSpecs() {
                 descInput.maxLength = 50;
                 titleCounter.textContent = titleInput.value.length + '/15 caracteres (carousel)';
                 descCounter.textContent = descInput.value.length + '/50 caracteres (carousel)';
-                break;
-            case 'LIVE_STREAM':
-                specs = 'URL de YouTube (normal o embed). Se convertirá automáticamente';
-                titleInput.maxLength = 100;
-                descInput.maxLength = 200;
-                titleCounter.textContent = titleInput.value.length + '/100 caracteres';
-                descCounter.textContent = descInput.value.length + '/200 caracteres';
                 break;
         }
         specsText.textContent = specs;

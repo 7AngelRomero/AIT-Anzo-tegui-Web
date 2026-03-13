@@ -1,0 +1,155 @@
+{% load static %}
+
+<form method="post" enctype="multipart/form-data" id="editPollFormModal" action="/dashboard/{{ poll.id }}/edit/">
+    {% csrf_token %}
+    
+    <!-- Información Básica -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <label for="title" class="form-label fw-semibold">Título de la Encuesta *</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ poll.title }}" maxlength="30" required>
+            <div class="form-text">Máximo 30 caracteres</div>
+        </div>
+        <div class="col-md-3">
+            <label for="status" class="form-label fw-semibold">Estado</label>
+            <select class="form-select" id="status" name="status">
+                <option value="BORRADOR" {% if poll.status == 'BORRADOR' %}selected{% endif %}>Borrador</option>
+                <option value="ACTIVA" {% if poll.status == 'ACTIVA' %}selected{% endif %}>Activa</option>
+                <option value="CERRADA" {% if poll.status == 'CERRADA' %}selected{% endif %}>Cerrada</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="image" class="form-label fw-semibold">Imagen</label>
+            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+            {% if poll.image %}
+                <div class="mt-2">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <small class="text-muted">Actual: {{ poll.image.name|truncatechars:20 }}</small>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="remove_image" name="remove_image">
+                            <label class="form-check-label text-danger" for="remove_image">
+                                <small>Eliminar</small>
+                            </label>
+                        </div>
+                    </div>
+                    <img src="{{ poll.image.url }}" class="img-thumbnail mt-1" style="max-width: 100px; max-height: 60px; object-fit: cover;">
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if request.user.rol.name == 'Administrador' %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="is_public" id="is_public" {% if poll.is_public %}checked{% endif %}>
+                <label class="form-check-label fw-semibold" for="is_public">
+                    Encuesta Pública
+                </label>
+                <div class="form-text">Marcado: Dirigida a usuarios | Desmarcado: Dirigida a trabajadores</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="mb-4">
+        <label for="description" class="form-label fw-semibold">Descripción</label>
+        <textarea class="form-control" id="description" name="description" rows="3" placeholder="Describe brevemente el propósito de esta encuesta...">{{ poll.description }}</textarea>
+    </div>
+    
+    <hr class="my-4">
+    
+    <!-- Sección de Preguntas -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="fw-bold mb-1" style="color: #184da1;">Preguntas</h5>
+            <small class="text-muted">Edita las preguntas existentes</small>
+        </div>
+    </div>
+    
+    <div id="questionsContainer" class="mb-4">
+        {% for question in poll.preguntas.all %}
+        <div class="card mb-3 question-card">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #f8f9fa;">
+                <h6 class="mb-0 fw-bold" style="color: #184da1;">
+                    <i class="fas fa-question-circle me-2"></i>Pregunta {{ forloop.counter }}
+                </h6>
+                <input type="checkbox" name="delete_question_{{ question.id }}" class="form-check-input" title="Marcar para eliminar">
+            </div>
+            <div class="card-body">
+                <input type="hidden" name="existing_question_id_{{ question.id }}" value="{{ question.id }}">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Texto de la Pregunta *</label>
+                    <input type="text" class="form-control" name="existing_question_text_{{ question.id }}" value="{{ question.question_text }}" required>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Tipo de Pregunta *</label>
+                        <select class="form-select" name="existing_question_type_{{ question.id }}" required>
+                            <option value="SELECCION_MULTIPLE" {% if question.question_type == 'SELECCION_MULTIPLE' %}selected{% endif %}>🔘 Selección Múltiple</option>
+                            <option value="ESCALA_LINEAL" {% if question.question_type == 'ESCALA_LINEAL' %}selected{% endif %}>📊 Escala Lineal</option>
+                            <option value="CALIFICACION" {% if question.question_type == 'CALIFICACION' %}selected{% endif %}>⭐ Calificación</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">¿Es obligatoria?</label>
+                        <select class="form-select" name="existing_is_obligatory_{{ question.id }}">
+                            <option value="false" {% if not question.is_obligatory %}selected{% endif %}>No</option>
+                            <option value="true" {% if question.is_obligatory %}selected{% endif %}>Sí</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="options-container" {% if question.question_type != 'SELECCION_MULTIPLE' %}style="display: none;"{% endif %}>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-semibold mb-0">Opciones de Respuesta</label>
+                        <small class="text-muted">Opciones existentes</small>
+                    </div>
+                    <div>
+                        {% for option in question.opciones.all %}
+                        <div class="input-group mb-2">
+                            <span class="input-group-text">Opción {{ forloop.counter }}</span>
+                            <input type="hidden" name="existing_option_id_{{ question.id }}_{{ option.id }}" value="{{ option.id }}">
+                            <input type="text" class="form-control" name="existing_option_text_{{ question.id }}_{{ option.id }}" value="{{ option.options_text }}" required>
+                            <div class="form-check ms-2 d-flex align-items-center">
+                                <input type="checkbox" name="delete_option_{{ question.id }}_{{ option.id }}" class="form-check-input" title="Eliminar">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <small class="text-muted">Agrega al menos 2 opciones para preguntas de selección múltiple</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+        <button type="button" class="btn btn-outline-secondary me-md-2" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Guardar Cambios
+        </button>
+    </div>
+</form>
+
+<style>
+.question-card {
+    transition: all 0.3s ease;
+}
+
+.question-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+}
+
+.options-container {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+</style>

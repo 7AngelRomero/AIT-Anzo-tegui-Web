@@ -1,0 +1,224 @@
+{% extends "pages/layouts/_base_manage.html" %}
+{% load static %}
+
+{% block title %}Estadísticas de Encuestas - AIT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+<div class="row mb-2">
+    <div class="col-12">
+        <h2 class="fw-bold mb-2" style="color: #184da1;">
+            <i class="fas fa-chart-bar me-2"></i>Reportes de las Encuestas
+        </h2>
+        <p class="text-muted">Total: <strong>{{ all_polls.count }}</strong> encuestas</p>
+    </div>
+</div>
+
+<!-- Filtro de búsqueda -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold"><i class="fas fa-search me-2"></i>Buscar</label>
+                        <input type="text" class="form-control" name="search" placeholder="título, autor, descripción..." value="{{ request.GET.search }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold"><i class="fas fa-toggle-on me-2"></i>Estado</label>
+                        <select class="form-select" name="status">
+                            <option value="">Todos</option>
+                            <option value="ACTIVA" {% if request.GET.status == 'ACTIVA' %}selected{% endif %}>Activa</option>
+                            <option value="BORRADOR" {% if request.GET.status == 'BORRADOR' %}selected{% endif %}>Borrador</option>
+                            <option value="CERRADA" {% if request.GET.status == 'CERRADA' %}selected{% endif %}>Cerrada</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold"><i class="fas fa-calendar me-2"></i>Desde</label>
+                        <input type="date" class="form-control" name="date_from" value="{{ request.GET.date_from }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold"><i class="fas fa-calendar me-2"></i>Hasta</label>
+                        <input type="date" class="form-control" name="date_to" value="{{ request.GET.date_to }}">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1" style="background-color: #184da1; border: none;">
+                            <i class="fas fa-filter me-2"></i>Filtrar
+                        </button>
+                        <a href="{% url 'dashboard:statistics' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for poll in all_polls %}
+<div class="card mb-4">
+    <div class="card-header" style="background: linear-gradient(135deg, #184da1 0%, #2D64BB 100%); color: white;">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <h5 class="mb-2 fw-bold">{{ poll.title }}</h5>
+                <p class="mb-4 small" style="opacity: 0.9;">{{ poll.description }}</p>
+                <div class="d-flex flex-wrap gap-3 small">
+                    <span><i class="fas fa-user me-1"></i>Autor: {{ poll.created_by.get_full_name|default:poll.created_by.username }}</span>
+                    <span><i class="fas fa-calendar-alt me-1"></i>Inicio: {{ poll.star_date|date:"d/m/Y" }}</span>
+                    <span><i class="fas fa-calendar-check me-1"></i>Fin: {{ poll.end_date|date:"d/m/Y"|default:"Sin fecha" }}</span>
+                    <span><i class="fas fa-users me-1"></i>{{ poll.participaciones.count }} participaciones</span>
+                    <span><i class="fas fa-question-circle me-1"></i>{{ poll.preguntas.count }} preguntas</span>
+                    <span class="badge" style="background: {% if poll.is_public %}rgba(23, 162, 184, 0.9){% else %}rgba(255, 193, 7, 0.9){% endif %};">{% if poll.is_public %}Pública{% else %}Interna{% endif %}</span>
+                    <span class="badge" style="background: {% if poll.status == 'ACTIVA' %}rgba(40, 167, 69, 0.9){% elif poll.status == 'BORRADOR' %}rgba(255, 193, 7, 0.9){% else %}rgba(108, 117, 125, 0.9){% endif %};">{{ poll.status }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        {% for question in poll.preguntas.all %}
+        <div class="mb-4">
+            <h6 class="fw-bold mb-3" style="color: #184da1;">{{ question.question_text }}</h6>
+            {% if poll.participaciones.count == 0 %}
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>No hay participantes todavía
+                </div>
+            {% elif question.question_type == 'SELECCION_MULTIPLE' %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="chart_{{ poll.id }}_{{ question.id }}"></canvas>
+                        </div>
+                    </div>
+                </div>
+            {% elif question.question_type == 'ESCALA_LINEAL' %}
+                <div style="position: relative; height: 300px;">
+                    <canvas id="chart_{{ poll.id }}_{{ question.id }}"></canvas>
+                </div>
+            {% elif question.question_type == 'CALIFICACION' %}
+                <div class="d-flex justify-content-center align-items-end gap-4 p-4" style="min-height: 200px;">
+                    {% for option in question.opciones.all %}
+                    <div class="text-center">
+                        <i class="fas fa-star" style="font-size: 2rem; color: #ffc107;"></i>
+                        <div class="mt-2 fw-bold" style="font-size: 1.2rem;">{{ option.value }}</div>
+                        <div class="badge bg-primary mt-1" id="star_count_{{ poll.id }}_{{ question.id }}_{{ option.value }}">0 votos</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <script>
+                    // Actualizar conteos de estrellas
+                    const chartData{{ poll.id }}_{{ question.id }} = {{ chart_data|safe }};
+                    if (chartData{{ poll.id }}_{{ question.id }}[{{ poll.id }}] && chartData{{ poll.id }}_{{ question.id }}[{{ poll.id }}][{{ question.id }}]) {
+                        const counts = chartData{{ poll.id }}_{{ question.id }}[{{ poll.id }}][{{ question.id }}].counts;
+                        for (let star in counts) {
+                            const elem = document.getElementById('star_count_{{ poll.id }}_{{ question.id }}_' + star);
+                            if (elem) {
+                                const count = counts[star];
+                                elem.textContent = count + (count === 1 ? ' voto' : ' votos');
+                            }
+                        }
+                    }
+                </script>
+            {% else %}
+                <p class="text-muted mt-2">Gráficas próximamente...</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+        
+        <div class="text-end mt-3">
+            <button class="btn btn-danger" onclick="exportToPDF({{ poll.id }})">
+                <i class="fas fa-file-pdf me-2"></i>Exportar PDF
+            </button>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="text-center py-5">
+    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+    <h4 class="text-muted">No hay encuestas creadas</h4>
+    <p class="text-muted">Las estadísticas aparecerán cuando se creen encuestas</p>
+</div>
+{% endfor %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chartData = {{ chart_data|safe }};
+    
+    {% for poll in all_polls %}
+        {% for question in poll.preguntas.all %}
+            {% if question.question_type == 'SELECCION_MULTIPLE' or question.question_type == 'ESCALA_LINEAL' %}
+            const canvas_{{ poll.id }}_{{ question.id }} = document.getElementById('chart_{{ poll.id }}_{{ question.id }}');
+            if (canvas_{{ poll.id }}_{{ question.id }} && chartData[{{ poll.id }}] && chartData[{{ poll.id }}][{{ question.id }}]) {
+                const data = chartData[{{ poll.id }}][{{ question.id }}];
+                const chartType = data.type || 'pie';
+                
+                const config = {
+                    type: chartType,
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.data,
+                            backgroundColor: chartType === 'bar' ? '#36A2EB' : ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: chartType === 'pie',
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        if (chartType === 'pie') {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                        } else {
+                                            return context.parsed.y + ' respuestas';
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        scales: chartType === 'bar' ? {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                },
+                                suggestedMax: Math.max(...data.data) + 1
+                            }
+                        } : {}
+                    }
+                };
+                
+                new Chart(canvas_{{ poll.id }}_{{ question.id }}, config);
+                
+                // Sincronizar colores de la leyenda con el gráfico
+                if (chartType === 'pie') {
+                    const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+                    data.labels.forEach((label, index) => {
+                        const legendItem = document.getElementById('legend_{{ poll.id }}_{{ question.id }}_' + index);
+                        if (legendItem) {
+                            const colorBadge = legendItem.querySelector('.legend-color');
+                            if (colorBadge) {
+                                colorBadge.style.backgroundColor = colors[index % colors.length];
+                            }
+                        }
+                    });
+                }
+            }
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+});
+
+function exportToPDF(pollId) {
+    window.open(`/dashboard/export-pdf/${pollId}/`, '_blank');
+}
+</script>
+{% endblock %}
